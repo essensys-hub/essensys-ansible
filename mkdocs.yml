@@ -1,0 +1,9 @@
+site_name: Essensys Ansible Documentation
+site_description: Documentation for Essensys Support Site Ansible deployment.
+theme:
+  name: readthedocs
+
+nav:
+  - Home: index.md
+  - Playbooks: playbooks.md
+  - Roles: roles.md
