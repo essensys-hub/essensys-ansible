@@ -1,0 +1,2 @@
+[essensys]
+test.essensys.fr ansible_user=ubuntu

@@ -1,0 +1,21 @@
+---
+- name: Ensure PostgreSQL service is started
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create essensys database user
+  postgresql_user:
+    name: essensys
+    password: essensys_secure_password
+    role_attr_flags: NOSUPERUSER
+  become: yes
+  become_user: postgres
+
+- name: Create essensys database
+  postgresql_db:
+    name: essensys_db
+    owner: essensys
+  become: yes
+  become_user: postgres

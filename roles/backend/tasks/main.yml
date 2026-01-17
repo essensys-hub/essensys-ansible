@@ -1,0 +1,70 @@
+---
+- name: Clone repository
+  git:
+    repo: 'https://github.com/essensys-hub/essensys-support-site.git'
+    dest: /opt/essensys/repo
+    version: collect
+    force: yes
+
+- name: Build Go backend
+  command: /usr/local/go/bin/go build -o server ./cmd/server
+  args:
+    chdir: /opt/essensys/repo/backend
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+
+- name: Stop backend service before update
+  service:
+    name: essensys-backend
+    state: stopped
+  ignore_errors: yes
+
+- name: Install backend binary
+  copy:
+    src: /opt/essensys/repo/backend/server
+    dest: /opt/essensys/backend/server
+    remote_src: yes
+    mode: '0755'
+    owner: essensys
+    group: essensys
+
+- name: Ensure .env file exists
+  copy:
+    dest: /opt/essensys/backend/.env
+    content: |
+      DB_HOST=127.0.0.1
+      DB_PORT=5432
+      DB_USER=essensys
+      DB_PASSWORD=essensys_secure_password
+      DB_NAME=essensys_db
+      JWT_SECRET=changeme_random_secret
+      ADMIN_TOKEN=admin-token-secret
+      FRONTEND_URL=https://mon.essensys.fr/
+      PORT=8080
+    owner: essensys
+    group: essensys
+    mode: '0600'
+    force: no
+
+- name: Copy systemd service file from repo
+  copy:
+    src: /opt/essensys/repo/backend/essensys-backend.service
+    dest: /etc/systemd/system/essensys-backend.service
+    remote_src: yes
+
+- name: Ensure EnvironmentFile is set in service
+  lineinfile:
+    path: /etc/systemd/system/essensys-backend.service
+    insertafter: '\[Service\]'
+    line: 'EnvironmentFile=/opt/essensys/backend/.env'
+    state: present
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Start and enable backend service
+  service:
+    name: essensys-backend
+    state: restarted
+    enabled: yes

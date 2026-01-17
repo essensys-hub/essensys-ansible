@@ -1,0 +1,80 @@
+---
+- name: Clone repository
+  git:
+    repo: 'https://github.com/essensys-hub/essensys-support-site.git'
+    dest: /opt/essensys/repo
+    version: collect
+    force: yes
+
+- name: Install npm dependencies
+  command: npm install
+  args:
+    chdir: /opt/essensys/repo/site
+
+- name: Build React frontend
+  command: npm run build
+  args:
+    chdir: /opt/essensys/repo/site
+
+- name: Clear deployment directory
+  file:
+    path: /opt/essensys/frontend/dist
+    state: absent
+
+- name: Recreate deployment directory
+  file:
+    path: /opt/essensys/frontend/dist
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: '0755'
+
+- name: Install frontend artifacts
+  copy:
+    src: /opt/essensys/repo/site/dist/
+    dest: /opt/essensys/frontend/dist/
+    remote_src: yes
+    owner: essensys
+    group: essensys
+    mode: '0755'
+
+- name: Create maintenance assets directory
+  file:
+    path: /opt/essensys/maintenance/assets
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: '0755'
+
+- name: Deploy maintenance page
+  copy:
+    src: /opt/essensys/repo/maintenance/index.html
+    dest: /opt/essensys/maintenance/index.html
+    remote_src: yes
+    owner: essensys
+    group: essensys
+
+- name: Deploy maintenance assets
+  copy:
+    src: /opt/essensys/repo/site/src/assets/fond-inprogress.png
+    dest: /opt/essensys/maintenance/assets/fond-inprogress.png
+    remote_src: yes
+    owner: essensys
+    group: essensys
+
+- name: Install Nginx config
+  copy:
+    src: /opt/essensys/repo/essensys.nginx
+    dest: /etc/nginx/sites-available/essensys
+    remote_src: yes
+
+- name: Enable Nginx site
+  file:
+    src: /etc/nginx/sites-available/essensys
+    dest: /etc/nginx/sites-enabled/essensys
+    state: link
+
+- name: Reload Nginx
+  service:
+    name: nginx
+    state: reloaded

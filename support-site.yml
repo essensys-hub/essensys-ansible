@@ -1,0 +1,10 @@
+---
+- name: Deploy Essensys Support Site
+  hosts: essensys
+  become: yes
+
+  roles:
+    - common
+    - database
+    - backend
+    - frontend
