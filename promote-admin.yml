@@ -1,0 +1,19 @@
+---
+- name: Promote User to Admin
+  hosts: essensys
+  become: yes
+
+  tasks:
+    - name: Ensure PostgreSQL client is installed
+      apt:
+        name: postgresql-client
+        state: present
+
+    - name: Promote nicolas@rineau.eu to admin
+      postgresql_query:
+        db: essensys_db
+        query: "UPDATE users SET role = 'admin' WHERE email = %s"
+        positional_args:
+          - nicolas@rineau.eu
+      become: yes
+      become_user: postgres
