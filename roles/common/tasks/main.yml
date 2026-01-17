@@ -23,9 +23,9 @@
   changed_when: false
 
 - name: Download Go
-  get_url:
-    url: https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
-    dest: /tmp/go1.23.4.linux-amd64.tar.gz
+  shell: curl -fsSL https://go.dev/dl/go1.23.4.linux-amd64.tar.gz -o /tmp/go1.23.4.linux-amd64.tar.gz
+  args:
+    creates: /tmp/go1.23.4.linux-amd64.tar.gz
   when: go_installed.rc != 0
 
 - name: Install Go
@@ -41,14 +41,13 @@
     line: 'export PATH=$PATH:/usr/local/go/bin'
     state: present
 
-- name: Install Node.js setup script
-  get_url:
-    url: https://deb.nodesource.com/setup_20.x
-    dest: /tmp/nodesource_setup.sh
-    mode: '0755'
+- name: Download Node.js setup script
+  shell: curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
+  args:
+    creates: /tmp/nodesource_setup.sh
 
 - name: Run Node.js setup
-  command: /tmp/nodesource_setup.sh
+  shell: bash /tmp/nodesource_setup.sh
   args:
     creates: /etc/apt/sources.list.d/nodesource.list
 
