@@ -1,0 +1,24 @@
+---
+- name: Enable HTTPS for Production Environment
+  hosts: essensys
+  become: yes
+
+  tasks:
+    - name: Ensure Certbot is installed
+      apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+        update_cache: yes
+
+    - name: Obtain SSL certificate for Production Domains
+      command: >
+        certbot --nginx 
+        -d mon.essensys.fr 
+        -d www.essensys.fr 
+        -d gateway.essensys.fr 
+        --non-interactive 
+        --agree-tos 
+        -m support@essensys.fr 
+        --redirect

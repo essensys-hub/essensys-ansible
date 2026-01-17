@@ -14,6 +14,8 @@
       - postgresql-contrib
       - acl
       - python3-psycopg2
+      - certbot
+      - python3-certbot-nginx
     state: present
 
 - name: Check if Go is installed

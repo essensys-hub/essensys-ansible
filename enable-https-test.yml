@@ -1,0 +1,22 @@
+---
+- name: Enable HTTPS for Test Environment
+  hosts: essensys
+  become: yes
+
+  tasks:
+    - name: Ensure Certbot is installed
+      apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+        update_cache: yes
+
+    - name: Obtain SSL certificate for test.essensys.fr
+      command: >
+        certbot --nginx 
+        -d test.essensys.fr 
+        --non-interactive 
+        --agree-tos 
+        -m support@essensys.fr 
+        --redirect
