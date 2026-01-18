@@ -3,7 +3,7 @@
   git:
     repo: 'https://github.com/essensys-hub/essensys-support-site.git'
     dest: /opt/essensys/repo
-    version: collect
+    version: V.1.0.0
     force: yes
 
 - name: Build Go backend
