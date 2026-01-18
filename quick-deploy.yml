@@ -1,0 +1,8 @@
+---
+- name: Quick Deploy Essensys Support Site (Backend + Frontend)
+  hosts: essensys
+  become: yes
+
+  roles:
+    - backend
+    - frontend

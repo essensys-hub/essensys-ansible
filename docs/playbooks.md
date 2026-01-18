@@ -42,3 +42,35 @@ Enables HTTPS for the **Production Environment** (`mon.essensys.fr`, `www.essens
 ```bash
 ansible-playbook -i inventory enable-https-prod.yml
 ```
+
+---
+
+## Quick Deployment
+
+### `quick-deploy.yml`
+
+A faster version of the deployment that **skips** system dependencies and database setup. It only updates the application code (Frontend + Backend).
+
+**Use this when:** You just want to push a code update to an already running server.
+
+**Usage:**
+```bash
+ansible-playbook -i inventory quick-deploy.yml
+```
+
+---
+
+## Administrative Tools
+
+### `promote-admin.yml`
+
+Promotes a registered user to the **Admin** role in the database.
+
+**Usage:**
+1. Open `promote-admin.yml` and check the target email (default: `nicolas@rineau.eu`).
+2. Run:
+```bash
+ansible-playbook -i inventory promote-admin.yml
+```
+
+> **Note:** The user must have already created an account (signed up) before you run this playbook.
