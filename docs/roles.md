@@ -45,3 +45,73 @@ Deploys the React frontend application.
     - Deploys the maintenance page.
     - Installs `essensys.nginx` configuration to `/etc/nginx/sites-available`.
     - Reloads Nginx.
+
+---
+
+## Raspberry Pi roles
+
+These roles are used by `install.raspberrypi.yml` and `update.raspberrypi.yml`.
+
+## `raspberry_common`
+
+- **Tasks**:
+    - Installs APT packages for Raspberry Pi.
+    - Installs **Go** and **Node.js**.
+    - Creates the `essensys` user and directories.
+    - Ensures Redis is running.
+
+## `raspberry_backend`
+
+- **Tasks**:
+    - Clones `essensys-server-backend`.
+    - Builds the Go binary and deploys it.
+    - Creates `config.yaml`.
+    - Installs and enables systemd service.
+
+## `raspberry_frontend`
+
+- **Tasks**:
+    - Clones `essensys-server-frontend`.
+    - Builds the frontend.
+    - Deploys assets to `/opt/essensys/frontend`.
+
+## `raspberry_nginx`
+
+- **Tasks**:
+    - Deploys nginx configs and log formats.
+    - Enables local and internal sites.
+    - Reloads nginx.
+
+## `raspberry_traefik`
+
+- **Tasks**:
+    - Installs Traefik binary.
+    - Deploys static and dynamic configuration.
+    - Installs block service and systemd units.
+
+## `raspberry_adguard`
+
+- **Tasks**:
+    - Installs AdGuard Home.
+    - Deploys configuration and rewrite.
+
+## `raspberry_monitor`
+
+- **Tasks**:
+    - Installs monitoring UI and autologin setup.
+
+## `raspberry_logrotate`
+
+- **Tasks**:
+    - Installs logrotate rules for Essensys logs.
+
+## `raspberry_push_status`
+
+- **Tasks**:
+    - Installs push status script and timer.
+
+## `raspberry_uninstall`
+
+- **Tasks**:
+    - Stops services and removes files.
+    - Optional removal of nginx/redis/user.

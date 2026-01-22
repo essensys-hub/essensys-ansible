@@ -1,0 +1,126 @@
+---
+- name: Arreter les services
+  service:
+    name: "{{ item }}"
+    state: stopped
+  loop:
+    - essensys-backend
+    - traefik
+    - traefik-block-service
+    - nginx
+    - AdGuardHome
+    - essensys-push.timer
+    - essensys-push.service
+  ignore_errors: true
+
+- name: Desactiver les services
+  service:
+    name: "{{ item }}"
+    enabled: false
+  loop:
+    - essensys-backend
+    - traefik
+    - traefik-block-service
+    - nginx
+    - AdGuardHome
+    - essensys-push.timer
+  ignore_errors: true
+
+- name: Supprimer les fichiers systemd
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/systemd/system/essensys-backend.service
+    - /etc/systemd/system/traefik.service
+    - /etc/systemd/system/traefik-block-service.service
+    - /etc/systemd/system/essensys-push.service
+    - /etc/systemd/system/essensys-push.timer
+    - /etc/systemd/system/AdGuardHome.service
+
+- name: Recharger systemd
+  systemd:
+    daemon_reload: true
+
+- name: Supprimer la configuration nginx
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/nginx/sites-available/essensys
+    - /etc/nginx/sites-enabled/essensys
+    - /etc/nginx/sites-available/essensys-frontend-internal
+    - /etc/nginx/sites-enabled/essensys-frontend-internal
+    - /etc/nginx/conf.d/essensys-api-log-format.conf
+
+- name: Supprimer les fichiers Traefik
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/traefik
+    - /var/log/traefik
+    - /var/lib/traefik
+    - /usr/local/bin/traefik
+    - /usr/local/bin/traefik-block-service.py
+    - /usr/local/bin/generate-htpasswd-essensys.sh
+
+- name: Supprimer AdGuard Home
+  file:
+    path: /opt/AdGuardHome
+    state: absent
+
+- name: Supprimer les fichiers d'installation
+  file:
+    path: "{{ install_dir }}"
+    state: absent
+
+- name: Supprimer les logs Essensys
+  file:
+    path: /var/logs/Essensys
+    state: absent
+
+- name: Supprimer les logs nginx Essensys
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/log/nginx/essensys-access.log
+    - /var/log/nginx/essensys-error.log
+    - /var/log/nginx/essensys-api-detailed.log
+    - /var/log/nginx/essensys-api-trace.log
+    - /var/log/nginx/essensys-api-error.log
+    - /var/log/nginx/frontend-internal-error.log
+
+- name: Desinstaller nginx (optionnel)
+  apt:
+    name:
+      - nginx
+      - nginx-common
+      - nginx-full
+    state: absent
+    autoremove: true
+  when: remove_nginx | bool
+
+- name: Desinstaller redis (optionnel)
+  apt:
+    name: redis-server
+    state: absent
+    autoremove: true
+  when: remove_redis | bool
+
+- name: Supprimer les depots sources
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/home/{{ service_user }}/essensys-server-backend"
+    - "/home/{{ service_user }}/essensys-server-frontend"
+  when: delete_user | bool
+
+- name: Supprimer l'utilisateur de service
+  user:
+    name: "{{ service_user }}"
+    state: absent
+    remove: true
+  when: delete_user | bool

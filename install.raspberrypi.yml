@@ -1,0 +1,31 @@
+---
+- name: Installation Essensys Raspberry Pi
+  hosts: raspberrypi
+  gather_facts: true
+  become: true
+  vars:
+    service_user: essensys
+    install_dir: /opt/essensys
+    backend_dir: "{{ install_dir }}/backend"
+    frontend_dir: "{{ install_dir }}/frontend"
+    backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
+    frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
+    backend_version: V.1.1.0
+    frontend_version: V.1.0.0
+    acme_email: admin@acme.com
+    use_staging: false
+    wan_domain_default: essensys.acme.com
+    domain_file: "/home/{{ service_user }}/domain.txt"
+    traefik_version: v2.11.3
+    go_version: "1.21.5"
+    node_setup_script: "https://deb.nodesource.com/setup_20.x"
+  roles:
+    - raspberry_common
+    - raspberry_backend
+    - raspberry_frontend
+    - raspberry_nginx
+    - raspberry_traefik
+    - raspberry_adguard
+    - raspberry_monitor
+    - raspberry_logrotate
+    - raspberry_push_status

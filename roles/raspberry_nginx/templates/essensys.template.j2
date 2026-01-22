@@ -1,0 +1,193 @@
+# Configuration principale: Frontend sur / et API sur /api/ (port 80)
+# IMPORTANT: Nginx gere le frontend local ET les API locales
+# Traefik gere uniquement le frontend WAN (port 443)
+server {
+    listen 80 default_server;
+    server_name _;
+    
+    # Desactiver toute redirection automatique
+    port_in_redirect off;
+    
+    root {{ frontend_dir }}/dist;
+    index index.html index.htm;
+    
+    # Types MIME
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
+    # Charset
+    charset utf-8;
+    
+    # Logs generaux
+    access_log /var/log/nginx/essensys-access.log;
+    error_log /var/log/nginx/essensys-error.log warn;
+    
+    # Logs detailles pour les API (diagnostic client legacy)
+    access_log /var/log/nginx/essensys-api-detailed.log essensys_api_detailed;
+    access_log /var/log/nginx/essensys-api-trace.log essensys_api_trace;
+    error_log /var/log/nginx/essensys-api-error.log debug;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
+    
+    # Cache pour les assets statiques
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+    
+    # Servir les fichiers HTML directement
+    location ~* \.html$ {
+        expires -1;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+    }
+    
+    # Proxy pour les API vers le backend
+    # CRITIQUE: Configuration compatible avec client legacy BP_MQX_ETH
+    # Le client necessite des reponses en un seul paquet TCP
+    location /api/ {
+        # Logs ultra-detailles pour diagnostic client legacy non-standard
+        access_log /var/log/nginx/essensys-api-detailed.log essensys_api_detailed;
+        access_log /var/log/nginx/essensys-api-trace.log essensys_api_trace;
+        error_log /var/log/nginx/essensys-api-error.log debug;
+        
+        # Capturer le body de la requete pour diagnostic (limite a 64k)
+        client_body_buffer_size 64k;
+        client_max_body_size 64k;
+        
+        proxy_pass http://127.0.0.1:7070/api/;
+        proxy_http_version 1.1;
+        
+        # Headers de requete
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+        
+        # CRITIQUE: Bufferiser la reponse complete pour single-packet TCP
+        # Le client legacy ne peut pas gerer les reponses fragmentees
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+        proxy_busy_buffers_size 8k;
+        # Bufferiser toute la reponse avant d'envoyer
+        proxy_max_temp_file_size 0;
+        
+        # Desactiver gzip pour les API (evite la fragmentation)
+        gzip off;
+        
+        # Preserver les headers originaux du backend
+        # Le backend envoie deja Content-Type avec espace avant ;charset
+        proxy_pass_header Content-Type;
+        proxy_pass_header Content-Length;
+        proxy_pass_header Connection;
+        
+        # Ne pas modifier les headers de reponse
+        proxy_hide_header X-Powered-By;
+        proxy_hide_header Server;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # Logs supplementaires pour diagnostic
+        # Capturer les erreurs de proxy
+        proxy_intercept_errors on;
+        
+        # Fermer la connexion apres la reponse (compatible avec Connection: close)
+        proxy_set_header Connection "close";
+    }
+    
+    # Health check endpoint
+    location /health {
+        proxy_pass http://127.0.0.1:7070/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        access_log off;
+    }
+    
+    # Debug Interface
+    location /debug {
+        proxy_pass http://127.0.0.1:7070/debug;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        access_log off;
+    }
+
+    # Reference Table (Redis Dump)
+    location /table_ref {
+        proxy_pass http://127.0.0.1:7070/table_ref;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        access_log off;
+    }
+    
+    # Servir le frontend (SPA) directement sur / - PAS DE REDIRECTION
+    location / {
+        # Desactiver toute redirection
+        absolute_redirect off;
+        port_in_redirect off;
+        
+        # Servir les fichiers statiques du frontend
+        try_files $uri $uri/ /index.html;
+        
+        # Headers pour eviter les redirections
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+    
+    # Securite - bloquer l'acces aux fichiers caches
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Desactiver les logs pour favicon
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+    
+    # Desactiver les logs pour robots.txt
+    location = /robots.txt {
+        log_not_found off;
+        access_log off;
+    }
+}
+
+# Configuration separee pour le dashboard Traefik (traefik.essensys.fr)
+# Utilisation d'un bloc server separe car les directives proxy_* ne sont pas autorisees dans un bloc if
+server {
+    listen 80;
+    server_name traefik.essensys.fr;
+    
+    # Proxy vers le dashboard Traefik (port 8080)
+    # Avec insecure: true, le dashboard est accessible directement sans route
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        # IMPORTANT: Ne pas modifier le Host pour que Traefik accepte la requete
+        # Avec insecure: true, Traefik accepte n'importe quel Host sur l'entrypoint dashboard
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        
+        # WebSocket support (si necessaire pour le dashboard)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Timeouts pour WebSocket
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}

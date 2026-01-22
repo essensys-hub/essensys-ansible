@@ -1,0 +1,47 @@
+---
+- name: Definir variables frontend
+  set_fact:
+    frontend_repo_dir: "/home/{{ service_user }}/essensys-server-frontend"
+
+- name: Cloner ou mettre a jour le frontend
+  git:
+    repo: "{{ frontend_repo }}"
+    dest: "{{ frontend_repo_dir }}"
+    version: "{{ frontend_version }}"
+    force: true
+  become_user: "{{ service_user }}"
+
+- name: Copier le frontend vers le repertoire d'installation
+  command: rsync -a --delete "{{ frontend_repo_dir }}/" "{{ frontend_dir }}/"
+  register: frontend_sync
+  changed_when: frontend_sync.rc == 0
+
+- name: Installer les dependances npm
+  command: npm install
+  args:
+    chdir: "{{ frontend_dir }}"
+  become_user: "{{ service_user }}"
+
+- name: Builder le frontend
+  command: npm run build
+  args:
+    chdir: "{{ frontend_dir }}"
+  become_user: "{{ service_user }}"
+
+- name: Verifier la presence du build
+  stat:
+    path: "{{ frontend_dir }}/dist"
+  register: frontend_dist
+
+- name: Echouer si le build est absent
+  fail:
+    msg: "Le build du frontend a echoue: {{ frontend_dir }}/dist manquant."
+  when: not frontend_dist.stat.exists
+
+- name: Definir les permissions du frontend
+  file:
+    path: "{{ frontend_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    recurse: true

@@ -1,0 +1,28 @@
+[Unit]
+Description=Essensys Backend Server
+After=network.target
+
+[Service]
+Type=simple
+User={{ service_user }}
+Group={{ service_user }}
+WorkingDirectory={{ backend_dir }}
+ExecStart={{ backend_dir }}/server
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/logs/Essensys/backend/console.out.log
+StandardError=append:/var/logs/Essensys/backend/console.out.log
+
+# Environment variables
+Environment="LOG_LEVEL=info"
+Environment="AUTH_ENABLED=false"
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ install_dir }} /var/logs/Essensys
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,121 @@
+---
+- name: Definir variables backend
+  set_fact:
+    backend_repo_dir: "/home/{{ service_user }}/essensys-server-backend"
+
+- name: Cloner ou mettre a jour le backend
+  git:
+    repo: "{{ backend_repo }}"
+    dest: "{{ backend_repo_dir }}"
+    version: "{{ backend_version }}"
+    force: true
+  become_user: "{{ service_user }}"
+
+- name: Arreter le service backend avant mise a jour
+  service:
+    name: essensys-backend
+    state: stopped
+  ignore_errors: true
+
+- name: Copier le backend vers le repertoire d'installation
+  command: rsync -a --delete "{{ backend_repo_dir }}/" "{{ backend_dir }}/"
+  register: backend_sync
+  changed_when: backend_sync.rc == 0
+
+- name: Synchroniser les dependances Go
+  command: /usr/local/go/bin/go mod tidy
+  args:
+    chdir: "{{ backend_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+  register: go_mod_tidy
+  failed_when: false
+  changed_when: go_mod_tidy.rc == 0
+
+- name: Telecharger les dependances Go si necessaire
+  command: /usr/local/go/bin/go mod download
+  args:
+    chdir: "{{ backend_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+  when: go_mod_tidy.rc != 0
+
+- name: Reexecuter go mod tidy apres download
+  command: /usr/local/go/bin/go mod tidy
+  args:
+    chdir: "{{ backend_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+  when: go_mod_tidy.rc != 0
+
+- name: Compiler le backend
+  command: /usr/local/go/bin/go build -o server ./cmd/server
+  args:
+    chdir: "{{ backend_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+
+- name: Creer le fichier config.yaml si absent
+  copy:
+    dest: "{{ backend_dir }}/config.yaml"
+    content: |
+      server:
+        port: 7070
+        read_timeout: 10s
+        write_timeout: 10s
+        idle_timeout: 60s
+
+      auth:
+        enabled: false
+        clients:
+          testclient: testpass
+
+        logging:
+        level: info
+        format: text
+
+      redis:
+        addr: "localhost:6379"
+        password: ""
+        db: 0
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+    force: false
+
+- name: Forcer le port 7070 dans config.yaml
+  lineinfile:
+    path: "{{ backend_dir }}/config.yaml"
+    regexp: '^\s*port:'
+    line: '  port: 7070'
+    insertafter: '^server:'
+
+- name: Installer le service systemd du backend
+  template:
+    src: essensys-backend.service.j2
+    dest: /etc/systemd/system/essensys-backend.service
+    mode: '0644'
+
+- name: Recharger systemd
+  systemd:
+    daemon_reload: true
+
+- name: Definir les permissions du backend
+  file:
+    path: "{{ backend_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    recurse: true
+
+- name: Demarrer le service backend
+  service:
+    name: essensys-backend
+    state: restarted
+    enabled: true
+
+- name: S'assurer que Redis est actif
+  service:
+    name: redis-server
+    state: started
+    enabled: true

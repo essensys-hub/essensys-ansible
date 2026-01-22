@@ -21,6 +21,37 @@ ansible-playbook -i inventory support-site.yml
 
 ---
 
+## Raspberry Pi
+
+### `install.raspberrypi.yml`
+
+Installation complete pour Raspberry Pi (Nginx + Traefik + Backend + Frontend + AdGuard + Monitor).
+
+**Usage:**
+```bash
+ansible-playbook -i inventory install.raspberrypi.yml
+```
+
+### `update.raspberrypi.yml`
+
+Mise a jour applicative (backend, frontend, config nginx/traefik, push status).
+
+**Usage:**
+```bash
+ansible-playbook -i inventory update.raspberrypi.yml
+```
+
+### `uninstall.raspberrypi.yml`
+
+Desinstallation complete. Requiert `confirm_uninstall=true`.
+
+**Usage:**
+```bash
+ansible-playbook -i inventory uninstall.raspberrypi.yml -e "confirm_uninstall=true"
+```
+
+---
+
 ## HTTPS Enablement
 
 These playbooks are used to enable SSL (HTTPS) via Let's Encrypt. Run them **after** the main deployment, as they require Nginx to be running.

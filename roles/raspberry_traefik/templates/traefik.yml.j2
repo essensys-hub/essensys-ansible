@@ -1,0 +1,112 @@
+# Configuration principale Traefik
+# Entrypoints et configuration globale
+
+api:
+  dashboard: true
+  insecure: true  # Dashboard accessible directement via l'entrypoint dashboard (port 8080)
+  # Le dashboard est accessible via:
+  # - http://traefik.essensys.fr/dashboard/ (Nginx proxy vers port 8080)
+  # - http://<ip-raspberry>:8080/dashboard/ (acces direct)
+  debug: true  # Activer le mode debug de l'API pour voir toutes les traces
+
+# Metriques Prometheus
+# Les metriques sont accessibles via l'API du dashboard (route traefik.essensys.fr)
+# L'entrypoint "traefik" est defini sur le port 8081 pour eviter le conflit avec le backend sur 8080
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    addRoutersLabels: true
+    # Les metriques sont integrees dans le dashboard et l'API interne
+    # L'entrypoint "traefik" sur port 8081 est utilise pour l'API interne uniquement
+
+entryPoints:
+  # Entrypoint pour l'API et le dashboard Traefik (port 8081 pour eviter le conflit avec le backend sur 7070)
+  # IMPORTANT: Traefik cree automatiquement cet entrypoint, il faut le definir explicitement
+  traefik:
+    address: ":8081"
+  
+  # Entrypoint pour le dashboard accessible depuis le subnet local (port 8080)
+  # Nginx proxy les requetes traefik.essensys.fr vers ce port
+  # OU acces direct via http://<ip-raspberry>:8080/dashboard/
+  dashboard:
+    address: ":8080"
+  
+  # NOTE: Le port 80 est gere par Nginx pour le frontend local ET les API locales
+  # Traefik ne gere que le port 443 pour le frontend WAN
+  # web:
+  #   address: ":80"  # Desactive - Nginx gere le port 80
+  
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+
+# Configuration Let's Encrypt pour HTTPS
+# NOTE: Le challenge HTTP Let's Encrypt necessite le port 80
+# Comme Nginx gere le port 80, le challenge sera gere par Nginx
+# Nginx doit etre configure pour proxy .well-known/acme-challenge vers Traefik
+# OU utiliser le challenge TLS-ALPN sur le port 443
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: {{ acme_email }}
+      storage: /etc/traefik/acme.json
+      # Serveur de staging (decommenter pour tester si erreur 429/Rate Limit)
+{% if use_staging %}
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+{% else %}
+      # caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+{% endif %}
+      # Utiliser TLS-ALPN challenge sur port 443 (pas besoin de port 80)
+      tlsChallenge: {}
+      # Alternative: httpChallenge necessite port 80, mais Nginx le gere
+      # httpChallenge:
+      #   entryPoint: web  # Necessiterait que Traefik ecoute sur port 80
+
+# Providers de configuration (fichiers statiques)
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+    filename: ""
+
+# Logs
+# CRITIQUE: Mode TRACE pour voir TOUTES les traces, meme les connexions rejetees
+# TRACE est le niveau le plus detaille disponible dans Traefik v2
+log:
+  level: TRACE  # TRACE pour voir toutes les connexions, meme rejetees avant routing
+  filePath: /var/log/traefik/traefik.log
+  format: common  # Format common plus lisible pour le debug (json aussi disponible)
+
+accessLog:
+  filePath: /var/log/traefik/access.log
+  format: json
+  bufferingSize: 1  # Buffering minimal (1 ligne) pour voir les logs en temps reel
+  # IMPORTANT: Ne PAS filtrer - voir TOUTES les requetes, meme rejetees
+  # Les requetes rejetees par Traefik (avant routing) peuvent ne pas avoir de status code
+  # Inclure tous les champs pour diagnostic complet
+  fields:
+    defaultMode: keep
+    headers:
+      defaultMode: keep  # Garder TOUS les headers pour voir les problemes
+      names:
+        User-Agent: keep
+        Content-Type: keep
+        Content-Length: keep
+        Connection: keep
+        Host: keep
+        # Headers supplementaires pour diagnostic client legacy
+        Accept: keep
+        Accept-Encoding: keep
+
+# Options globales
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+# Configuration pour compatibilite client legacy BP_MQX_ETH
+# Le client necessite des reponses en un seul paquet TCP
+# Desactiver la compression globale pour les API (sera reactivee par middleware si necessaire)
+# Note: La compression peut etre desactivee au niveau des middlewares

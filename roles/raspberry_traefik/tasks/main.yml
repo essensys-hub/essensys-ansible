@@ -1,0 +1,127 @@
+---
+- name: Definir les variables Traefik
+  set_fact:
+    traefik_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv7' }}"
+
+- name: Verifier le binaire Traefik
+  stat:
+    path: /usr/local/bin/traefik
+  register: traefik_bin
+
+- name: Lire le domaine WAN
+  slurp:
+    src: "{{ domain_file }}"
+  register: domain_file_content
+  ignore_errors: true
+
+- name: Calculer le domaine WAN
+  set_fact:
+    wan_domain: >-
+      {{
+        (domain_file_content.content | default('') | b64decode | trim)
+        if (domain_file_content is defined and domain_file_content.content is defined and (domain_file_content.content | b64decode | trim) != '')
+        else wan_domain_default
+      }}
+
+- name: Telecharger Traefik
+  get_url:
+    url: "https://github.com/traefik/traefik/releases/download/{{ traefik_version }}/traefik_{{ traefik_version }}_linux_{{ traefik_arch }}.tar.gz"
+    dest: /tmp/traefik.tar.gz
+    mode: '0644'
+  when: not traefik_bin.stat.exists
+
+- name: Extraire Traefik
+  unarchive:
+    src: /tmp/traefik.tar.gz
+    dest: /tmp
+    remote_src: true
+  when: not traefik_bin.stat.exists
+
+- name: Installer le binaire Traefik
+  copy:
+    src: /tmp/traefik
+    dest: /usr/local/bin/traefik
+    mode: '0755'
+    remote_src: true
+  when: not traefik_bin.stat.exists
+
+- name: Creer les repertoires Traefik
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/traefik
+    - /etc/traefik/dynamic
+    - /var/log/traefik
+    - /var/lib/traefik
+
+- name: Deployer la configuration Traefik
+  template:
+    src: traefik.yml.j2
+    dest: /etc/traefik/traefik.yml
+    mode: '0644'
+
+- name: Deployer la configuration dynamique locale
+  template:
+    src: local-routes.yml.j2
+    dest: /etc/traefik/dynamic/local-routes.yml
+    mode: '0644'
+
+- name: Deployer la configuration dynamique WAN
+  template:
+    src: wan-routes.yml.j2
+    dest: /etc/traefik/dynamic/wan-routes.yml
+    mode: '0644'
+
+- name: Creer acme.json
+  file:
+    path: /etc/traefik/acme.json
+    state: touch
+    mode: '0600'
+
+- name: Creer users.htpasswd
+  file:
+    path: /etc/traefik/users.htpasswd
+    state: touch
+    mode: '0600'
+
+- name: Installer le service de blocage Traefik
+  copy:
+    src: block-service.py
+    dest: /usr/local/bin/traefik-block-service.py
+    mode: '0755'
+
+- name: Installer generate-htpasswd.sh
+  copy:
+    src: generate-htpasswd.sh
+    dest: /usr/local/bin/generate-htpasswd-essensys.sh
+    mode: '0755'
+
+- name: Installer le service systemd Traefik block
+  template:
+    src: traefik-block-service.service.j2
+    dest: /etc/systemd/system/traefik-block-service.service
+    mode: '0644'
+
+- name: Installer le service systemd Traefik
+  template:
+    src: traefik.service.j2
+    dest: /etc/systemd/system/traefik.service
+    mode: '0644'
+
+- name: Recharger systemd
+  systemd:
+    daemon_reload: true
+
+- name: Activer et demarrer Traefik
+  service:
+    name: traefik
+    state: restarted
+    enabled: true
+
+- name: Activer et demarrer le service de blocage
+  service:
+    name: traefik-block-service
+    state: restarted
+    enabled: true

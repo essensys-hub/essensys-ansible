@@ -1,0 +1,13 @@
+[Unit]
+Description=Traefik Block Service (403 Forbidden)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /usr/local/bin/traefik-block-service.py 8082
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

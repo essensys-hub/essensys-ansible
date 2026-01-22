@@ -1,0 +1,57 @@
+---
+- name: Copier le format de log nginx
+  copy:
+    src: essensys-api-log-format.conf
+    dest: /etc/nginx/conf.d/essensys-api-log-format.conf
+    mode: '0644'
+
+- name: Deployer la configuration nginx principale
+  template:
+    src: essensys.template.j2
+    dest: /etc/nginx/sites-available/essensys
+    mode: '0644'
+
+- name: Activer le site nginx
+  file:
+    src: /etc/nginx/sites-available/essensys
+    dest: /etc/nginx/sites-enabled/essensys
+    state: link
+
+- name: Desactiver la configuration nginx par defaut
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Deployer la configuration nginx frontend interne
+  template:
+    src: nginx-frontend-internal.conf.j2
+    dest: /etc/nginx/sites-available/essensys-frontend-internal
+    mode: '0644'
+
+- name: Activer le site nginx frontend interne
+  file:
+    src: /etc/nginx/sites-available/essensys-frontend-internal
+    dest: /etc/nginx/sites-enabled/essensys-frontend-internal
+    state: link
+
+- name: Creer les fichiers de logs nginx
+  file:
+    path: "{{ item }}"
+    state: touch
+    mode: '0644'
+  loop:
+    - /var/log/nginx/essensys-api-detailed.log
+    - /var/log/nginx/essensys-api-trace.log
+    - /var/log/nginx/essensys-api-error.log
+    - /var/log/nginx/essensys-access.log
+    - /var/log/nginx/essensys-error.log
+    - /var/log/nginx/frontend-internal-error.log
+
+- name: Tester la configuration nginx
+  command: nginx -t
+  changed_when: false
+
+- name: Recharger nginx
+  service:
+    name: nginx
+    state: reloaded

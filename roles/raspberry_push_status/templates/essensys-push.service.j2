@@ -1,0 +1,8 @@
+[Unit]
+Description=Essensys Status Push Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 {{ install_dir }}/push_status.py

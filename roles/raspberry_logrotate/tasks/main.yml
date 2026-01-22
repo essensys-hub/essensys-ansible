@@ -1,0 +1,6 @@
+---
+- name: Installer la configuration logrotate
+  copy:
+    src: essensys-logrotate.conf
+    dest: /etc/logrotate.d/essensys
+    mode: '0644'

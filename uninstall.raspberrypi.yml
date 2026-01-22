@@ -1,0 +1,20 @@
+---
+- name: Desinstallation Essensys Raspberry Pi
+  hosts: raspberrypi
+  gather_facts: false
+  become: true
+  vars:
+    service_user: essensys
+    install_dir: /opt/essensys
+    remove_nginx: false
+    remove_redis: false
+    delete_user: false
+    confirm_uninstall: false
+  pre_tasks:
+    - name: Verifier confirmation de desinstallation
+      assert:
+        that:
+          - confirm_uninstall | bool
+        fail_msg: "Definissez confirm_uninstall=true pour autoriser la desinstallation."
+  roles:
+    - raspberry_uninstall

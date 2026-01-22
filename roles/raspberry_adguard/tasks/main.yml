@@ -1,0 +1,66 @@
+---
+- name: Definir l'architecture AdGuard
+  set_fact:
+    adguard_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv7' }}"
+
+- name: Desactiver DNSStubListener pour systemd-resolved
+  lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^#?DNSStubListener='
+    line: 'DNSStubListener=no'
+  notify: Restart resolved
+  ignore_errors: true
+
+- name: Verifier resolv.conf
+  file:
+    src: /run/systemd/resolve/resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+  ignore_errors: true
+
+- name: Installer AdGuard Home
+  unarchive:
+    src: "https://static.adguard.com/adguardhome/release/AdGuardHome_linux_{{ adguard_arch }}.tar.gz"
+    dest: /opt
+    remote_src: true
+    creates: /opt/AdGuardHome/AdGuardHome
+
+- name: Deployer la configuration AdGuard Home
+  template:
+    src: AdGuardHome.yaml.j2
+    dest: /opt/AdGuardHome/AdGuardHome.yaml
+    mode: '0644'
+    force: false
+
+- name: Installer le service AdGuard Home
+  command: /opt/AdGuardHome/AdGuardHome -s install
+  args:
+    chdir: /opt/AdGuardHome
+  register: adguard_install
+  changed_when: "'installed' in adguard_install.stdout.lower()"
+  failed_when: false
+
+- name: Demarrer AdGuard Home
+  service:
+    name: AdGuardHome
+    state: restarted
+    enabled: true
+
+- name: Attendre l'API AdGuard
+  wait_for:
+    host: 127.0.0.1
+    port: 3000
+    timeout: 30
+
+- name: Configurer le rewrite DNS pour mon.essensys.fr
+  uri:
+    url: http://127.0.0.1:3000/control/rewrite/add
+    method: POST
+    headers:
+      Content-Type: application/json
+    body_format: json
+    body:
+      domain: mon.essensys.fr
+      answer: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+    status_code: [200, 201]
+  ignore_errors: true

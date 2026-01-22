@@ -1,0 +1,106 @@
+---
+- name: Mettre a jour le cache APT
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Installer les dependances systeme
+  apt:
+    name:
+      - curl
+      - wget
+      - git
+      - build-essential
+      - rsync
+      - nginx
+      - apache2-utils
+      - python3
+      - python3-yaml
+      - libcap2-bin
+      - ca-certificates
+      - openssh-client
+      - redis-server
+    state: present
+
+- name: Definir les variables d'architecture
+  set_fact:
+    go_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv6l' }}"
+
+- name: Verifier la presence de Go
+  command: /usr/local/go/bin/go version
+  register: go_installed
+  ignore_errors: true
+  changed_when: false
+
+- name: Telecharger Go
+  get_url:
+    url: "https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    dest: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    mode: '0644'
+  when: go_installed.rc != 0
+
+- name: Installer Go
+  unarchive:
+    src: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+    dest: /usr/local
+    remote_src: true
+  when: go_installed.rc != 0
+
+- name: Ajouter Go au PATH systeme
+  lineinfile:
+    path: /etc/profile
+    line: 'export PATH=$PATH:/usr/local/go/bin'
+    state: present
+
+- name: Telecharger le script Node.js
+  get_url:
+    url: "{{ node_setup_script }}"
+    dest: /tmp/nodesource_setup.sh
+    mode: '0755'
+
+- name: Executer le script Node.js
+  command: bash /tmp/nodesource_setup.sh
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+
+- name: Installer Node.js
+  apt:
+    name: nodejs
+    state: present
+
+- name: Creer l'utilisateur de service
+  user:
+    name: "{{ service_user }}"
+    shell: /bin/bash
+    create_home: true
+    home: "/home/{{ service_user }}"
+
+- name: Creer les repertoires d'installation
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop:
+    - "{{ install_dir }}"
+    - "{{ backend_dir }}"
+    - "{{ frontend_dir }}"
+    - "{{ install_dir }}/logs"
+
+- name: Creer le repertoire de logs backend
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop:
+    - /var/logs/Essensys
+    - /var/logs/Essensys/backend
+
+- name: S'assurer que Redis est actif
+  service:
+    name: redis-server
+    state: started
+    enabled: true

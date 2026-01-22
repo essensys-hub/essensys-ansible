@@ -1,0 +1,15 @@
+---
+- name: Copier le script de monitoring
+  copy:
+    src: monitor.py
+    dest: "{{ install_dir }}/monitor.py"
+    mode: '0755'
+
+- name: Copier le setup du monitoring
+  copy:
+    src: setup_monitor.sh
+    dest: "{{ install_dir }}/setup_monitor.sh"
+    mode: '0755'
+
+- name: Executer le setup du monitoring
+  command: "{{ install_dir }}/setup_monitor.sh"
