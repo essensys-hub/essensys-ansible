@@ -3,20 +3,30 @@
   set_fact:
     adguard_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv7' }}"
 
+- name: Verifier resolved.conf
+  stat:
+    path: /etc/systemd/resolved.conf
+  register: resolved_conf
+
 - name: Desactiver DNSStubListener pour systemd-resolved
   lineinfile:
     path: /etc/systemd/resolved.conf
     regexp: '^#?DNSStubListener='
     line: 'DNSStubListener=no'
   notify: Restart resolved
-  ignore_errors: true
+  when: resolved_conf.stat.exists
+
+- name: Verifier resolv.conf source
+  stat:
+    path: /run/systemd/resolve/resolv.conf
+  register: resolv_source
 
 - name: Verifier resolv.conf
   file:
     src: /run/systemd/resolve/resolv.conf
     dest: /etc/resolv.conf
     state: link
-  ignore_errors: true
+  when: resolv_source.stat.exists
 
 - name: Installer AdGuard Home
   unarchive:
