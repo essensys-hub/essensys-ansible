@@ -1,1 +1,0 @@
-ansible-playbook -i inventory quick-deploy.yml
