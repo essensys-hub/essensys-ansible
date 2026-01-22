@@ -27,24 +27,23 @@
     go_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv6l' }}"
 
 - name: Verifier la presence de Go
-  command: /usr/local/go/bin/go version
-  register: go_installed
-  ignore_errors: true
-  changed_when: false
+  stat:
+    path: /usr/local/go/bin/go
+  register: go_binary
 
 - name: Telecharger Go
   get_url:
     url: "https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
     dest: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
     mode: '0644'
-  when: go_installed.rc != 0
+  when: not go_binary.stat.exists
 
 - name: Installer Go
   unarchive:
     src: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
     dest: /usr/local
     remote_src: true
-  when: go_installed.rc != 0
+  when: not go_binary.stat.exists
 
 - name: Ajouter Go au PATH systeme
   lineinfile:
