@@ -36,7 +36,12 @@ fi
 
 # Demander le nom d'utilisateur
 if [ -z "$1" ]; then
-    read -p "Nom d'utilisateur: " USERNAME
+    if [ -r /dev/tty ]; then
+        read -r -p "Nom d'utilisateur: " USERNAME < /dev/tty
+    else
+        log_error "Aucun TTY disponible pour saisir le nom d'utilisateur"
+        exit 1
+    fi
 else
     USERNAME="$1"
 fi
@@ -53,8 +58,13 @@ HTPASSWD_FILE="/etc/traefik/users.htpasswd"
 mkdir -p "$(dirname "$HTPASSWD_FILE")"
 
 # Demander le mot de passe (sans l'afficher)
-read -sp "Mot de passe: " PASSWORD
-echo ""
+if [ -r /dev/tty ]; then
+    read -r -s -p "Mot de passe: " PASSWORD < /dev/tty
+    echo ""
+else
+    log_error "Aucun TTY disponible pour saisir le mot de passe"
+    exit 1
+fi
 
 if [ -z "$PASSWORD" ]; then
     log_error "Le mot de passe ne peut pas etre vide"
