@@ -15,7 +15,8 @@
   service:
     name: essensys-backend
     state: stopped
-  ignore_errors: true
+  failed_when: false
+  changed_when: false
 
 - name: Copier le backend vers le repertoire d'installation
   command: rsync -a --delete "{{ backend_repo_dir }}/" "{{ backend_dir }}/"
