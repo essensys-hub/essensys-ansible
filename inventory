@@ -1,2 +1,5 @@
 [essensys]
 test.essensys.fr ansible_user=ubuntu
+
+[raspberrypi]
+localhost ansible_connection=local
