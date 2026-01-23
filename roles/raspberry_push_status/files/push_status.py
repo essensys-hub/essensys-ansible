@@ -7,8 +7,8 @@ import os
 import sys
 
 # Configuration
-#GATEWAY_URL = "http://gateway.essensys.fr/api/infos" # User requested HTTP for now
-GATEWAY_URL = "https://gateway.essensys.fr/api/infos"
+GATEWAY_URL = "http://gateway.essensys.fr/api/infos" # User requested HTTP for now
+#GATEWAY_URL = "https://gateway.essensys.fr/api/infos"
 
 SERVICES = [
     "essensys-backend", 
