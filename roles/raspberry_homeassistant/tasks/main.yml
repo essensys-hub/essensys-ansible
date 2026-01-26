@@ -54,6 +54,24 @@
     create: yes
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
+- name: Ensure configuration.yaml exists
+  file:
+    path: "{{ homeassistant_dir }}/config/configuration.yaml"
+    state: touch
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+
+- name: Add Essensys configuration to configuration.yaml
+  blockinfile:
+    path: "{{ homeassistant_dir }}/config/configuration.yaml"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK ESSENSYS"
+    block: |
+      essensys:
+        backend_url: http://localhost:7070
+    create: yes
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
 
 - name: Deploy docker-compose.yml
   template:
