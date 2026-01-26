@@ -1,6 +1,6 @@
 ---
 - name: Check Docker installation
-  command: docker --version
+  shell: command -v docker
   register: docker_check
   ignore_errors: yes
   changed_when: false
