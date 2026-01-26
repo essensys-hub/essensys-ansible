@@ -12,7 +12,8 @@ import re
 LOG_FILES = [
     ("/var/logs/Essensys/backend/console.out.log", "Backend"),
     ("/var/log/traefik/traefik-error.log", "Traefik"),
-    ("/var/log/nginx/essensys-api-error.log", "Nginx")
+    ("/var/log/nginx/essensys-api-error.log", "Nginx"),
+    ("/opt/essensys/homeassistant/config/home-assistant.log", "H.Asst")
 ]
 
 SERVICES = [
@@ -21,7 +22,8 @@ SERVICES = [
     {"name": "Traefik", "service": "traefik", "key": "t"},
     {"name": "AdGuard", "service": "AdGuardHome", "key": "a"},
     {"name": "Blocker", "service": "traefik-block-service", "key": "k"},
-    {"name": "Push", "service": "essensys-push.timer", "key": "p"}
+    {"name": "Push", "service": "essensys-push.timer", "key": "p"},
+    {"name": "HomeAss", "service": "homeassistant", "key": "h"}
 ]
 REFRESH_RATE = 1.0  # seconds
 
@@ -32,7 +34,8 @@ class SystemMonitor:
         self.log_buffers = {
             "Backend": deque(maxlen=200),
             "Traefik": deque(maxlen=200),
-            "Nginx": deque(maxlen=200)
+            "Nginx": deque(maxlen=200),
+            "H.Asst": deque(maxlen=200)
         }
         self.log_lock = threading.Lock()
         self.running = True
@@ -430,7 +433,7 @@ def main(stdscr):
             if time.time() - last_restart_time < 3:
                 stdscr.addstr(h-1, 0, last_restart_msg, curses.color_pair(4) | curses.A_REVERSE)
             else:
-                cmds = "1:Bk 2:Tr 3:Ng 0:All | q:Logoff | r:Reboot | b/f/t/a/k/p:Rst Svc | c:Conf"
+                cmds = "1:Bk 2:Tr 3:Ng 0:All | q:Off | r:Reb | b/f/t/a/k/p/h:Rst Svc | c:Conf"
                 stdscr.addstr(h-1, 0, cmds[:w-1], curses.color_pair(3))
 
             # --- Input Handling ---
@@ -479,6 +482,10 @@ def main(stdscr):
             elif key == ord('p'):
                 monitor.restart_service("essensys-push.timer")
                 last_restart_msg = "Restarting Push Timer..."
+                last_restart_time = time.time()
+            elif key == ord('h'):
+                monitor.restart_service("homeassistant")
+                last_restart_msg = "Restarting Home Asst..."
                 last_restart_time = time.time()
 
             stdscr.refresh()

@@ -10,8 +10,8 @@
     frontend_dir: "{{ install_dir }}/frontend"
     backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
     frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
-    backend_version: V.1.1.0
-    frontend_version: V.1.1.0
+    backend_version: V.1.2.0
+    frontend_version: V.1.2.0
     acme_email: admin@acme.com
     use_staging: false
     wan_domain_default: essensys.acme.com
@@ -29,3 +29,4 @@
     - raspberry_monitor
     - raspberry_logrotate
     - raspberry_push_status
+    - raspberry_homeassistant

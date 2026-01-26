@@ -1,0 +1,79 @@
+---
+- name: Check Docker installation
+  command: docker --version
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install Docker
+  shell: curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+  args:
+    chdir: /tmp
+    creates: /usr/bin/docker
+  when: docker_check.failed
+
+- name: Add user to docker group
+  user:
+    name: "{{ service_user }}"
+    groups: docker
+    append: yes
+
+- name: Create Home Assistant directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop:
+    - "{{ homeassistant_dir }}"
+    - "{{ homeassistant_dir }}/config"
+    - "{{ homeassistant_dir }}/config/custom_components"
+
+- name: Clone Essensys Home Assistant Repo
+  git:
+    repo: "{{ homeassistant_repo }}"
+    dest: "/home/{{ service_user }}/essensys-homeassitant"
+    version: "{{ homeassistant_version | default('main') }}"
+    force: yes
+  become_user: "{{ service_user }}"
+
+- name: Install Essensys Component
+  copy:
+    src: "/home/{{ service_user }}/essensys-homeassitant/custom_components/essensys"
+    dest: "{{ homeassistant_dir }}/config/custom_components/"
+    remote_src: yes
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Configure Essensys Backend URL in secrets.yaml (optional helper)
+  lineinfile:
+    path: "{{ homeassistant_dir }}/config/secrets.yaml"
+    line: "essensys_backend_url: http://localhost:7070"
+    create: yes
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+
+- name: Deploy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ homeassistant_dir }}/docker-compose.yml"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+
+- name: Install Home Assistant Systemd Service
+  template:
+    src: homeassistant.service.j2
+    dest: /etc/systemd/system/homeassistant.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and Start Home Assistant
+  systemd:
+    name: homeassistant
+    state: started
+    enabled: yes
+    daemon_reload: yes
