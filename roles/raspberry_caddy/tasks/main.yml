@@ -88,10 +88,29 @@
     group: root
   changed_when: false
 
-- name: Generate initial Caddy configuration
-  shell: |
-    /usr/local/bin/essensys-auth status > /dev/null 2>&1 || true
-  changed_when: false
+- name: Check if Caddyfile exists
+  stat:
+    path: /etc/caddy/Caddyfile
+  register: caddyfile_stat
+
+- name: Generate initial Caddy configuration (noauth for first install)
+  template:
+    src: Caddyfile.noauth.j2
+    dest: /etc/caddy/Caddyfile
+    mode: '0644'
+  when: not caddyfile_stat.stat.exists or caddyfile_stat.stat.size == 0
+
+- name: Stop nginx to free port 80/443
+  systemd:
+    name: nginx
+    state: stopped
+  ignore_errors: yes
+
+- name: Stop traefik to free port 80/443
+  systemd:
+    name: traefik
+    state: stopped
+  ignore_errors: yes
 
 - name: Enable and start Caddy service
   systemd:
