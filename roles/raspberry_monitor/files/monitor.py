@@ -11,17 +11,14 @@ import re
 # Configuration
 LOG_FILES = [
     ("/var/logs/Essensys/backend/console.out.log", "Backend"),
-    ("/var/log/traefik/traefik-error.log", "Traefik"),
-    ("/var/log/nginx/essensys-api-error.log", "Nginx"),
+    ("/var/log/caddy/access.log", "Caddy"),
     ("/opt/essensys/homeassistant/config/home-assistant.log", "H.Asst")
 ]
 
 SERVICES = [
     {"name": "Backend", "service": "essensys-backend", "key": "b"},
-    {"name": "Frontend", "service": "nginx", "key": "f"},
-    {"name": "Traefik", "service": "traefik", "key": "t"},
+    {"name": "Caddy", "service": "caddy", "key": "c"},
     {"name": "AdGuard", "service": "AdGuardHome", "key": "a"},
-    {"name": "Blocker", "service": "traefik-block-service", "key": "k"},
     {"name": "Push", "service": "essensys-push.timer", "key": "p"},
     {"name": "HomeAss", "service": "homeassistant", "key": "h"}
 ]
@@ -33,8 +30,7 @@ class SystemMonitor:
         # Separate buffers for each source
         self.log_buffers = {
             "Backend": deque(maxlen=200),
-            "Traefik": deque(maxlen=200),
-            "Nginx": deque(maxlen=200),
+            "Caddy": deque(maxlen=200),
             "H.Asst": deque(maxlen=200)
         }
         self.log_lock = threading.Lock()
@@ -330,9 +326,9 @@ def main(stdscr):
     last_restart_msg = ""
     last_restart_time = 0
 
-    # View State: 0=All, 1=Backend, 2=Traefik, 3=Nginx
+    # View State: 0=All, 1=Backend, 2=Caddy
     view_mode = 0 
-    VIEW_NAMES = {0: "Overview", 1: "Backend", 2: "Traefik", 3: "Nginx"}
+    VIEW_NAMES = {0: "Overview", 1: "Backend", 2: "Caddy"}
 
     try:
         while True:
@@ -409,31 +405,27 @@ def main(stdscr):
             if log_area_h > 0:
                 with monitor.log_lock:
                     if view_mode == 0:
-                        if w > 120:
-                            # 3 Columns
-                            col_w = w // 3
+                        if w > 100:
+                            # 2 Columns
+                            col_w = w // 2
                             draw_box(stdscr, log_start_y, 0, log_area_h, col_w-1, "Backend", monitor.log_buffers["Backend"], curses.color_pair(5))
-                            draw_box(stdscr, log_start_y, col_w, log_area_h, col_w-1, "Traefik", monitor.log_buffers["Traefik"], curses.color_pair(5))
-                            draw_box(stdscr, log_start_y, col_w*2, log_area_h, col_w-1, "Nginx", monitor.log_buffers["Nginx"], curses.color_pair(5))
+                            draw_box(stdscr, log_start_y, col_w, log_area_h, col_w-1, "Caddy", monitor.log_buffers["Caddy"], curses.color_pair(5))
                         else:
-                            # 3 Stacked Rows
-                            row_h = log_area_h // 3
+                            # 2 Stacked Rows
+                            row_h = log_area_h // 2
                             draw_box(stdscr, log_start_y, 0, row_h, w, "Backend", monitor.log_buffers["Backend"], curses.color_pair(5))
-                            draw_box(stdscr, log_start_y + row_h, 0, row_h, w, "Traefik", monitor.log_buffers["Traefik"], curses.color_pair(5))
-                            draw_box(stdscr, log_start_y + row_h*2, 0, log_area_h - row_h*2, w, "Nginx", monitor.log_buffers["Nginx"], curses.color_pair(5))
+                            draw_box(stdscr, log_start_y + row_h, 0, log_area_h - row_h, w, "Caddy", monitor.log_buffers["Caddy"], curses.color_pair(5))
                     
                     elif view_mode == 1:
                         draw_box(stdscr, log_start_y, 0, log_area_h, w, "Backend (Maximized)", monitor.log_buffers["Backend"], curses.color_pair(5))
                     elif view_mode == 2:
-                        draw_box(stdscr, log_start_y, 0, log_area_h, w, "Traefik (Maximized)", monitor.log_buffers["Traefik"], curses.color_pair(5))
-                    elif view_mode == 3:
-                        draw_box(stdscr, log_start_y, 0, log_area_h, w, "Nginx (Maximized)", monitor.log_buffers["Nginx"], curses.color_pair(5))
+                        draw_box(stdscr, log_start_y, 0, log_area_h, w, "Caddy (Maximized)", monitor.log_buffers["Caddy"], curses.color_pair(5))
 
             # --- Status Bar ---
             if time.time() - last_restart_time < 3:
                 stdscr.addstr(h-1, 0, last_restart_msg, curses.color_pair(4) | curses.A_REVERSE)
             else:
-                cmds = "1:Bk 2:Tr 3:Ng 0:All | q:Off | r:Reb | b/f/t/a/k/p/h:Rst Svc | c:Conf"
+                cmds = "1:Bk 2:Cd 0:All | q:Off | r:Reb | b/c/a/p/h:Rst Svc | f:Conf"
                 stdscr.addstr(h-1, 0, cmds[:w-1], curses.color_pair(3))
 
             # --- Input Handling ---
@@ -447,11 +439,9 @@ def main(stdscr):
                 view_mode = 1
             elif key == ord('2'):
                 view_mode = 2
-            elif key == ord('3'):
-                view_mode = 3
             elif key == ord('u'):
                 monitor.last_service_check = 0 # Force refresh on next loop
-            elif key == ord('c'):
+            elif key == ord('f'):
                 monitor.open_raspi_config(stdscr)
             elif key == ord('l'):
                 monitor.prompt_login(stdscr)
@@ -463,21 +453,13 @@ def main(stdscr):
                 monitor.restart_service("essensys-backend")
                 last_restart_msg = "Restarting Backend..."
                 last_restart_time = time.time()
-            elif key == ord('f'):
-                monitor.restart_service("nginx")
-                last_restart_msg = "Restarting Nginx..."
-                last_restart_time = time.time()
-            elif key == ord('t'):
-                monitor.restart_service("traefik")
-                last_restart_msg = "Restarting Traefik..."
+            elif key == ord('c'):
+                monitor.restart_service("caddy")
+                last_restart_msg = "Restarting Caddy..."
                 last_restart_time = time.time()
             elif key == ord('a'):
                 monitor.restart_service("AdGuardHome")
                 last_restart_msg = "Restarting AdGuard..."
-                last_restart_time = time.time()
-            elif key == ord('k'):
-                monitor.restart_service("traefik-block-service")
-                last_restart_msg = "Restarting Blocker..."
                 last_restart_time = time.time()
             elif key == ord('p'):
                 monitor.restart_service("essensys-push.timer")
