@@ -100,16 +100,33 @@
     mode: '0644'
   when: not caddyfile_stat.stat.exists or caddyfile_stat.stat.size == 0
 
-- name: Stop nginx to free port 80/443
+- name: Stop and disable nginx to free port 80/443
   systemd:
     name: nginx
     state: stopped
+    enabled: no
   ignore_errors: yes
 
-- name: Stop traefik to free port 80/443
+- name: Stop and disable traefik to free port 80/443
   systemd:
     name: traefik
     state: stopped
+    enabled: no
+  ignore_errors: yes
+
+- name: Kill any process on port 80
+  shell: fuser -k 80/tcp || true
+  ignore_errors: yes
+
+- name: Kill any process on port 443
+  shell: fuser -k 443/tcp || true
+  ignore_errors: yes
+
+- name: Wait for ports to be released
+  wait_for:
+    port: 80
+    state: stopped
+    timeout: 10
   ignore_errors: yes
 
 - name: Enable and start Caddy service
