@@ -1,4 +1,5 @@
-# Configuration Caddy avec authentification obligatoire partout
+# Configuration Caddy - Auth obligatoire partout (LAN + WAN)
+# Réplique la config Nginx pour compatibilité client legacy
 # Généré par Ansible - Ne pas modifier manuellement
 
 {
@@ -9,34 +10,103 @@
     }
 }
 
+# Port 80 - LAN uniquement, redirige vers HTTPS
 :80 {
-    redir https://{host}{uri} permanent
+    # Bloquer le WAN sur port 80
+    @wan_on_80 {
+        not remote_ip 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 ::1 fd00::/8
+    }
+    respond @wan_on_80 "Forbidden - LAN only" 403
+
+    # LAN - Servir directement (pour compatibilité client legacy)
+    # Health check (public)
+    handle /health {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    # Debug interface
+    handle /debug* {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    # Table ref
+    handle /table_ref {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    # API Backend avec auth
+    handle /api/* {
+        basicauth {
+            import /etc/essensys/auth/users.htpasswd
+        }
+        reverse_proxy localhost:{{ essensys_backend_port }} {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up Connection "close"
+            flush_interval -1
+        }
+    }
+
+    # Frontend avec auth
+    handle {
+        basicauth {
+            import /etc/essensys/auth/users.htpasswd
+        }
+        root * {{ essensys_frontend_dir }}/dist
+        try_files {path} /index.html
+        file_server
+    }
 }
 
+# Port 443 - HTTPS avec auth obligatoire
 :443 {
-    tls {{ essensys_tls_mode }}
+    tls internal
 
-    basicauth * {
+    # Health check (public)
+    handle /health {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    # Debug interface
+    handle /debug* {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    # Table ref
+    handle /table_ref {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    # Tout le reste avec auth obligatoire
+    basicauth {
         import /etc/essensys/auth/users.htpasswd
     }
 
-    @health path /health /api/health
-    handle @health {
-        reverse_proxy localhost:{{ essensys_backend_port }}
+    # API Backend
+    handle /api/* {
+        reverse_proxy localhost:{{ essensys_backend_port }} {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up Connection "close"
+            flush_interval -1
+        }
     }
 
-    @api path /api/*
-    handle @api {
-        reverse_proxy localhost:{{ essensys_backend_port }}
-    }
-
+    # Frontend
     handle {
-        reverse_proxy localhost:{{ essensys_frontend_port }}
+        root * {{ essensys_frontend_dir }}/dist
+        try_files {path} /index.html
+        file_server
     }
 
+    # Headers de sécurité
     header {
         X-Content-Type-Options nosniff
-        X-Frame-Options DENY
+        X-Frame-Options SAMEORIGIN
         Referrer-Policy strict-origin-when-cross-origin
         -Server
     }
