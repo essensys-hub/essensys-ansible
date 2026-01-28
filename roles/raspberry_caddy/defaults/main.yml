@@ -1,0 +1,14 @@
+---
+# Variables par défaut pour le rôle raspberry_caddy
+
+# Authentification
+essensys_auth_enabled: true
+essensys_lan_noauth: false
+essensys_auth_realm: "Essensys"
+
+# Ports des services backend
+essensys_backend_port: 8080
+essensys_frontend_port: 3000
+
+# Certificat (internal = auto-signé)
+essensys_tls_mode: "internal"

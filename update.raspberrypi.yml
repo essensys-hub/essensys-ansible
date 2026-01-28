@@ -10,8 +10,8 @@
     frontend_dir: "{{ install_dir }}/frontend"
     backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
     frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
-    backend_version: V.1.1.0
-    frontend_version: V.1.0.0
+    backend_version: V.1.2.1
+    frontend_version: V.1.2.1
     acme_email: admin@acme.com
     use_staging: false
     wan_domain_default: essensys.acme.com
@@ -22,6 +22,7 @@
   roles:
     - raspberry_backend
     - raspberry_frontend
+    - raspberry_caddy
     - raspberry_nginx
     - raspberry_traefik
     - raspberry_push_status

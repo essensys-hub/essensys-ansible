@@ -1,0 +1,40 @@
+# Configuration Caddy SANS authentification
+# ⚠️ ATTENTION: Accès libre à tous - utilisez uniquement en développement
+# Généré par Ansible - Ne pas modifier manuellement
+
+{
+    admin off
+    log {
+        output file /var/log/caddy/access.log
+        format console
+    }
+}
+
+:80 {
+    redir https://{host}{uri} permanent
+}
+
+:443 {
+    tls {{ essensys_tls_mode }}
+
+    @health path /health /api/health
+    handle @health {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    @api path /api/*
+    handle @api {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    handle {
+        reverse_proxy localhost:{{ essensys_frontend_port }}
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+}

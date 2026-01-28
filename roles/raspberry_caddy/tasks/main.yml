@@ -1,0 +1,101 @@
+---
+# Rôle raspberry_caddy - Installation et configuration de Caddy avec authentification
+
+- name: Install required packages for Caddy repository
+  apt:
+    name:
+      - debian-keyring
+      - debian-archive-keyring
+      - apt-transport-https
+      - curl
+    state: present
+    update_cache: yes
+
+- name: Add Caddy GPG key
+  shell: |
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+- name: Add Caddy repository
+  shell: |
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+  args:
+    creates: /etc/apt/sources.list.d/caddy-stable.list
+
+- name: Install Caddy
+  apt:
+    name: caddy
+    state: present
+    update_cache: yes
+
+- name: Create auth directory
+  file:
+    path: /etc/essensys/auth
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+
+- name: Create Caddy templates directory
+  file:
+    path: /opt/essensys-caddy
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Copy Caddy templates
+  template:
+    src: "{{ item }}"
+    dest: "/opt/essensys-caddy/{{ item | basename | regex_replace('\\.j2$', '') }}"
+    mode: '0644'
+  with_fileglob:
+    - templates/Caddyfile.*.j2
+  notify: reload caddy
+
+- name: Copy essensys-auth script
+  copy:
+    src: essensys-auth
+    dest: /usr/local/bin/essensys-auth
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create Caddy log directory
+  file:
+    path: /var/log/caddy
+    state: directory
+    mode: '0755'
+    owner: caddy
+    group: caddy
+
+- name: Create auth config.env if not exists
+  template:
+    src: config.env.j2
+    dest: /etc/essensys/auth/config.env
+    mode: '0600'
+    owner: root
+    group: root
+    force: no  # Don't overwrite existing config
+
+- name: Create htpasswd file if not exists
+  file:
+    path: /etc/essensys/auth/users.htpasswd
+    state: touch
+    mode: '0600'
+    owner: root
+    group: root
+  changed_when: false
+
+- name: Generate initial Caddy configuration
+  shell: |
+    /usr/local/bin/essensys-auth status > /dev/null 2>&1 || true
+  changed_when: false
+
+- name: Enable and start Caddy service
+  systemd:
+    name: caddy
+    enabled: yes
+    state: started
+    daemon_reload: yes

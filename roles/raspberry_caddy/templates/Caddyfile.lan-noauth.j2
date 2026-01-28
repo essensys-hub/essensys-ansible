@@ -1,0 +1,65 @@
+# Configuration Caddy avec authentification WAN uniquement
+# LAN (RFC1918 + loopback) sans authentification
+# Généré par Ansible - Ne pas modifier manuellement
+
+{
+    admin off
+    log {
+        output file /var/log/caddy/access.log
+        format console
+    }
+}
+
+:80 {
+    redir https://{host}{uri} permanent
+}
+
+:443 {
+    tls {{ essensys_tls_mode }}
+
+    @private_network {
+        remote_ip 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 ::1 fd00::/8
+    }
+    
+    @public_network {
+        not remote_ip 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 ::1 fd00::/8
+    }
+
+    @health path /health /api/health
+    handle @health {
+        reverse_proxy localhost:{{ essensys_backend_port }}
+    }
+
+    handle @public_network {
+        basicauth * {
+            import /etc/essensys/auth/users.htpasswd
+        }
+        
+        @api path /api/*
+        handle @api {
+            reverse_proxy localhost:{{ essensys_backend_port }}
+        }
+
+        handle {
+            reverse_proxy localhost:{{ essensys_frontend_port }}
+        }
+    }
+
+    handle @private_network {
+        @api path /api/*
+        handle @api {
+            reverse_proxy localhost:{{ essensys_backend_port }}
+        }
+
+        handle {
+            reverse_proxy localhost:{{ essensys_frontend_port }}
+        }
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+}
