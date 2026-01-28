@@ -52,7 +52,7 @@
     mode: '0644'
   with_fileglob:
     - templates/Caddyfile.*.j2
-  notify: reload caddy
+  notify: restart caddy
 
 - name: Copy essensys-auth script
   copy:
@@ -88,17 +88,12 @@
     group: root
   changed_when: false
 
-- name: Check if Caddyfile exists
-  stat:
-    path: /etc/caddy/Caddyfile
-  register: caddyfile_stat
-
-- name: Generate initial Caddy configuration (noauth for first install)
+- name: Generate Caddy configuration (noauth by default)
   template:
     src: Caddyfile.noauth.j2
     dest: /etc/caddy/Caddyfile
     mode: '0644'
-  when: not caddyfile_stat.stat.exists or caddyfile_stat.stat.size == 0
+  notify: restart caddy
 
 - name: Stop and disable nginx to free port 80/443
   systemd:
