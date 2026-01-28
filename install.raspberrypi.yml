@@ -24,8 +24,9 @@
     - raspberry_backend
     - raspberry_frontend
     - raspberry_caddy
-    - raspberry_nginx
-    - raspberry_traefik
+    # nginx et traefik remplacés par Caddy dans V.1.2.1
+    # - raspberry_nginx
+    # - raspberry_traefik
     - raspberry_adguard
     - raspberry_monitor
     - raspberry_logrotate
