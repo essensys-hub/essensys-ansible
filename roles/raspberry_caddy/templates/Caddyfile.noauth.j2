@@ -15,6 +15,12 @@
 
 # Port 80 - LAN uniquement
 :80 {
+    # Log d'accès HTTP
+    log {
+        output file /var/log/caddy/http-access.log
+        format json
+    }
+
     # Bloquer le WAN sur port 80
     @wan_on_80 {
         not remote_ip 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 ::1 fd00::/8
@@ -64,6 +70,12 @@
 # Port 443 - HTTPS sans auth
 :443 {
     tls internal
+
+    # Log d'accès HTTP
+    log {
+        output file /var/log/caddy/https-access.log
+        format json
+    }
 
     # Health check
     handle /health {
