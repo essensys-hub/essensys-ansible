@@ -11,13 +11,15 @@ import re
 # Configuration
 LOG_FILES = [
     ("/var/logs/Essensys/backend/console.out.log", "Backend"),
-    ("/var/log/caddy/access.log", "Caddy"),
+    ("/var/log/nginx/essensys-access.log", "Nginx"),
+    ("/opt/essensys/traefik/traefik.log", "Traefik"),
     ("/opt/essensys/homeassistant/config/home-assistant.log", "H.Asst")
 ]
 
 SERVICES = [
     {"name": "Backend", "service": "essensys-backend", "key": "b"},
-    {"name": "Caddy", "service": "caddy", "key": "c"},
+    {"name": "Nginx", "service": "nginx", "key": "n"},
+    {"name": "Traefik", "service": "traefik", "key": "t"},
     {"name": "AdGuard", "service": "AdGuardHome", "key": "a"},
     {"name": "Push", "service": "essensys-push.timer", "key": "p"},
     {"name": "HomeAss", "service": "homeassistant", "key": "h"}
@@ -453,9 +455,13 @@ def main(stdscr):
                 monitor.restart_service("essensys-backend")
                 last_restart_msg = "Restarting Backend..."
                 last_restart_time = time.time()
-            elif key == ord('c'):
-                monitor.restart_service("caddy")
-                last_restart_msg = "Restarting Caddy..."
+            elif key == ord('n'):
+                monitor.restart_service("nginx")
+                last_restart_msg = "Restarting Nginx..."
+                last_restart_time = time.time()
+            elif key == ord('t'):
+                monitor.restart_service("traefik")
+                last_restart_msg = "Restarting Traefik..."
                 last_restart_time = time.time()
             elif key == ord('a'):
                 monitor.restart_service("AdGuardHome")

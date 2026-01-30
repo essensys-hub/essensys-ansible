@@ -22,8 +22,10 @@
   roles:
     - raspberry_backend
     - raspberry_frontend
-    - raspberry_caddy
-    # nginx et traefik remplacés par Caddy dans V.1.2.1
-    # - raspberry_nginx
-    # - raspberry_traefik
+    # Nginx pour port 80 (client legacy - tolérant aux requêtes HTTP non-standard)
+    - raspberry_nginx
+    # Traefik pour port 443 avec authentification
+    - raspberry_traefik
+    # Caddy désactivé (rejette les requêtes HTTP non-standard du client legacy)
+    # - raspberry_caddy
     - raspberry_push_status

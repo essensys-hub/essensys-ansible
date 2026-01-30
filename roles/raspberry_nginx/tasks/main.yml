@@ -1,4 +1,29 @@
 ---
+# Arrêter Caddy s'il est actif (pour libérer les ports 80/443)
+- name: Stop and disable Caddy service
+  systemd:
+    name: caddy
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+- name: Kill any process on port 80
+  shell: fuser -k 80/tcp || true
+  ignore_errors: yes
+
+- name: Wait for port 80 to be released
+  wait_for:
+    port: 80
+    state: stopped
+    timeout: 10
+  ignore_errors: yes
+
+- name: Ensure nginx is installed
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
 - name: Copier le format de log nginx
   copy:
     src: essensys-api-log-format.conf
@@ -50,6 +75,12 @@
 - name: Tester la configuration nginx
   command: nginx -t
   changed_when: false
+
+- name: Enable and start nginx
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started
 
 - name: Recharger nginx
   service:
