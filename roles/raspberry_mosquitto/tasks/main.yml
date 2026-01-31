@@ -39,12 +39,9 @@
 
 - name: Generate Mosquitto password file
   shell: |
-    echo "{{ mosquitto_user }}:{{ mosquitto_password }}" | mosquitto_passwd -c -b /tmp/mosquitto_passwd.tmp {{ mosquitto_user }} {{ mosquitto_password }}
-    mv /tmp/mosquitto_passwd.tmp {{ mosquitto_dir }}/config/passwd
+    /usr/bin/mosquitto_passwd -c -b {{ mosquitto_dir }}/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}
   args:
     creates: "{{ mosquitto_dir }}/config/passwd"
-  become: no
-  become_user: "{{ service_user }}"
 
 - name: Set ownership of password file
   file:
