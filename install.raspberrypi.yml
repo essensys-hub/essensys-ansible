@@ -30,8 +30,8 @@
     # Caddy désactivé (rejette les requêtes HTTP non-standard du client legacy)
     # - raspberry_caddy
     - raspberry_adguard
-    - raspberry_monitor
     - raspberry_logrotate
     - raspberry_push_status
     - raspberry_mosquitto
+    - raspberry_monitor
     - raspberry_homeassistant

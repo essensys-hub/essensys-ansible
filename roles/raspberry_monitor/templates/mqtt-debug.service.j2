@@ -1,0 +1,18 @@
+[Unit]
+Description=MQTT Debug Web Interface
+After=network.target mosquitto.service
+Requires=mosquitto.service
+
+[Service]
+Type=simple
+User={{ service_user }}
+Group={{ service_user }}
+WorkingDirectory={{ install_dir }}
+ExecStart=/usr/bin/python3 {{ install_dir }}/mqtt_debug.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

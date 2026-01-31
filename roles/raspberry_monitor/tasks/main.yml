@@ -1,4 +1,15 @@
 ---
+- name: Installer les dépendances Python pour MQTT Debug
+  pip:
+    name:
+      - flask==3.0.0
+      - flask-socketio==5.3.6
+      - paho-mqtt==1.6.1
+      - python-socketio==5.10.0
+      - eventlet==0.33.3
+    state: present
+    executable: pip3
+
 - name: Copier le script de monitoring
   copy:
     src: monitor.py
@@ -13,3 +24,40 @@
 
 - name: Executer le setup du monitoring
   command: "{{ install_dir }}/setup_monitor.sh"
+
+- name: Copier l'interface web MQTT Debug
+  copy:
+    src: mqtt_debug.py
+    dest: "{{ install_dir }}/mqtt_debug.py"
+    mode: '0755'
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+
+- name: Créer le fichier de configuration MQTT Debug
+  copy:
+    content: |
+      {
+        "broker": "localhost",
+        "port": 1883,
+        "username": "{{ mosquitto_user }}",
+        "password": "{{ mosquitto_password }}"
+      }
+    dest: "{{ install_dir }}/mqtt_debug_config.json"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'
+
+- name: Installer le service systemd MQTT Debug
+  template:
+    src: mqtt-debug.service.j2
+    dest: /etc/systemd/system/mqtt-debug.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Activer et démarrer le service MQTT Debug
+  systemd:
+    name: mqtt-debug
+    state: started
+    enabled: yes
+    daemon_reload: yes
