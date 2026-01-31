@@ -33,4 +33,5 @@
     - raspberry_monitor
     - raspberry_logrotate
     - raspberry_push_status
+    - raspberry_mosquitto
     - raspberry_homeassistant

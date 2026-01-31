@@ -73,6 +73,22 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
 
+- name: Add MQTT configuration to configuration.yaml
+  blockinfile:
+    path: "{{ homeassistant_dir }}/config/configuration.yaml"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK MQTT"
+    block: |
+      mqtt:
+        broker: localhost
+        port: 1883
+        username: "{{ mosquitto_user }}"
+        password: "{{ mosquitto_password }}"
+        discovery: true
+        discovery_prefix: homeassistant
+    create: yes
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+
 - name: Deploy docker-compose.yml
   template:
     src: docker-compose.yml.j2

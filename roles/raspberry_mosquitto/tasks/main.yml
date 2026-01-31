@@ -1,0 +1,85 @@
+---
+- name: Check Docker installation
+  shell: command -v docker
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install Docker
+  shell: curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+  args:
+    chdir: /tmp
+    creates: /usr/bin/docker
+  when: docker_check.failed
+
+- name: Add user to docker group
+  user:
+    name: "{{ service_user }}"
+    groups: docker
+    append: yes
+
+- name: Create Mosquitto directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop:
+    - "{{ mosquitto_dir }}"
+    - "{{ mosquitto_dir }}/config"
+    - "{{ mosquitto_dir }}/data"
+    - "{{ mosquitto_dir }}/log"
+
+- name: Install mosquitto-clients for password generation
+  apt:
+    name: mosquitto-clients
+    state: present
+    update_cache: yes
+
+- name: Generate Mosquitto password file
+  shell: |
+    echo "{{ mosquitto_user }}:{{ mosquitto_password }}" | mosquitto_passwd -c -b /tmp/mosquitto_passwd.tmp {{ mosquitto_user }} {{ mosquitto_password }}
+    mv /tmp/mosquitto_passwd.tmp {{ mosquitto_dir }}/config/passwd
+  args:
+    creates: "{{ mosquitto_dir }}/config/passwd"
+  become: no
+  become_user: "{{ service_user }}"
+
+- name: Set ownership of password file
+  file:
+    path: "{{ mosquitto_dir }}/config/passwd"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'
+
+- name: Deploy mosquitto.conf
+  template:
+    src: mosquitto.conf.j2
+    dest: "{{ mosquitto_dir }}/config/mosquitto.conf"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+
+- name: Deploy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ mosquitto_dir }}/docker-compose.yml"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+
+- name: Install Mosquitto Systemd Service
+  template:
+    src: mosquitto.service.j2
+    dest: /etc/systemd/system/mosquitto.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and Start Mosquitto
+  systemd:
+    name: mosquitto
+    state: started
+    enabled: yes
+    daemon_reload: yes
