@@ -4,10 +4,17 @@
     name:
       - python3
       - python3-pip
+      - python3-venv
     state: present
     update_cache: yes
 
-- name: Installer les dépendances Python pour MQTT Debug
+- name: Créer l'environnement virtuel Python pour MQTT Debug
+  command: python3 -m venv {{ install_dir }}/mqtt_debug_venv
+  args:
+    creates: "{{ install_dir }}/mqtt_debug_venv"
+  become_user: "{{ service_user }}"
+
+- name: Installer les dépendances Python pour MQTT Debug dans le venv
   pip:
     name:
       - flask==3.0.0
@@ -16,7 +23,8 @@
       - python-socketio==5.10.0
       - eventlet==0.33.3
     state: present
-    executable: pip3
+    executable: "{{ install_dir }}/mqtt_debug_venv/bin/pip"
+    virtualenv: "{{ install_dir }}/mqtt_debug_venv"
 
 - name: Copier le script de monitoring
   copy:
