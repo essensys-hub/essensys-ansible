@@ -31,21 +31,9 @@
     - "{{ mosquitto_dir }}/data"
     - "{{ mosquitto_dir }}/log"
 
-- name: Install mosquitto-clients for password generation
-  apt:
-    name: mosquitto-clients
-    state: present
-    update_cache: yes
-
-- name: Find mosquitto_passwd path
-  command: which mosquitto_passwd
-  register: mosquitto_passwd_path
-  changed_when: false
-  failed_when: false
-
-- name: Generate Mosquitto password file
+- name: Generate Mosquitto password file using Docker container
   shell: |
-    {{ mosquitto_passwd_path.stdout | default('/usr/bin/mosquitto_passwd') }} -c -b {{ mosquitto_dir }}/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}
+    docker run --rm -v {{ mosquitto_dir }}/config:/mosquitto/config eclipse-mosquitto:2 sh -c "mosquitto_passwd -c -b /mosquitto/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}"
   args:
     creates: "{{ mosquitto_dir }}/config/passwd"
 
