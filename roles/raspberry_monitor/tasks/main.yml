@@ -1,4 +1,12 @@
 ---
+- name: Installer Python3 et pip3
+  apt:
+    name:
+      - python3
+      - python3-pip
+    state: present
+    update_cache: yes
+
 - name: Installer les dépendances Python pour MQTT Debug
   pip:
     name:
