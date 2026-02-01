@@ -1,0 +1,7 @@
+---
+# Variables par défaut pour le rôle raspberry_backend
+
+# Configuration UniFi Protect
+unifi_enabled: false
+unifi_base_url: "https://192.168.0.1"
+unifi_api_key: ""

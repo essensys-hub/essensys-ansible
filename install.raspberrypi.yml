@@ -10,8 +10,8 @@
     frontend_dir: "{{ install_dir }}/frontend"
     backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
     frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
-    backend_version: V.1.2.1
-    frontend_version: V.1.2.1
+    backend_version: V.1.2.2
+    frontend_version: V.1.2.2
     acme_email: admin@acme.com
     use_staging: false
     wan_domain_default: essensys.acme.com
@@ -19,6 +19,10 @@
     traefik_version: v2.11.3
     go_version: "1.21.5"
     node_setup_script: "https://deb.nodesource.com/setup_20.x"
+    # Configuration UniFi Protect (optionnel)
+    # unifi_enabled: true
+    # unifi_base_url: "https://192.168.0.1"
+    # unifi_api_key: "votre_cle_api_unifi_ici"
   roles:
     - raspberry_common
     - raspberry_backend
