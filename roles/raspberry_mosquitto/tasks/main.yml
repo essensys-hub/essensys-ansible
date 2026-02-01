@@ -37,11 +37,17 @@
     state: present
     update_cache: yes
 
+- name: Find mosquitto_passwd path
+  command: which mosquitto_passwd
+  register: mosquitto_passwd_path
+  changed_when: false
+
 - name: Generate Mosquitto password file
   shell: |
-    /usr/bin/mosquitto_passwd -c -b {{ mosquitto_dir }}/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}
+    {{ mosquitto_passwd_path.stdout }} -c -b {{ mosquitto_dir }}/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}
   args:
     creates: "{{ mosquitto_dir }}/config/passwd"
+  when: mosquitto_passwd_path.rc == 0
 
 - name: Set ownership of password file
   file:
