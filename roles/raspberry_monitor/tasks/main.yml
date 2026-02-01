@@ -23,7 +23,6 @@
       - python-socketio==5.10.0
       - eventlet==0.33.3
     state: present
-    executable: "{{ install_dir }}/mqtt_debug_venv/bin/pip"
     virtualenv: "{{ install_dir }}/mqtt_debug_venv"
 
 - name: Copier le script de monitoring
