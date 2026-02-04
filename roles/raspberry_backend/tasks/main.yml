@@ -29,6 +29,7 @@
     chdir: "{{ backend_dir }}"
   environment:
     PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOTOOLCHAIN: local
   register: go_mod_tidy
   failed_when: false
   changed_when: go_mod_tidy.rc == 0
@@ -39,6 +40,7 @@
     chdir: "{{ backend_dir }}"
   environment:
     PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOTOOLCHAIN: local
   when: go_mod_tidy.rc != 0
 
 - name: Reexecuter go mod tidy apres download
@@ -47,6 +49,7 @@
     chdir: "{{ backend_dir }}"
   environment:
     PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOTOOLCHAIN: local
   when: go_mod_tidy.rc != 0
 
 - name: Compiler le backend
@@ -55,6 +58,7 @@
     chdir: "{{ backend_dir }}"
   environment:
     PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOTOOLCHAIN: local
 
 - name: Creer le fichier config.yaml si absent
   copy:
@@ -84,6 +88,8 @@
         enabled: false
         base_url: "https://192.168.0.1"
         api_key: ""
+        username: ""
+        password: ""
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
@@ -105,6 +111,12 @@
         enabled: {{ unifi_enabled | lower }}
         base_url: "{{ unifi_base_url }}"
         api_key: "{{ unifi_api_key }}"
+        {% if unifi_username | default('') != '' %}
+        username: "{{ unifi_username }}"
+        {% endif %}
+        {% if unifi_password | default('') != '' %}
+        password: "{{ unifi_password }}"
+        {% endif %}
     create: yes
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
