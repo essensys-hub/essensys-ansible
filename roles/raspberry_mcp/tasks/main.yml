@@ -12,6 +12,17 @@
     path: "{{ mcp_src_dir }}"
   register: mcp_src_stat
 
+- name: Telecharger les dependances MCP
+  command: /usr/local/go/bin/go mod tidy
+  args:
+    chdir: "{{ mcp_src_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOTOOLCHAIN: local
+  when: mcp_src_stat.stat.exists
+  register: mcp_deps
+  changed_when: mcp_deps.rc == 0
+
 - name: Compiler le serveur MCP
   command: /usr/local/go/bin/go build -o essensys-mcp
   args:
