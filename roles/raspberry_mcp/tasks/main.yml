@@ -1,0 +1,80 @@
+---
+- name: Definir variables MCP
+  set_fact:
+    mcp_src_dir: "/home/{{ service_user }}/essensys-server-backend/cmd/mcp-server"
+    mcp_bin_dir: "/usr/local/bin"
+    mcp_service_name: "essensys-mcp"
+    mcp_config_dir: "/etc/essensys"
+    mcp_token_file: "/etc/essensys/mcp.token"
+
+- name: Verifier la presence du code source MCP
+  stat:
+    path: "{{ mcp_src_dir }}"
+  register: mcp_src_stat
+
+- name: Compiler le serveur MCP
+  command: /usr/local/go/bin/go build -o essensys-mcp
+  args:
+    chdir: "{{ mcp_src_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOTOOLCHAIN: local
+  when: mcp_src_stat.stat.exists
+  register: mcp_build
+  changed_when: mcp_build.rc == 0
+
+- name: Installer le binaire MCP
+  copy:
+    src: "{{ mcp_src_dir }}/essensys-mcp"
+    dest: "{{ mcp_bin_dir }}/essensys-mcp"
+    mode: '0755'
+    remote_src: yes
+  when: mcp_src_stat.stat.exists and mcp_build.rc == 0
+  notify: Restart MCP
+
+- name: Creer le repertoire de configuration
+  file:
+    path: "{{ mcp_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Verifier si le token existe
+  stat:
+    path: "{{ mcp_token_file }}"
+  register: token_stat
+
+- name: Generer un token MCP aleatoire
+  shell: openssl rand -hex 32 > {{ mcp_token_file }}
+  args:
+    creates: "{{ mcp_token_file }}"
+  when: not token_stat.stat.exists
+  register: token_gen
+
+- name: Fixer les permissions du token
+  file:
+    path: "{{ mcp_token_file }}"
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: Lire le token MCP
+  slurp:
+    src: "{{ mcp_token_file }}"
+  register: mcp_token_b64
+
+- name: Definir variable token
+  set_fact:
+    mcp_token: "{{ mcp_token_b64['content'] | b64decode | trim }}"
+
+- name: Installer le service systemd MCP
+  template:
+    src: essensys-mcp.service.j2
+    dest: /etc/systemd/system/essensys-mcp.service
+    mode: '0644'
+  notify: Restart MCP
+
+- name: Activer et demarrer le service MCP
+  service:
+    name: "{{ mcp_service_name }}"
+    enabled: yes
+    state: started

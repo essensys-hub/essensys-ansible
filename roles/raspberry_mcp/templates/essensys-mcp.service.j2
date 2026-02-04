@@ -1,0 +1,12 @@
+[Unit]
+Description=Essensys MCP Server
+After=network.target redis-server.service
+
+[Service]
+ExecStart=/usr/local/bin/essensys-mcp -mode sse -port 8080 -token {{ mcp_token }}
+Restart=always
+User=root
+# Adjust User if non-root access to Redis/Network is sufficient, but root is safe for internal Pi.
+
+[Install]
+WantedBy=multi-user.target

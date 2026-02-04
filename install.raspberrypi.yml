@@ -26,6 +26,7 @@
   roles:
     - raspberry_common
     - raspberry_backend
+    - raspberry_mcp
     - raspberry_frontend
     # Nginx pour port 80 (client legacy - tolérant aux requêtes HTTP non-standard)
     - raspberry_nginx
