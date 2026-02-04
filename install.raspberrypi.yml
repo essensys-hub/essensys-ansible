@@ -10,7 +10,7 @@
     frontend_dir: "{{ install_dir }}/frontend"
     backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
     frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
-    backend_version: V.1.2.2
+    backend_version: V.1.2.3
     frontend_version: V.1.2.2
     acme_email: admin@acme.com
     use_staging: false
