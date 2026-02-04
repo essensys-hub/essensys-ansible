@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Diagnostic UniFi Protect - V.1.2.2 - Essensys Ansible Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Diagnostic UniFi Protect - V.1.2.2";
+        var mkdocs_page_input_path = "unifi-troubleshooting.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Essensys Ansible Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Essensys Ansible Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Diagnostic UniFi Protect - V.1.2.2</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="diagnostic-unifi-protect-v122">Diagnostic UniFi Protect - V.1.2.2</h1>
+<h2 id="verifications-a-faire">Vérifications à faire</h2>
+<h3 id="1-verifier-que-le-backend-est-sur-v122">1. Vérifier que le backend est sur V.1.2.2</h3>
+<pre><code class="language-bash">cd /opt/essensys/backend
+git branch
+# Doit afficher: * V.1.2.2
+</code></pre>
+<p>Si ce n'est pas le cas :</p>
+<pre><code class="language-bash">cd /opt/essensys/backend
+git fetch --all --tags
+git checkout V.1.2.2
+</code></pre>
+<h3 id="2-verifier-que-le-backend-a-ete-recompile-avec-unifi">2. Vérifier que le backend a été recompilé avec UniFi</h3>
+<pre><code class="language-bash"># Vérifier que le binaire existe et est récent
+ls -lh /opt/essensys/backend/server
+
+# Vérifier que le package unifi existe
+ls -la /opt/essensys/backend/internal/unifi/
+# Doit afficher: client.go, models.go
+</code></pre>
+<p>Si le package n'existe pas, recompiler :</p>
+<pre><code class="language-bash">cd /opt/essensys/backend
+/usr/local/go/bin/go mod tidy
+/usr/local/go/bin/go build -o server ./cmd/server
+sudo systemctl restart essensys-backend
+</code></pre>
+<h3 id="3-verifier-la-configuration-unifi-dans-configyaml">3. Vérifier la configuration UniFi dans config.yaml</h3>
+<pre><code class="language-bash">sudo cat /opt/essensys/backend/config.yaml | grep -A 4 unifi
+</code></pre>
+<p>Doit afficher quelque chose comme :</p>
+<pre><code class="language-yaml">unifi:
+  enabled: true
+  base_url: &quot;https://192.168.0.1&quot;
+  api_key: &quot;votre_cle_api&quot;
+</code></pre>
+<h3 id="4-verifier-les-logs-du-backend">4. Vérifier les logs du backend</h3>
+<pre><code class="language-bash">sudo journalctl -u essensys-backend -n 50 --no-pager
+</code></pre>
+<p>Chercher :
+- <code>"Initialized UniFi Protect Handler"</code> → UniFi est bien initialisé
+- <code>"WARNING: UniFi Protect enabled but API key not configured"</code> → API key manquante
+- <code>"Failed to get cameras"</code> → Erreur de connexion à UniFi</p>
+<h3 id="5-tester-lendpoint-api-directement">5. Tester l'endpoint API directement</h3>
+<pre><code class="language-bash">curl -v http://localhost:7070/api/unifi/cameras
+</code></pre>
+<p>Résultats possibles :
+- <code>503 Service Unavailable</code> avec "UniFi Protect is not configured" → UniFi pas configuré ou API key manquante
+- <code>500 Internal Server Error</code> → Erreur de connexion à UniFi Protect
+- <code>200 OK</code> avec JSON → Ça fonctionne !</p>
+<h3 id="6-verifier-que-le-frontend-est-sur-v122">6. Vérifier que le frontend est sur V.1.2.2</h3>
+<pre><code class="language-bash">cd /opt/essensys/frontend
+git branch
+# Doit afficher: * V.1.2.2
+</code></pre>
+<p>Si ce n'est pas le cas :</p>
+<pre><code class="language-bash">cd /opt/essensys/frontend
+git fetch --all --tags
+git checkout V.1.2.2
+</code></pre>
+<h3 id="7-reconstruire-le-frontend">7. Reconstruire le frontend</h3>
+<pre><code class="language-bash">cd /opt/essensys/frontend
+npm install
+npm run build
+sudo systemctl restart essensys-frontend
+# ou si c'est servi par nginx, juste recharger nginx
+sudo systemctl reload nginx
+</code></pre>
+<h3 id="8-verifier-dans-le-navigateur">8. Vérifier dans le navigateur</h3>
+<ol>
+<li>Ouvrir la console du navigateur (F12)</li>
+<li>Aller sur <code>/dashboard</code></li>
+<li>Vérifier les erreurs dans la console :</li>
+<li><code>[UNIFI] Fetching cameras from: ...</code> → Le frontend essaie bien de charger les caméras</li>
+<li>Erreurs 503/500 → Voir les logs backend ci-dessus</li>
+</ol>
+<h3 id="9-verifier-le-menu-de-navigation">9. Vérifier le menu de navigation</h3>
+<p>Le menu de gauche doit contenir "UniFi Protect" avec une icône caméra.</p>
+<p>Si ce n'est pas le cas, le frontend n'a pas été reconstruit.</p>
+<h2 id="solution-rapide-reinstaller-avec-ansible">Solution rapide : Réinstaller avec Ansible</h2>
+<p>Si tout le reste échoue, réinstaller avec Ansible :</p>
+<pre><code class="language-bash">cd /opt/essensys-ansible
+ansible-playbook -i inventory install.raspberrypi.yml \
+  -e &quot;unifi_enabled=true&quot; \
+  -e &quot;unifi_base_url=https://192.168.0.1&quot; \
+  -e &quot;unifi_api_key=votre_cle_api&quot;
+</code></pre>
+<h2 id="problemes-courants">Problèmes courants</h2>
+<h3 id="la-carte-unifi-napparait-pas-sur-le-dashboard">La carte UniFi n'apparaît pas sur le dashboard</h3>
+<p><strong>Cause</strong> : Frontend pas reconstruit avec V.1.2.2
+<strong>Solution</strong> : Reconstruire le frontend (étape 7)</p>
+<h3 id="erreur-503-unifi-protect-is-not-configured">Erreur 503 "UniFi Protect is not configured"</h3>
+<p><strong>Cause</strong> : API key manquante ou <code>enabled: false</code> dans config.yaml
+<strong>Solution</strong> : Vérifier config.yaml (étape 3)</p>
+<h3 id="erreur-500-failed-to-retrieve-cameras">Erreur 500 "Failed to retrieve cameras"</h3>
+<p><strong>Cause</strong> : Problème de connexion à UniFi Protect (API key invalide, réseau, etc.)
+<strong>Solution</strong> : 
+- Vérifier l'API key
+- Vérifier que <code>https://192.168.0.1/unifi-api/protect/bootstrap</code> est accessible depuis le Raspberry Pi
+- Vérifier les logs backend (étape 4)</p>
+<h3 id="le-menu-unifi-protect-napparait-pas">Le menu UniFi Protect n'apparaît pas</h3>
+<p><strong>Cause</strong> : Frontend pas reconstruit avec V.1.2.2
+<strong>Solution</strong> : Reconstruire le frontend (étape 7)</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

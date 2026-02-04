@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Roles - Essensys Ansible Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Roles";
+        var mkdocs_page_input_path = "roles.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Essensys Ansible Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Roles</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#common">common</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#database">database</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#backend">backend</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#frontend">frontend</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry-pi-roles">Raspberry Pi roles</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_common">raspberry_common</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_backend">raspberry_backend</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_frontend">raspberry_frontend</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_nginx">raspberry_nginx</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_traefik">raspberry_traefik</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_adguard">raspberry_adguard</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_monitor">raspberry_monitor</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_logrotate">raspberry_logrotate</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_push_status">raspberry_push_status</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#raspberry_uninstall">raspberry_uninstall</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Essensys Ansible Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Roles</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="roles">Roles</h1>
+<p>The project is structured into reusable Ansible roles.</p>
+<h2 id="common"><code>common</code></h2>
+<p>Handles the base system configuration.</p>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Installs APT packages: <code>git</code>, <code>nginx</code>, <code>curl</code>, <code>postgresql</code>, <code>certbot</code>, etc.</li>
+<li>Installs <strong>Go</strong> (via curl).</li>
+<li>Installs <strong>Node.js</strong> (via Nodesource script).</li>
+<li>Creates the <code>essensys</code> system user.</li>
+<li>Creates directory structure: <code>/opt/essensys/{backend,frontend,maintenance}</code>.</li>
+</ul>
+</li>
+</ul>
+<h2 id="database"><code>database</code></h2>
+<p>Manages the PostgreSQL database.</p>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Ensures PostgreSQL service is running.</li>
+<li>Creates the <code>essensys</code> database user.</li>
+<li>Creates the <code>essensys_db</code> database.</li>
+</ul>
+</li>
+</ul>
+<h2 id="backend"><code>backend</code></h2>
+<p>Deploys the Go backend application.</p>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Clones the code from GitHub (<code>essensys-support-site</code>).</li>
+<li>Builds the Go binary (<code>cmd/server</code>).</li>
+<li>Installs the binary to <code>/opt/essensys/backend/server</code>.</li>
+<li>Configures <code>.env</code> file.</li>
+<li>Installs and enables <code>essensys-backend.service</code> (Systemd).</li>
+</ul>
+</li>
+</ul>
+<h2 id="frontend"><code>frontend</code></h2>
+<p>Deploys the React frontend application.</p>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Clones the code from GitHub.</li>
+<li>Installs NPM dependencies.</li>
+<li>Builds the production bundle (<code>npm run build</code>).</li>
+<li>Copies artifacts to <code>/opt/essensys/frontend/dist</code>.</li>
+<li>Deploys the maintenance page.</li>
+<li>Installs <code>essensys.nginx</code> configuration to <code>/etc/nginx/sites-available</code>.</li>
+<li>Reloads Nginx.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="raspberry-pi-roles">Raspberry Pi roles</h2>
+<p>These roles are used by <code>install.raspberrypi.yml</code> and <code>update.raspberrypi.yml</code>.</p>
+<h2 id="raspberry_common"><code>raspberry_common</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Installs APT packages for Raspberry Pi.</li>
+<li>Installs <strong>Go</strong> and <strong>Node.js</strong>.</li>
+<li>Creates the <code>essensys</code> user and directories.</li>
+<li>Ensures Redis is running.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_backend"><code>raspberry_backend</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Clones <code>essensys-server-backend</code>.</li>
+<li>Builds the Go binary and deploys it.</li>
+<li>Creates <code>config.yaml</code>.</li>
+<li>Installs and enables systemd service.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_frontend"><code>raspberry_frontend</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Clones <code>essensys-server-frontend</code>.</li>
+<li>Builds the frontend.</li>
+<li>Deploys assets to <code>/opt/essensys/frontend</code>.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_nginx"><code>raspberry_nginx</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Deploys nginx configs and log formats.</li>
+<li>Enables local and internal sites.</li>
+<li>Reloads nginx.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_traefik"><code>raspberry_traefik</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Installs Traefik binary.</li>
+<li>Deploys static and dynamic configuration.</li>
+<li>Installs block service and systemd units.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_adguard"><code>raspberry_adguard</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Installs AdGuard Home.</li>
+<li>Deploys configuration and rewrite.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_monitor"><code>raspberry_monitor</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Installs monitoring UI and autologin setup.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_logrotate"><code>raspberry_logrotate</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Installs logrotate rules for Essensys logs.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_push_status"><code>raspberry_push_status</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Installs push status script and timer.</li>
+</ul>
+</li>
+</ul>
+<h2 id="raspberry_uninstall"><code>raspberry_uninstall</code></h2>
+<ul>
+<li><strong>Tasks</strong>:<ul>
+<li>Stops services and removes files.</li>
+<li>Optional removal of nginx/redis/user.</li>
+</ul>
+</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../playbooks/" class="btn btn-neutral float-left" title="Playbooks"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../playbooks/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
