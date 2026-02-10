@@ -21,6 +21,7 @@
     node_setup_script: "https://deb.nodesource.com/setup_20.x"
   roles:
     - raspberry_backend
+    - raspberry_mcp
     - raspberry_frontend
     # Nginx pour port 80 (client legacy - tolérant aux requêtes HTTP non-standard)
     - raspberry_nginx

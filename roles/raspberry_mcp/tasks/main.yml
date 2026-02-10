@@ -12,6 +12,15 @@
     path: "{{ mcp_src_dir }}"
   register: mcp_src_stat
 
+- name: Mettre a jour le code source depuis git
+  git:
+    repo: "{{ backend_repo | default('https://github.com/essensys-hub/essensys-server-backend.git') }}"
+    dest: "/home/{{ service_user }}/essensys-server-backend"
+    version: "{{ backend_version | default('V.1.2.2') }}"
+    force: true
+  become_user: "{{ service_user }}"
+  when: mcp_src_stat.stat.exists
+
 - name: Telecharger les dependances MCP
   command: /usr/local/go/bin/go mod tidy
   args:
