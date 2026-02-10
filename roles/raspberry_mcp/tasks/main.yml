@@ -12,27 +12,17 @@
     path: "{{ mcp_src_dir }}"
   register: mcp_src_stat
 
-- name: Mettre a jour le code source depuis git
-  git:
-    repo: "{{ backend_repo | default('https://github.com/essensys-hub/essensys-server-backend.git') }}"
-    dest: "/home/{{ service_user }}/essensys-server-backend"
-    version: "{{ backend_version | default('V.1.2.2') }}"
-    force: true
-    update: yes
+- name: Forcer la mise a jour git avant compilation MCP
+  shell: |
+    cd /home/{{ service_user }}/essensys-server-backend
+    git fetch origin
+    git checkout {{ backend_version | default('V.1.2.2') }}
+    git reset --hard origin/{{ backend_version | default('V.1.2.2') }}
   become_user: "{{ service_user }}"
   when: mcp_src_stat.stat.exists
-  register: git_update
+  register: git_force_update
 
-- name: Forcer la mise a jour git si necessaire
-  command: git fetch origin && git reset --hard origin/{{ backend_version | default('V.1.2.2') }}
-  args:
-    chdir: "/home/{{ service_user }}/essensys-server-backend"
-  become_user: "{{ service_user }}"
-  when: mcp_src_stat.stat.exists
-  ignore_errors: yes
-  register: git_reset
-
-- name: Afficher le commit actuel pour verification
+- name: Afficher le commit actuel apres mise a jour
   command: git rev-parse HEAD
   args:
     chdir: "/home/{{ service_user }}/essensys-server-backend"
@@ -40,9 +30,22 @@
   when: mcp_src_stat.stat.exists
   register: current_commit
 
-- name: Afficher le commit attendu
+- name: Afficher le commit pour verification
   debug:
     msg: "Commit actuel: {{ current_commit.stdout | default('N/A') }}"
+
+- name: Verifier le contenu de la ligne 283 du fichier main.go
+  command: sed -n '283p' cmd/mcp-server/main.go
+  args:
+    chdir: "/home/{{ service_user }}/essensys-server-backend"
+  become_user: "{{ service_user }}"
+  when: mcp_src_stat.stat.exists
+  register: line_283
+  ignore_errors: yes
+
+- name: Afficher la ligne 283 pour verification
+  debug:
+    msg: "Ligne 283: {{ line_283.stdout | default('N/A') }}"
 
 - name: Telecharger les dependances MCP
   command: /usr/local/go/bin/go mod tidy
