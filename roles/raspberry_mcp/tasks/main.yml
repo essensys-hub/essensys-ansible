@@ -30,6 +30,19 @@
   become_user: "{{ service_user }}"
   when: mcp_src_stat.stat.exists
   ignore_errors: yes
+  register: git_reset
+
+- name: Afficher le commit actuel pour verification
+  command: git rev-parse HEAD
+  args:
+    chdir: "/home/{{ service_user }}/essensys-server-backend"
+  become_user: "{{ service_user }}"
+  when: mcp_src_stat.stat.exists
+  register: current_commit
+
+- name: Afficher le commit attendu
+  debug:
+    msg: "Commit actuel: {{ current_commit.stdout | default('N/A') }}"
 
 - name: Telecharger les dependances MCP
   command: /usr/local/go/bin/go mod tidy
