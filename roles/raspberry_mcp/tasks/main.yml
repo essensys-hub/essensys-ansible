@@ -23,6 +23,14 @@
   when: mcp_src_stat.stat.exists
   register: git_update
 
+- name: Forcer la mise a jour git si necessaire
+  command: git fetch origin && git reset --hard origin/{{ backend_version | default('V.1.2.2') }}
+  args:
+    chdir: "/home/{{ service_user }}/essensys-server-backend"
+  become_user: "{{ service_user }}"
+  when: mcp_src_stat.stat.exists
+  ignore_errors: yes
+
 - name: Telecharger les dependances MCP
   command: /usr/local/go/bin/go mod tidy
   args:
