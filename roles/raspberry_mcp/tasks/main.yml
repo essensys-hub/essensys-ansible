@@ -18,8 +18,10 @@
     dest: "/home/{{ service_user }}/essensys-server-backend"
     version: "{{ backend_version | default('V.1.2.2') }}"
     force: true
+    update: yes
   become_user: "{{ service_user }}"
   when: mcp_src_stat.stat.exists
+  register: git_update
 
 - name: Telecharger les dependances MCP
   command: /usr/local/go/bin/go mod tidy
