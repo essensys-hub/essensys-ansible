@@ -19,10 +19,6 @@
     traefik_version: v2.11.3
     go_version: "1.21.5"
     node_setup_script: "https://deb.nodesource.com/setup_20.x"
-    # Configuration UniFi Protect (optionnel)
-    # unifi_enabled: true
-    # unifi_base_url: "https://192.168.0.1"
-    # unifi_api_key: "votre_cle_api_unifi_ici"
   roles:
     - raspberry_common
     - raspberry_backend

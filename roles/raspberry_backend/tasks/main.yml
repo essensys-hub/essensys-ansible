@@ -84,12 +84,6 @@
         password: ""
         db: 0
 
-      unifi:
-        enabled: false
-        base_url: "https://192.168.0.1"
-        api_key: ""
-        username: ""
-        password: ""
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
@@ -102,25 +96,6 @@
     line: '  port: 7070'
     insertafter: '^server:'
 
-- name: Configurer UniFi Protect dans config.yaml
-  blockinfile:
-    path: "{{ backend_dir }}/config.yaml"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK UNIFI"
-    block: |
-      unifi:
-        enabled: {{ unifi_enabled | lower }}
-        base_url: "{{ unifi_base_url }}"
-        api_key: "{{ unifi_api_key }}"
-        {% if unifi_username | default('') != '' %}
-        username: "{{ unifi_username }}"
-        {% endif %}
-        {% if unifi_password | default('') != '' %}
-        password: "{{ unifi_password }}"
-        {% endif %}
-    create: yes
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0644'
 
 - name: Installer le service systemd du backend
   template:
