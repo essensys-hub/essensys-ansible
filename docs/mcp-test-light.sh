@@ -109,16 +109,18 @@ fi
 
 # Test 3: Envoyer la commande pour allumer la lumière
 # "chevet chambre petit 3" correspond à:
-# - Index 621: Allumer Lumières CHB (LSB)
+# D'après test_chb3.py:
+# - Index 613: Allumer Lumières CHB (LSB) - Scenario_Allumer_CHB_LSB (Offset 21)
 # - Bit 6 (valeur 64): Lampe de la petite chambre 3
 # - Index 590: Trigger scenario (obligatoire, valeur "1")
+# Note: Le backend génère automatiquement le bloc complet (605-622) si un index lumière est présent
 log_info "Test 3: Envoi de la commande pour allumer 'chevet chambre petit 3'..."
 
 # Commande pour allumer la lampe de la petite chambre 3
 # Format ExchangeKV: [{"k": index, "v": "valeur"}]
-# Index 621 avec valeur 64 (bit 6) pour allumer la petite chambre 3
-# Index 590 avec valeur "1" pour déclencher le scénario
-LIGHT_COMMAND='[{"k":590,"v":"1"},{"k":621,"v":"64"}]'
+# Index 613 avec valeur 64 (bit 6) pour allumer la petite chambre 3
+# Le backend ajoutera automatiquement l'index 590 et complétera le bloc 605-622
+LIGHT_COMMAND='[{"k":613,"v":"64"}]'
 
 log_info "Commande: $LIGHT_COMMAND"
 log_warn "NOTE: Vous devrez peut-être adapter l'index (k) et la valeur (v) selon votre configuration"
