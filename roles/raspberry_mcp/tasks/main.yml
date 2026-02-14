@@ -74,8 +74,28 @@
   register: mcp_deps
   changed_when: mcp_deps.rc == 0
 
-- name: Compiler le serveur MCP
-  command: /usr/local/go/bin/go build -o essensys-mcp
+- name: Obtenir le commit git actuel pour la version
+  command: git rev-parse --short HEAD
+  args:
+    chdir: "/home/{{ service_user }}/essensys-server-backend"
+  become_user: "{{ service_user }}"
+  register: git_commit_short
+  changed_when: false
+  when: mcp_src_stat.stat.exists
+
+- name: Obtenir la date de build
+  command: date -u +"%Y-%m-%dT%H:%M:%SZ"
+  register: build_time
+  changed_when: false
+  when: mcp_src_stat.stat.exists
+
+- name: Compiler le serveur MCP avec informations de version
+  command: >
+    /usr/local/go/bin/go build
+    -ldflags "-X main.version={{ backend_version | default('V.1.2.2') }}
+              -X main.buildTime={{ build_time.stdout }}
+              -X main.gitCommit={{ git_commit_short.stdout }}"
+    -o essensys-mcp
   args:
     chdir: "{{ mcp_src_dir }}"
   environment:
