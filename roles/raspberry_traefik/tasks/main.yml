@@ -29,6 +29,22 @@
     - /etc/apt/sources.list.d/caddy-stable.list
   ignore_errors: true
 
+- name: Arreter et desactiver Home Assistant (stack sans HA)
+  systemd:
+    name: homeassistant
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Supprimer Home Assistant (stack sans HA)
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/systemd/system/homeassistant.service
+    - /opt/essensys/homeassistant
+  ignore_errors: true
+
 - name: Verifier le binaire Traefik
   stat:
     path: /usr/local/bin/traefik

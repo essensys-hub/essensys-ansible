@@ -103,3 +103,24 @@
     name: redis-server
     state: started
     enabled: true
+
+- name: Arreter et desactiver Home Assistant (stack sans HA)
+  systemd:
+    name: homeassistant
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Supprimer le service Home Assistant (stack sans HA)
+  file:
+    path: /etc/systemd/system/homeassistant.service
+    state: absent
+
+- name: Recharger systemd apres suppression Home Assistant
+  systemd:
+    daemon_reload: true
+
+- name: Supprimer les fichiers Home Assistant (stack sans HA)
+  file:
+    path: /opt/essensys/homeassistant
+    state: absent
