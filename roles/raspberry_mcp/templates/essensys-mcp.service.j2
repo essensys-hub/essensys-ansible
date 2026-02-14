@@ -3,7 +3,7 @@ Description=Essensys MCP Server
 After=network.target redis-server.service
 
 [Service]
-ExecStart=/usr/local/bin/essensys-mcp -mode sse -port 8080 -token {{ mcp_token }}
+ExecStart=/usr/local/bin/essensys-mcp -mode sse -port {{ mcp_port | default(8083) }} -token {{ mcp_token }}
 Restart=always
 RestartSec=10
 User=root

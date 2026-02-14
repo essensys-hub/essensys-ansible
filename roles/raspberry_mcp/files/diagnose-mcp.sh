@@ -78,13 +78,13 @@ fi
 echo ""
 
 # 6. Vérifier le port
-echo "6. Port 8080:"
-if ss -tlnp | grep -q ":8080"; then
-    echo "   ⚠ Port 8080 déjà utilisé:"
-    ss -tlnp | grep ":8080"
+echo "6. Port 8083 (MCP):"
+if ss -tlnp | grep -q ":8083"; then
+    echo "   ⚠ Port 8083 déjà utilisé:"
+    ss -tlnp | grep ":8083"
     echo "   Vérifiez si un autre processus utilise le port"
 else
-    echo "   ✓ Port 8080 libre"
+    echo "   ✓ Port 8083 libre"
 fi
 echo ""
 
@@ -111,14 +111,14 @@ echo "8. Test manuel du binaire:"
 if [ -f /etc/essensys/mcp.token ] && [ -f /usr/local/bin/essensys-mcp ]; then
     TOKEN=$(cat /etc/essensys/mcp.token | tr -d '[:space:]')
     echo "   Tentative de démarrage manuel (timeout 3s)..."
-    timeout 3 /usr/local/bin/essensys-mcp -mode sse -port 8080 -token "$TOKEN" 2>&1 | head -5 || {
+    timeout 3 /usr/local/bin/essensys-mcp -mode sse -port 8083 -token "$TOKEN" 2>&1 | head -5 || {
         EXIT_CODE=$?
         if [ $EXIT_CODE -eq 124 ]; then
             echo "   ✓ Binaire démarre (arrêté après timeout)"
         else
             echo "   ✗ Erreur lors du démarrage (code: $EXIT_CODE)"
             echo "   Essayez manuellement:"
-            echo "   sudo /usr/local/bin/essensys-mcp -mode sse -port 8080 -token \$(cat /etc/essensys/mcp.token)"
+            echo "   sudo /usr/local/bin/essensys-mcp -mode sse -port 8083 -token \$(cat /etc/essensys/mcp.token)"
         fi
     }
 else
