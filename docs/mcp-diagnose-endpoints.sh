@@ -1,10 +1,12 @@
 #!/bin/bash
 # Script de diagnostic pour vérifier les endpoints MCP
-# Version: 1.0.0
+# Version: 1.0.1
 
 set -e
 
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="1.0.1"
+SCRIPT_NAME="mcp-diagnose-endpoints.sh"
+SCRIPT_REPO="https://raw.githubusercontent.com/essensys-hub/essensys-ansible/V.1.2.2/docs/mcp-diagnose-endpoints.sh"
 
 MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token 2>/dev/null || echo "")
 MCP_PORT=${MCP_PORT:-8083}
@@ -18,6 +20,19 @@ echo "=== Diagnostic des endpoints MCP ==="
 echo "Version du script: $SCRIPT_VERSION"
 echo "Port: $MCP_PORT"
 echo "Token: ${MCP_TOKEN:0:10}..."
+echo ""
+
+# Vérifier si une version plus récente est disponible
+echo "0. Vérification de la version du script..."
+CURRENT_VERSION="$SCRIPT_VERSION"
+REMOTE_VERSION=$(curl -s "$SCRIPT_REPO" 2>/dev/null | grep "^SCRIPT_VERSION=" | head -1 | cut -d'"' -f2 || echo "")
+
+if [ -n "$REMOTE_VERSION" ] && [ "$REMOTE_VERSION" != "$CURRENT_VERSION" ]; then
+    echo "   ⚠ Version disponible: $REMOTE_VERSION (vous avez: $CURRENT_VERSION)"
+    echo "   → Mettez à jour avec: curl -o $SCRIPT_NAME $SCRIPT_REPO && chmod +x $SCRIPT_NAME"
+else
+    echo "   ✓ Version à jour ($CURRENT_VERSION)"
+fi
 echo ""
 
 # Vérifier que le service est actif ou que le processus est en cours d'exécution
