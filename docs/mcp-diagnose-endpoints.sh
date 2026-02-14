@@ -95,6 +95,8 @@ fi
 # Test de l'endpoint /messages (POST avec initialize)
 echo ""
 echo "4. Test de l'endpoint /messages (POST)..."
+echo "   Note: Le protocole MCP SSE nécessite une session SSE active."
+echo "   Sans session, l'erreur 'Missing sessionId' est normale."
 MESSAGES_RESPONSE=$(curl -s -k -w "\n%{http_code}" \
     -H "Authorization: Bearer $MCP_TOKEN" \
     -H "Content-Type: application/json" \
@@ -122,6 +124,11 @@ if [ "$HTTP_CODE" = "200" ]; then
     echo "   ✓ POST /messages retourne 200"
     echo "   Réponse: $BODY" | head -c 200
     echo ""
+elif [ "$HTTP_CODE" = "400" ] && echo "$BODY" | grep -q "Missing sessionId"; then
+    echo "   ⚠ POST /messages retourne 400 (Missing sessionId)"
+    echo "   → Comportement attendu: le protocole MCP SSE nécessite une session SSE active"
+    echo "   → Pour tester correctement, utilisez un client MCP qui établit d'abord une session SSE"
+    echo "   → L'endpoint fonctionne correctement (les requêtes arrivent au serveur)"
 else
     echo "   ✗ POST /messages retourne $HTTP_CODE"
     echo "   Réponse complète:"
