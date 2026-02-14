@@ -141,6 +141,26 @@
     dest: /usr/local/bin/diagnose-mcp
     mode: '0755'
 
+- name: Verifier si le port 8080 est deja utilise
+  command: ss -tlnp | grep :8080 || true
+  register: port_check
+  changed_when: false
+  failed_when: false
+
+- name: Avertir si le port est deja utilise
+  debug:
+    msg: |
+      ATTENTION: Le port 8080 est deja utilise!
+      Processus: {{ port_check.stdout }}
+      Le service MCP ne pourra pas demarrer.
+      Arretez le processus ou changez le port.
+  when: port_check.stdout != ""
+
+- name: Arreter tout processus essensys-mcp existant
+  command: pkill -f essensys-mcp || true
+  changed_when: false
+  failed_when: false
+
 - name: Activer et demarrer le service MCP
   service:
     name: "{{ mcp_service_name }}"
