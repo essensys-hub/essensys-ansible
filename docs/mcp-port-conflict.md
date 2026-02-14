@@ -1,21 +1,21 @@
-# Résolution du conflit de port 8080 pour MCP
+# Résolution du conflit de port 8083 pour MCP
 
 ## Problème
-Le service MCP ne peut pas démarrer car le port 8080 est déjà utilisé par un autre processus.
+Le service MCP ne peut pas démarrer car le port 8083 est déjà utilisé par un autre processus.
 
 ## Diagnostic
 
-### 1. Identifier le processus utilisant le port 8080
+### 1. Identifier le processus utilisant le port 8083
 
 ```bash
 # Méthode 1: Avec ss
-sudo ss -tlnp | grep :8080
+sudo ss -tlnp | grep :8083
 
 # Méthode 2: Avec lsof
-sudo lsof -i :8080
+sudo lsof -i :8083
 
 # Méthode 3: Avec netstat
-sudo netstat -tlnp | grep :8080
+sudo netstat -tlnp | grep :8083
 ```
 
 ### 2. Vérifier si c'est une instance MCP qui tourne déjà
@@ -45,7 +45,7 @@ ps aux | grep essensys-mcp
 sudo pkill -f essensys-mcp
 
 # Vérifier que le port est libre
-sudo ss -tlnp | grep :8080
+sudo ss -tlnp | grep :8083
 ```
 
 ### Solution 2: Changer le port du service MCP
@@ -70,11 +70,11 @@ sudo systemctl restart essensys-mcp
 
 ### Solution 3: Identifier et arrêter l'autre service
 
-Si un autre service utilise le port 8080 :
+Si un autre service utilise le port 8083 :
 
 ```bash
 # Identifier le processus
-sudo lsof -i :8080
+sudo lsof -i :8083
 
 # Arrêter le service correspondant (remplacer SERVICE_NAME par le nom réel)
 sudo systemctl stop SERVICE_NAME
@@ -89,7 +89,7 @@ Après avoir libéré le port :
 
 ```bash
 # Vérifier que le port est libre
-sudo ss -tlnp | grep :8080
+sudo ss -tlnp | grep :8083
 
 # Redémarrer le service MCP
 sudo systemctl restart essensys-mcp
@@ -107,4 +107,4 @@ Pour éviter ce problème à l'avenir :
 
 1. Vérifier que le service MCP est bien arrêté avant de le redémarrer
 2. Utiliser `systemctl restart` plutôt que de lancer manuellement le binaire
-3. Vérifier les ports avant l'installation avec `ss -tlnp | grep :8080`
+3. Vérifier les ports avant l'installation avec `ss -tlnp | grep :8083`

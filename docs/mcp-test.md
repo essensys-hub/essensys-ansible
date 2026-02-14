@@ -34,7 +34,7 @@ sudo ss -tlnp | grep 8080
 
 Vous devriez voir quelque chose comme :
 ```
-LISTEN 0 4096 *:8080 *:* users:(("essensys-mcp",pid=1234,fd=3))
+LISTEN 0 4096 *:8083 *:* users:(("essensys-mcp",pid=1234,fd=3))
 ```
 
 ## 2. Test de connexion SSE basique
@@ -52,7 +52,7 @@ echo "Token: $MCP_TOKEN"
 curl -k -N \
   -H "Authorization: Bearer $MCP_TOKEN" \
   -H "Accept: text/event-stream" \
-  http://localhost:8080/sse
+  http://localhost:8083/sse
 ```
 
 Vous devriez voir des événements SSE qui arrivent. Appuyez sur `Ctrl+C` pour arrêter.
@@ -81,7 +81,7 @@ curl -k \
       }
     }
   }' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 Réponse attendue : Un JSON avec les informations du serveur MCP.
@@ -100,7 +100,7 @@ curl -k \
     "id": 2,
     "method": "tools/list"
   }' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 Réponse attendue : Liste des outils MCP disponibles (read_exchange_table, read_exchange_value, set_exchange_value, send_order).
@@ -127,7 +127,7 @@ curl -k \
       }
     }
   }' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 ### Test 2 : Lire une valeur spécifique de la table d'échange
@@ -151,7 +151,7 @@ curl -k \
       }
     }
   }' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 ### Test 3 : Écrire une valeur dans la table d'échange
@@ -176,7 +176,7 @@ curl -k \
       }
     }
   }' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 ### Test 4 : Envoyer une commande (order)
@@ -199,7 +199,7 @@ curl -k \
       }
     }
   }' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 ## 5. Test avec script Python (optionnel)
@@ -213,7 +213,7 @@ import json
 import sys
 
 # Configuration
-MCP_URL = "http://localhost:8080/messages"
+MCP_URL = "http://localhost:8083/messages"
 TOKEN_FILE = "/etc/essensys/mcp.token"
 
 # Lire le token
@@ -307,7 +307,7 @@ npm install -g @modelcontextprotocol/inspector
 ```bash
 MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
 
-mcp-inspect sse http://localhost:8080/sse \
+mcp-inspect sse http://localhost:8083/sse \
   --header "Authorization: Bearer $MCP_TOKEN"
 ```
 
@@ -354,7 +354,7 @@ curl -k -s \
       }
     }
   }' \
-  http://localhost:8080/messages | jq .
+  http://localhost:8083/messages | jq .
 
 # 2. Lire la valeur
 echo "Lecture de la valeur..."
@@ -374,7 +374,7 @@ curl -k -s \
       }
     }
   }' \
-  http://localhost:8080/messages | jq .
+  http://localhost:8083/messages | jq .
 
 # 3. Vérifier dans Redis directement
 echo "Vérification dans Redis..."
@@ -390,7 +390,7 @@ curl -k \
   -H "Content-Type: application/json" \
   -X POST \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 Réponse attendue : `401 Unauthorized`
@@ -403,7 +403,7 @@ curl -k \
   -H "Content-Type: application/json" \
   -X POST \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 Réponse attendue : `401 Unauthorized`
@@ -422,7 +422,7 @@ Créez un fichier `test_mcp.sh` :
 set -e
 
 MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
-MCP_URL="http://localhost:8080/messages"
+MCP_URL="http://localhost:8083/messages"
 
 echo "=== Test du serveur MCP Essensys ==="
 echo ""
@@ -447,7 +447,7 @@ fi
 
 # Test 3: Port en écoute
 echo "3. Vérification du port..."
-if ss -tlnp | grep -q ":8080"; then
+if ss -tlnp | grep -q ":8083"; then
     echo "✓ Port 8080 en écoute"
 else
     echo "✗ Port 8080 non en écoute"

@@ -64,7 +64,7 @@ MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
 curl -k -N \
   -H "Authorization: Bearer $MCP_TOKEN" \
   -H "Accept: text/event-stream" \
-  http://localhost:8080/sse
+  http://localhost:8083/sse
 
 # Tester l'endpoint /messages
 curl -k \
@@ -72,7 +72,7 @@ curl -k \
   -H "Content-Type: application/json" \
   -X POST \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0.0"}}}' \
-  http://localhost:8080/messages
+  http://localhost:8083/messages
 ```
 
 ## 6. Vérifier les ports et la connectivité
@@ -84,7 +84,7 @@ sudo netstat -tlnp | grep 8080
 sudo ss -tlnp | grep 8080
 
 # Vérifier depuis l'extérieur (si accessible)
-curl -k -I http://localhost:8080/sse
+curl -k -I http://localhost:8083/sse
 ```
 
 ## 7. Vérifier les logs détaillés
@@ -172,7 +172,7 @@ Si vous avez installé MCP Inspector :
 npm install -g @modelcontextprotocol/inspector
 
 # Tester avec le serveur SSE
-mcp-inspect sse http://localhost:8080/sse \
+mcp-inspect sse http://localhost:8083/sse \
   --header "Authorization: Bearer $MCP_TOKEN"
 ```
 
@@ -199,7 +199,7 @@ sudo journalctl -u essensys-mcp -n 50
 redis-cli ping
 
 # Vérifier que le port n'est pas déjà utilisé
-sudo lsof -i :8080
+sudo lsof -i :8083
 ```
 
 ### Erreur de compilation
