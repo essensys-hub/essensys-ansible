@@ -168,11 +168,12 @@
     state: started
 
 - name: Afficher le statut du service MCP apres demarrage
-  command: systemctl status {{ mcp_service_name }} --no-pager -l || true
+  shell: systemctl status {{ mcp_service_name }} --no-pager -l || true
   register: mcp_status
   changed_when: false
+  failed_when: false
 
-- name: Afficher le statut
+- name: Afficher le statut si le service a des problemes
   debug:
     msg: "{{ mcp_status.stdout_lines }}"
-  when: mcp_status.rc != 0
+  when: mcp_status.rc != 0 and mcp_status.stdout != ""
