@@ -3,6 +3,32 @@
   set_fact:
     traefik_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv7' }}"
 
+- name: Arreter et desactiver Caddy (stack Traefik only)
+  systemd:
+    name: caddy
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Desinstaller Caddy (stack Traefik only)
+  apt:
+    name: caddy
+    state: absent
+    autoremove: true
+    purge: true
+  ignore_errors: true
+
+- name: Supprimer fichiers et depots Caddy (stack Traefik only)
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/caddy
+    - /var/log/caddy
+    - /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+    - /etc/apt/sources.list.d/caddy-stable.list
+  ignore_errors: true
+
 - name: Verifier le binaire Traefik
   stat:
     path: /usr/local/bin/traefik

@@ -25,8 +25,6 @@
     - raspberry_frontend
     # Nginx pour port 80 (client legacy - tolérant aux requêtes HTTP non-standard)
     - raspberry_nginx
-    # Traefik pour port 443 avec authentification
+    # Traefik pour port 443 avec authentification (stack WAN)
     - raspberry_traefik
-    # Caddy désactivé (rejette les requêtes HTTP non-standard du client legacy)
-    # - raspberry_caddy
     - raspberry_push_status

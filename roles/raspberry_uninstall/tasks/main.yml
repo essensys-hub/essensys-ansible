@@ -7,6 +7,7 @@
     - essensys-backend
     - traefik
     - traefik-block-service
+    - caddy
     - nginx
     - AdGuardHome
     - essensys-push.timer
@@ -21,6 +22,7 @@
     - essensys-backend
     - traefik
     - traefik-block-service
+    - caddy
     - nginx
     - AdGuardHome
     - essensys-push.timer
@@ -65,6 +67,16 @@
     - /usr/local/bin/traefik-block-service.py
     - /usr/local/bin/generate-htpasswd-essensys.sh
 
+- name: Supprimer les fichiers Caddy
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/caddy
+    - /var/log/caddy
+    - /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+    - /etc/apt/sources.list.d/caddy-stable.list
+
 - name: Supprimer AdGuard Home
   file:
     path: /opt/AdGuardHome
@@ -101,6 +113,13 @@
     state: absent
     autoremove: true
   when: remove_nginx | bool
+
+- name: Desinstaller caddy
+  apt:
+    name: caddy
+    state: absent
+    autoremove: true
+    purge: true
 
 - name: Desinstaller redis (optionnel)
   apt:
