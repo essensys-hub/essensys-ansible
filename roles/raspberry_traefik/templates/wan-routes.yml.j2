@@ -20,15 +20,17 @@ http:
         usersFile: /etc/traefik/users.htpasswd
 
   routers:
-    # Redirection HTTP vers HTTPS pour le frontend WAN
-    frontend-wan-redirect:
-      rule: "Host(`{{ wan_domain }}`) && !PathPrefix(`/api/`)"
-      entryPoints:
-        - web
-      service: frontend-service
-      middlewares:
-        - redirect-to-https
-      priority: 5
+    # NOTE: Redirection HTTP vers HTTPS désactivée car Traefik n'écoute pas sur port 80
+    # Le port 80 est géré par Nginx pour l'accès local
+    # Les redirections HTTP->HTTPS doivent être gérées par Nginx si nécessaire
+    # frontend-wan-redirect:
+    #   rule: "Host(`{{ wan_domain }}`) && !PathPrefix(`/api/`)"
+    #   entryPoints:
+    #     - web
+    #   service: frontend-service
+    #   middlewares:
+    #     - redirect-to-https
+    #   priority: 5
     
     # Frontend WAN avec authentification (HTTPS)
     frontend-wan:
@@ -42,15 +44,15 @@ http:
         certResolver: letsencrypt
       priority: 10
     
-    # Redirection HTTP vers HTTPS pour /api/admin/inject
-    api-inject-wan-redirect:
-      rule: "Host(`{{ wan_domain }}`) && PathPrefix(`/api/admin/inject`)"
-      entryPoints:
-        - web
-      service: backend-service
-      middlewares:
-        - redirect-to-https
-      priority: 20
+    # NOTE: Redirection HTTP vers HTTPS désactivée car Traefik n'écoute pas sur port 80
+    # api-inject-wan-redirect:
+    #   rule: "Host(`{{ wan_domain }}`) && PathPrefix(`/api/admin/inject`)"
+    #   entryPoints:
+    #     - web
+    #   service: backend-service
+    #   middlewares:
+    #     - redirect-to-https
+    #   priority: 20
     
     # /api/admin/inject UNIQUEMENT en HTTPS avec authentification (meme auth que frontend)
     api-inject-wan:
@@ -66,10 +68,10 @@ http:
     
     # Blocage de toutes les autres routes WAN (autres API)
     # Ces routes retournent 403 Forbidden
+    # NOTE: Seulement sur websecure (HTTPS) car Traefik n'écoute pas sur port 80
     block-api-wan:
       rule: "Host(`{{ wan_domain }}`) && PathPrefix(`/api/`) && !PathPrefix(`/api/admin/inject`)"
       entryPoints:
-        - web
         - websecure
       service: block-service
       tls:
