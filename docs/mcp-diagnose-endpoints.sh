@@ -1,7 +1,10 @@
 #!/bin/bash
 # Script de diagnostic pour vérifier les endpoints MCP
+# Version: 1.0.0
 
 set -e
+
+SCRIPT_VERSION="1.0.0"
 
 MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token 2>/dev/null || echo "")
 MCP_PORT=${MCP_PORT:-8083}
@@ -12,6 +15,7 @@ if [ -z "$MCP_TOKEN" ]; then
 fi
 
 echo "=== Diagnostic des endpoints MCP ==="
+echo "Version du script: $SCRIPT_VERSION"
 echo "Port: $MCP_PORT"
 echo "Token: ${MCP_TOKEN:0:10}..."
 echo ""
