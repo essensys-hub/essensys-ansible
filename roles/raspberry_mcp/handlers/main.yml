@@ -1,0 +1,7 @@
+---
+- name: Restart MCP
+  systemd:
+    name: "{{ mcp_service_name }}"
+    state: restarted
+    enabled: yes
+  listen: "Restart MCP"
