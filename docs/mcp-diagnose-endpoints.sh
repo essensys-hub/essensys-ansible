@@ -16,12 +16,28 @@ echo "Port: $MCP_PORT"
 echo "Token: ${MCP_TOKEN:0:10}..."
 echo ""
 
-# Vérifier que le service est actif
+# Vérifier que le service est actif ou que le processus est en cours d'exécution
 echo "1. Vérification du service MCP..."
-if systemctl is-active --quiet essensys-mcp; then
-    echo "   ✓ Service actif"
+SERVICE_ACTIVE=false
+PROCESS_RUNNING=false
+
+# Vérifier le statut systemd
+if systemctl is-active --quiet essensys-mcp 2>/dev/null; then
+    SERVICE_ACTIVE=true
+fi
+
+# Vérifier si le processus est en cours d'exécution
+if pgrep -f "essensys-mcp" > /dev/null; then
+    PROCESS_RUNNING=true
+fi
+
+if [ "$SERVICE_ACTIVE" = true ]; then
+    echo "   ✓ Service systemd actif"
+elif [ "$PROCESS_RUNNING" = true ]; then
+    echo "   ⚠ Service systemd inactif mais processus en cours d'exécution"
+    echo "   → Le service a probablement été lancé manuellement"
 else
-    echo "   ✗ Service inactif"
+    echo "   ✗ Service inactif et aucun processus trouvé"
     exit 1
 fi
 
