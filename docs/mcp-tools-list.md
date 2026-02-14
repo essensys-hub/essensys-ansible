@@ -1,6 +1,6 @@
 # Liste des outils MCP disponibles
 
-Le serveur MCP Essensys expose **4 outils** pour interagir avec le système d'automatisation.
+Le serveur MCP Essensys expose **5 outils** pour interagir avec le système d'automatisation.
 
 ## 1. `read_exchange_table`
 
@@ -93,7 +93,53 @@ Set index 621 to '64' for client default
 
 ---
 
-## 4. `send_order`
+## 4. `find_device_index`
+
+**Description** : Recherche un équipement par nom et retourne l'index et la valeur correspondants dans la table d'échange. Supporte la recherche partielle et le filtrage par catégorie.
+
+**Paramètres** :
+- `device_name` (string, requis) : Nom de l'équipement à rechercher (recherche partielle supportée)
+- `category` (string, optionnel) : Filtrer par catégorie : `"light"`, `"shutter"`, `"scenario"`, `"security"`, `"heating"`, `"irrigation"`
+
+**Retour** : Liste des équipements trouvés avec leurs indices, valeurs, actions et commandes MCP
+
+**Exemple d'utilisation** :
+```json
+{
+  "name": "find_device_index",
+  "arguments": {
+    "device_name": "chevet chambre petit 3",
+    "category": "light"
+  }
+}
+```
+
+**Exemple de réponse** :
+```
+Équipements trouvés pour 'chevet chambre petit 3':
+(Filtré par catégorie: light)
+
+1. Chevet Petite Chambre 3
+   Index: 613
+   Valeur: 64
+   Action: allumer
+   Catégorie: light
+   Commande MCP: send_order avec params_json='[{"k":613,"v":"64"}]'
+```
+
+**Catégories disponibles** :
+- `light` : Éclairage (lampes, variateurs)
+- `shutter` : Volets et stores
+- `scenario` : Scénarios (1-8)
+- `security` : Sécurité (alarme, prises, machines)
+- `heating` : Chauffage
+- `irrigation` : Arrosage
+
+**Note** : Pour la documentation complète de tous les équipements, consultez `essensys-server-backend/docs/MCP_DEVICE_INDEX_REFERENCE.md`
+
+---
+
+## 5. `send_order`
 
 **Description** : Envoie une commande (action) au backend via la queue globale d'actions. C'est l'outil recommandé pour envoyer des commandes au système.
 
