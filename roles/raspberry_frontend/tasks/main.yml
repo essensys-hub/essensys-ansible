@@ -9,7 +9,20 @@
     dest: "{{ frontend_repo_dir }}"
     version: "{{ frontend_version }}"
     force: true
+    update: yes
   become_user: "{{ service_user }}"
+  register: frontend_git_update
+
+- name: Forcer la mise a jour git du frontend (toujours executer)
+  shell: |
+    set -e
+    cd {{ frontend_repo_dir }}
+    git fetch origin
+    git checkout -f {{ frontend_version }}
+    git reset --hard origin/{{ frontend_version }}
+    git clean -fd
+  become_user: "{{ service_user }}"
+  changed_when: true
 
 - name: Copier le frontend vers le repertoire d'installation
   command: rsync -a --delete "{{ frontend_repo_dir }}/" "{{ frontend_dir }}/"

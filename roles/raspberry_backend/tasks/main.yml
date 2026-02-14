@@ -13,7 +13,7 @@
   become_user: "{{ service_user }}"
   register: backend_git_update
 
-- name: Forcer la mise a jour git du backend si necessaire
+- name: Forcer la mise a jour git du backend (toujours executer)
   shell: |
     set -e
     cd {{ backend_repo_dir }}
@@ -22,7 +22,6 @@
     git reset --hard origin/{{ backend_version }}
     git clean -fd
   become_user: "{{ service_user }}"
-  when: backend_git_update.changed == false
   changed_when: true
 
 - name: Arreter le service backend avant mise a jour
