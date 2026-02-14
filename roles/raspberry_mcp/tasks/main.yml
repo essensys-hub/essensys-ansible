@@ -135,8 +135,24 @@
     mode: '0644'
   notify: Restart MCP
 
+- name: Installer le script de diagnostic MCP
+  copy:
+    src: diagnose-mcp.sh
+    dest: /usr/local/bin/diagnose-mcp
+    mode: '0755'
+
 - name: Activer et demarrer le service MCP
   service:
     name: "{{ mcp_service_name }}"
     enabled: yes
     state: started
+
+- name: Afficher le statut du service MCP apres demarrage
+  command: systemctl status {{ mcp_service_name }} --no-pager -l || true
+  register: mcp_status
+  changed_when: false
+
+- name: Afficher le statut
+  debug:
+    msg: "{{ mcp_status.stdout_lines }}"
+  when: mcp_status.rc != 0
