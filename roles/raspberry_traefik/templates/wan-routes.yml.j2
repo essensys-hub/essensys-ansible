@@ -1,38 +1,14 @@
-# Configuration des routes WAN ({{ wan_domain }})
-# Regles de securite WAN:
-# - Frontend-service: Accessible en HTTPS avec authentification basique
-# - /api/admin/inject: UNIQUEMENT en HTTPS avec authentification basique (meme auth que frontend)
-# - Autres API (/api/serverinfos, /api/mystatus, /api/myactions, /api/done): BLOQUEES (ni HTTP ni HTTPS)
-# - Backend (autres endpoints): BLOQUE en WAN
-# Le domaine est remplace depuis /home/{{ service_user }}/domain.txt
-
 http:
   middlewares:
-    # Middleware de redirection HTTP vers HTTPS
     redirect-to-https:
       redirectScheme:
         scheme: https
         permanent: true
-    
-    # Middleware d'authentification basique (utilise pour frontend ET /api/admin/inject)
     auth-wan:
       basicAuth:
         usersFile: /etc/traefik/users.htpasswd
 
   routers:
-    # NOTE: Redirection HTTP vers HTTPS désactivée car Traefik n'écoute pas sur port 80
-    # Le port 80 est géré par Nginx pour l'accès local
-    # Les redirections HTTP->HTTPS doivent être gérées par Nginx si nécessaire
-    # frontend-wan-redirect:
-    #   rule: "Host(`{{ wan_domain }}`) && !PathPrefix(`/api/`)"
-    #   entryPoints:
-    #     - web
-    #   service: frontend-service
-    #   middlewares:
-    #     - redirect-to-https
-    #   priority: 5
-    
-    # Frontend WAN avec authentification (HTTPS)
     frontend-wan:
       rule: "Host(`{{ wan_domain }}`) && !PathPrefix(`/api/`)"
       entryPoints:
@@ -43,18 +19,7 @@ http:
       tls:
         certResolver: letsencrypt
       priority: 10
-    
-    # NOTE: Redirection HTTP vers HTTPS désactivée car Traefik n'écoute pas sur port 80
-    # api-inject-wan-redirect:
-    #   rule: "Host(`{{ wan_domain }}`) && PathPrefix(`/api/admin/inject`)"
-    #   entryPoints:
-    #     - web
-    #   service: backend-service
-    #   middlewares:
-    #     - redirect-to-https
-    #   priority: 20
-    
-    # /api/admin/inject UNIQUEMENT en HTTPS avec authentification (meme auth que frontend)
+
     api-inject-wan:
       rule: "Host(`{{ wan_domain }}`) && PathPrefix(`/api/admin/inject`)"
       entryPoints:
@@ -65,10 +30,7 @@ http:
       tls:
         certResolver: letsencrypt
       priority: 25
-    
-    # Blocage de toutes les autres routes WAN (autres API)
-    # Ces routes retournent 403 Forbidden
-    # NOTE: Seulement sur websecure (HTTPS) car Traefik n'écoute pas sur port 80
+
     block-api-wan:
       rule: "Host(`{{ wan_domain }}`) && PathPrefix(`/api/`) && !PathPrefix(`/api/admin/inject`)"
       entryPoints:
@@ -79,22 +41,18 @@ http:
       priority: 15
 
   services:
-    # Service frontend (proxy vers nginx qui sert les fichiers statiques)
-    # Nginx ecoute sur port 9090 en interne pour servir le frontend
     frontend-service:
       loadBalancer:
         servers:
-          - url: "http://127.0.0.1:9090"
+          - url: "http://127.0.0.1:80"
         passHostHeader: true
-    
-    # Service backend (proxy vers backend Go sur port 7070)
+
     backend-service:
       loadBalancer:
         servers:
           - url: "http://127.0.0.1:7070"
         passHostHeader: true
-    
-    # Service de blocage (retourne 403 Forbidden)
+
     block-service:
       loadBalancer:
         servers:

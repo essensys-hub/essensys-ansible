@@ -1,138 +1,77 @@
 ---
-- name: Definir les variables Traefik
-  set_fact:
-    traefik_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv7' }}"
-
-- name: Arreter et desactiver Caddy (stack Traefik only)
-  systemd:
-    name: caddy
+- name: Arreter l'ancien Traefik systemd (migration vers Docker)
+  service:
+    name: traefik
     state: stopped
     enabled: false
-  ignore_errors: true
+  failed_when: false
+  changed_when: false
 
-- name: Desinstaller Caddy (stack Traefik only)
-  apt:
-    name: caddy
-    state: absent
-    autoremove: true
-    purge: true
-  ignore_errors: true
+- name: Arreter l'ancien service block (migration)
+  service:
+    name: traefik-block-service
+    state: stopped
+    enabled: false
+  failed_when: false
+  changed_when: false
 
-- name: Supprimer fichiers et depots Caddy (stack Traefik only)
+- name: Supprimer les anciens services systemd Traefik
   file:
     path: "{{ item }}"
     state: absent
   loop:
-    - /etc/caddy
-    - /var/log/caddy
-    - /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-    - /etc/apt/sources.list.d/caddy-stable.list
-  ignore_errors: true
-
-- name: Arreter et desactiver Home Assistant (stack sans HA)
-  systemd:
-    name: homeassistant
-    state: stopped
-    enabled: false
-  ignore_errors: true
-
-- name: Supprimer Home Assistant (stack sans HA)
-  file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - /etc/systemd/system/homeassistant.service
-    - /opt/essensys/homeassistant
-  ignore_errors: true
-
-- name: Verifier le binaire Traefik
-  stat:
-    path: /usr/local/bin/traefik
-  register: traefik_bin
-
-- name: Lire le domaine WAN
-  slurp:
-    src: "{{ domain_file }}"
-  register: domain_file_content
-  ignore_errors: true
-
-- name: Calculer le domaine WAN
-  set_fact:
-    wan_domain: >-
-      {{
-        (domain_file_content.content | default('') | b64decode | trim)
-        if (domain_file_content is defined and domain_file_content.content is defined and (domain_file_content.content | b64decode | trim) != '')
-        else wan_domain_default
-      }}
-
-- name: Telecharger Traefik
-  get_url:
-    url: "https://github.com/traefik/traefik/releases/download/{{ traefik_version }}/traefik_{{ traefik_version }}_linux_{{ traefik_arch }}.tar.gz"
-    dest: /tmp/traefik.tar.gz
-    mode: '0644'
-  when: not traefik_bin.stat.exists
-
-- name: Extraire Traefik
-  unarchive:
-    src: /tmp/traefik.tar.gz
-    dest: /tmp
-    remote_src: true
-  when: not traefik_bin.stat.exists
-
-- name: Installer le binaire Traefik
-  copy:
-    src: /tmp/traefik
-    dest: /usr/local/bin/traefik
-    mode: '0755'
-    remote_src: true
-  when: not traefik_bin.stat.exists
+    - /etc/systemd/system/traefik.service
+    - /etc/systemd/system/traefik-block-service.service
 
 - name: Creer les repertoires Traefik
   file:
     path: "{{ item }}"
     state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
     mode: '0755'
   loop:
-    - /etc/traefik
-    - /etc/traefik/dynamic
-    - /var/log/traefik
-    - /var/lib/traefik
+    - "{{ traefik_config_dir }}"
+    - "{{ traefik_config_dir }}/dynamic"
+    - "{{ traefik_log_dir }}"
 
 - name: Deployer la configuration Traefik
   template:
     src: traefik.yml.j2
-    dest: /etc/traefik/traefik.yml
+    dest: "{{ traefik_config_dir }}/traefik.yml"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
     mode: '0644'
+  notify: restart traefik
 
-- name: Deployer la configuration dynamique locale
-  template:
-    src: local-routes.yml.j2
-    dest: /etc/traefik/dynamic/local-routes.yml
-    mode: '0644'
-
-- name: Deployer la configuration dynamique WAN
+- name: Deployer les routes WAN
   template:
     src: wan-routes.yml.j2
-    dest: /etc/traefik/dynamic/wan-routes.yml
+    dest: "{{ traefik_config_dir }}/dynamic/wan-routes.yml"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
     mode: '0644'
+  notify: restart traefik
 
-- name: Creer acme.json
+- name: Creer acme.json si absent
   file:
-    path: /etc/traefik/acme.json
+    path: "{{ traefik_config_dir }}/acme.json"
     state: touch
     mode: '0600'
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    modification_time: preserve
+    access_time: preserve
 
-- name: Creer users.htpasswd
+- name: Creer users.htpasswd si absent
   file:
-    path: /etc/traefik/users.htpasswd
+    path: "{{ traefik_config_dir }}/users.htpasswd"
     state: touch
     mode: '0600'
-
-- name: Installer le service de blocage Traefik
-  copy:
-    src: block-service.py
-    dest: /usr/local/bin/traefik-block-service.py
-    mode: '0755'
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    modification_time: preserve
+    access_time: preserve
 
 - name: Installer generate-htpasswd.sh
   copy:
@@ -140,30 +79,26 @@
     dest: /usr/local/bin/generate-htpasswd-essensys.sh
     mode: '0755'
 
-- name: Installer le service systemd Traefik block
-  template:
-    src: traefik-block-service.service.j2
-    dest: /etc/systemd/system/traefik-block-service.service
-    mode: '0644'
+- name: Pull de l'image Traefik
+  community.docker.docker_image:
+    name: "{{ traefik_image }}:{{ traefik_version_docker }}"
+    source: pull
+    force_source: true
+  notify: restart traefik
 
-- name: Installer le service systemd Traefik
-  template:
-    src: traefik.service.j2
-    dest: /etc/systemd/system/traefik.service
-    mode: '0644'
+- name: Lancer le conteneur Traefik
+  community.docker.docker_container:
+    name: "{{ traefik_container_name }}"
+    image: "{{ traefik_image }}:{{ traefik_version_docker }}"
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - "{{ traefik_config_dir }}:/etc/traefik"
+      - "{{ traefik_log_dir }}:/var/log/traefik"
+    comparisons:
+      image: strict
 
-- name: Recharger systemd
-  systemd:
-    daemon_reload: true
-
-- name: Activer et demarrer Traefik
-  service:
-    name: traefik
-    state: restarted
-    enabled: true
-
-- name: Activer et demarrer le service de blocage
-  service:
-    name: traefik-block-service
-    state: restarted
-    enabled: true
+- name: Afficher le statut Traefik
+  debug:
+    msg: "Traefik {{ traefik_version_docker }} deploye (HTTPS:443, dashboard:8080)"

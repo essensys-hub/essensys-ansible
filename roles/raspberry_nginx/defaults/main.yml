@@ -1,0 +1,6 @@
+---
+nginx_image: "essensyshub/essensys-nginx"
+nginx_version: "{{ essensys_version }}"
+nginx_container_name: "essensys-nginx"
+nginx_config_dir: "{{ config_dir }}/nginx"
+nginx_frontend_dir: "{{ data_dir }}/frontend"

@@ -1,5 +1,4 @@
 ---
 frontend_image: "essensyshub/essensys-frontend"
 frontend_version: "{{ essensys_version }}"
-frontend_container_name: "essensys-frontend"
-frontend_port: 3000
+frontend_html_dir: "{{ data_dir }}/frontend"

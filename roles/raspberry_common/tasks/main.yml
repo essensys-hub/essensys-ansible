@@ -10,61 +10,13 @@
       - curl
       - wget
       - git
-      - build-essential
-      - rsync
-      - nginx
-      - apache2-utils
       - python3
       - python3-yaml
-      - libcap2-bin
       - ca-certificates
       - openssh-client
       - redis-server
-    state: present
-
-- name: Definir les variables d'architecture
-  set_fact:
-    go_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv6l' }}"
-
-- name: Verifier la presence de Go
-  stat:
-    path: /usr/local/go/bin/go
-  register: go_binary
-
-- name: Telecharger Go
-  get_url:
-    url: "https://go.dev/dl/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
-    dest: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
-    mode: '0644'
-  when: not go_binary.stat.exists
-
-- name: Installer Go
-  unarchive:
-    src: "/tmp/go{{ go_version }}.linux-{{ go_arch }}.tar.gz"
-    dest: /usr/local
-    remote_src: true
-  when: not go_binary.stat.exists
-
-- name: Ajouter Go au PATH systeme
-  lineinfile:
-    path: /etc/profile
-    line: 'export PATH=$PATH:/usr/local/go/bin'
-    state: present
-
-- name: Telecharger le script Node.js
-  get_url:
-    url: "{{ node_setup_script }}"
-    dest: /tmp/nodesource_setup.sh
-    mode: '0755'
-
-- name: Executer le script Node.js
-  command: bash /tmp/nodesource_setup.sh
-  args:
-    creates: /etc/apt/sources.list.d/nodesource.list
-
-- name: Installer Node.js
-  apt:
-    name: nodejs
+      - apache2-utils
+      - openssl
     state: present
 
 - name: Creer l'utilisateur de service
@@ -74,7 +26,7 @@
     create_home: true
     home: "/home/{{ service_user }}"
 
-- name: Creer les repertoires d'installation
+- name: Creer la structure /opt/data/
   file:
     path: "{{ item }}"
     state: directory
@@ -82,21 +34,17 @@
     group: "{{ service_user }}"
     mode: '0755'
   loop:
-    - "{{ install_dir }}"
-    - "{{ backend_dir }}"
-    - "{{ frontend_dir }}"
-    - "{{ install_dir }}/logs"
-
-- name: Creer le repertoire de logs backend
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0755'
-  loop:
-    - /var/logs/Essensys
-    - /var/logs/Essensys/backend
+    - "{{ data_dir }}"
+    - "{{ config_dir }}"
+    - "{{ config_dir }}/backend"
+    - "{{ config_dir }}/mcp"
+    - "{{ config_dir }}/control-plane"
+    - "{{ config_dir }}/nginx"
+    - "{{ config_dir }}/traefik"
+    - "{{ config_dir }}/traefik/dynamic"
+    - "{{ data_dir }}/control-plane"
+    - "{{ data_dir }}/frontend"
+    - "{{ data_dir }}/logs"
 
 - name: S'assurer que Redis est actif
   service:
@@ -104,23 +52,17 @@
     state: started
     enabled: true
 
-- name: Arreter et desactiver Home Assistant (stack sans HA)
-  systemd:
-    name: homeassistant
-    state: stopped
-    enabled: false
+- name: Lire le domaine WAN
+  slurp:
+    src: "{{ domain_file }}"
+  register: domain_file_content
   ignore_errors: true
 
-- name: Supprimer le service Home Assistant (stack sans HA)
-  file:
-    path: /etc/systemd/system/homeassistant.service
-    state: absent
-
-- name: Recharger systemd apres suppression Home Assistant
-  systemd:
-    daemon_reload: true
-
-- name: Supprimer les fichiers Home Assistant (stack sans HA)
-  file:
-    path: /opt/essensys/homeassistant
-    state: absent
+- name: Calculer le domaine WAN
+  set_fact:
+    wan_domain: >-
+      {{
+        (domain_file_content.content | default('') | b64decode | trim)
+        if (domain_file_content is defined and domain_file_content.content is defined and (domain_file_content.content | b64decode | trim) != '')
+        else wan_domain_default
+      }}

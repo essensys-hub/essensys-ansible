@@ -4,28 +4,23 @@
     name: "{{ frontend_image }}:{{ frontend_version }}"
     source: pull
     force_source: true
-  notify: restart frontend
 
-- name: Lancer le conteneur frontend
-  community.docker.docker_container:
-    name: "{{ frontend_container_name }}"
-    image: "{{ frontend_image }}:{{ frontend_version }}"
-    state: started
-    restart_policy: unless-stopped
-    network_mode: host
-    comparisons:
-      image: strict
+- name: Extraire les fichiers statiques du frontend
+  shell: |
+    docker rm -f essensys-frontend-extract 2>/dev/null || true
+    docker create --name essensys-frontend-extract {{ frontend_image }}:{{ frontend_version }}
+    docker cp essensys-frontend-extract:/var/www/html/. {{ frontend_html_dir }}/
+    docker rm essensys-frontend-extract
+  changed_when: true
 
-- name: Verifier que le frontend repond
-  uri:
-    url: "http://localhost:{{ frontend_port }}/"
-    status_code: [200]
-  register: frontend_health
-  retries: 5
-  delay: 3
-  until: frontend_health.status == 200
-  ignore_errors: true
+- name: Fixer les permissions des fichiers frontend
+  file:
+    path: "{{ frontend_html_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    recurse: true
 
 - name: Afficher le statut frontend
   debug:
-    msg: "Frontend {{ frontend_version }} deploye sur le port {{ frontend_port }}"
+    msg: "Frontend {{ frontend_version }} deploye dans {{ frontend_html_dir }}"

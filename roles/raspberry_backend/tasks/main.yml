@@ -1,12 +1,4 @@
 ---
-- name: Creer le repertoire de donnees backend
-  file:
-    path: "{{ backend_data_dir }}"
-    state: directory
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0755'
-
 - name: Verifier si la config backend existe
   stat:
     path: "{{ backend_config }}"
@@ -41,7 +33,6 @@
   file:
     path: /etc/systemd/system/essensys-backend.service
     state: absent
-  notify: reload systemd
 
 - name: Lancer le conteneur backend
   community.docker.docker_container:
@@ -54,19 +45,8 @@
     command: ["-config", "/etc/essensys/config.yaml"]
     volumes:
       - "{{ backend_config }}:/etc/essensys/config.yaml:ro"
-      - "{{ backend_data_dir }}:/data"
     comparisons:
       image: strict
-
-- name: Verifier que le backend repond
-  uri:
-    url: "http://localhost:{{ backend_port }}/api/health"
-    status_code: [200, 404]
-  register: backend_health
-  retries: 5
-  delay: 3
-  until: backend_health.status is defined
-  ignore_errors: true
 
 - name: Afficher le statut backend
   debug:

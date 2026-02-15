@@ -12,5 +12,8 @@ redis:
 store:
   path: /data/controlplane.db
 
+backup:
+  data_dir: /opt/data
+
 log:
   level: {{ control_plane_log_level }}

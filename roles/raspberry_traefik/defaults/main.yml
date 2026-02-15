@@ -1,0 +1,6 @@
+---
+traefik_image: "essensyshub/essensys-traefik"
+traefik_version_docker: "{{ essensys_version }}"
+traefik_container_name: "essensys-traefik"
+traefik_config_dir: "{{ config_dir }}/traefik"
+traefik_log_dir: "{{ data_dir }}/logs/traefik"

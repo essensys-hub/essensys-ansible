@@ -1,13 +1,5 @@
 ---
-- name: Creer le repertoire de donnees du Control Plane
-  file:
-    path: "{{ control_plane_data_dir }}"
-    state: directory
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0755'
-
-- name: Verifier si la config existe deja
+- name: Verifier si la config Control Plane existe
   stat:
     path: "{{ control_plane_config }}"
   register: cp_config_stat
@@ -53,25 +45,15 @@
     network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - "{{ control_plane_data_dir }}:/data"
+      - "{{ control_plane_data }}:/data"
       - "{{ control_plane_config }}:/etc/controlplane/config.yaml:ro"
+      - "{{ data_dir }}:/opt/data:ro"
     comparisons:
       image: strict
-  register: cp_container
-
-- name: Attendre que le Control Plane soit accessible
-  uri:
-    url: "http://localhost:{{ control_plane_port }}/api/health"
-    status_code: [200, 401]
-  register: cp_health
-  retries: 5
-  delay: 3
-  until: cp_health.status in [200, 401]
-  ignore_errors: true
 
 - name: Afficher le statut du Control Plane
   debug:
     msg: >
       Control Plane {{ control_plane_version }} deploye.
       URL: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ control_plane_port }}
-      Config: {{ control_plane_config }}
+      Backup: {{ data_dir }}/

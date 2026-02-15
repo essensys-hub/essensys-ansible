@@ -1,10 +1,4 @@
 ---
-- name: Creer le repertoire de configuration MCP
-  file:
-    path: "{{ mcp_config_dir }}"
-    state: directory
-    mode: '0755'
-
 - name: Verifier si le token MCP existe
   stat:
     path: "{{ mcp_token_file }}"
@@ -20,8 +14,8 @@
   file:
     path: "{{ mcp_token_file }}"
     mode: '0600'
-    owner: root
-    group: root
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
 
 - name: Lire le token MCP
   slurp:
@@ -44,7 +38,6 @@
   file:
     path: /etc/systemd/system/essensys-mcp.service
     state: absent
-  notify: reload systemd mcp
 
 - name: Arreter tout processus essensys-mcp existant
   command: pkill -f essensys-mcp
@@ -62,17 +55,6 @@
     command: ["-mode", "sse", "-port", "{{ mcp_port }}", "-token", "{{ mcp_token }}"]
     comparisons:
       image: strict
-  notify: restart mcp
-
-- name: Verifier que le MCP repond
-  uri:
-    url: "http://localhost:{{ mcp_port }}/sse"
-    status_code: [200, 401, 405]
-  register: mcp_health
-  retries: 5
-  delay: 3
-  until: mcp_health.status is defined
-  ignore_errors: true
 
 - name: Afficher le statut MCP
   debug:
