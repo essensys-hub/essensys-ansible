@@ -1,0 +1,32 @@
+---
+- name: Verifier si Docker est installe
+  command: docker --version
+  register: docker_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Installer Docker via get.docker.com
+  shell: curl -fsSL https://get.docker.com | sh
+  when: docker_check.rc != 0
+
+- name: Ajouter les utilisateurs au groupe docker
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+
+- name: Activer et demarrer Docker
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Verifier que Docker fonctionne
+  command: docker info
+  register: docker_info
+  changed_when: false
+
+- name: Afficher la version Docker
+  debug:
+    msg: "Docker installe: {{ docker_check.stdout | default(docker_info.stdout_lines[0] | default('OK')) }}"

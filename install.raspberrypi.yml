@@ -4,32 +4,42 @@
   gather_facts: true
   become: true
   vars:
+    essensys_version: "V.1.3.0"
     service_user: essensys
     install_dir: /opt/essensys
     backend_dir: "{{ install_dir }}/backend"
     frontend_dir: "{{ install_dir }}/frontend"
     backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
     frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
-    backend_version: V.1.2.2
-    frontend_version: V.1.2.2
+    backend_version: "{{ essensys_version }}"
+    frontend_version: "{{ essensys_version }}"
     acme_email: admin@acme.com
     use_staging: false
     wan_domain_default: essensys.acme.com
     domain_file: "/home/{{ service_user }}/domain.txt"
     traefik_version: v2.11.3
-    go_version: "1.21.5"
+    go_version: "1.23.4"
     node_setup_script: "https://deb.nodesource.com/setup_20.x"
   roles:
+    # --- Systeme de base ---
     - raspberry_common
+    - raspberry_docker
+
+    # --- Services metier ---
     - raspberry_backend
     - raspberry_mcp
     - raspberry_frontend
-    # Nginx pour port 80 (client legacy - tolérant aux requêtes HTTP non-standard)
+
+    # --- Reverse proxy & reseau ---
     - raspberry_nginx
-    # Traefik pour port 443 avec authentification (stack WAN)
     - raspberry_traefik
+
+    # --- Control Plane (Docker) ---
+    - raspberry_control_plane
+
+    # --- Services complementaires ---
     - raspberry_adguard
-    - raspberry_logrotate
-    - raspberry_push_status
     - raspberry_mosquitto
     - raspberry_monitor
+    - raspberry_logrotate
+    - raspberry_push_status

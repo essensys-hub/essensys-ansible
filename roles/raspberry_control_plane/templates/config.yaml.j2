@@ -1,0 +1,16 @@
+server:
+  port: {{ control_plane_port }}
+  auth_token: "{{ control_plane_auth_token }}"
+
+docker:
+  socket: /var/run/docker.sock
+
+redis:
+  addr: "{{ control_plane_redis_addr }}"
+  db: {{ control_plane_redis_db }}
+
+store:
+  path: /data/controlplane.db
+
+log:
+  level: {{ control_plane_log_level }}

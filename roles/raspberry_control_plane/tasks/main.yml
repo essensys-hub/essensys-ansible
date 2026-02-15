@@ -1,0 +1,77 @@
+---
+- name: Creer le repertoire de donnees du Control Plane
+  file:
+    path: "{{ control_plane_data_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Verifier si la config existe deja
+  stat:
+    path: "{{ control_plane_config }}"
+  register: cp_config_stat
+
+- name: Generer un token d'authentification
+  command: openssl rand -hex 32
+  register: cp_auth_token
+  when: not cp_config_stat.stat.exists
+  changed_when: false
+
+- name: Lire le token existant depuis la config
+  shell: "grep auth_token {{ control_plane_config }} | sed 's/.*\"\\(.*\\)\"/\\1/'"
+  register: cp_existing_token
+  when: cp_config_stat.stat.exists
+  changed_when: false
+
+- name: Definir le token d'authentification
+  set_fact:
+    control_plane_auth_token: "{{ cp_auth_token.stdout if not cp_config_stat.stat.exists else cp_existing_token.stdout }}"
+
+- name: Deployer la configuration du Control Plane
+  template:
+    src: config.yaml.j2
+    dest: "{{ control_plane_config }}"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'
+  notify: restart control plane
+
+- name: Pull de l'image Control Plane
+  community.docker.docker_image:
+    name: "{{ control_plane_image }}:{{ control_plane_version }}"
+    source: pull
+    force_source: true
+  notify: restart control plane
+
+- name: Lancer le conteneur Control Plane
+  community.docker.docker_container:
+    name: "{{ control_plane_name }}"
+    image: "{{ control_plane_image }}:{{ control_plane_version }}"
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "{{ control_plane_data_dir }}:/data"
+      - "{{ control_plane_config }}:/etc/controlplane/config.yaml:ro"
+    comparisons:
+      image: strict
+  register: cp_container
+
+- name: Attendre que le Control Plane soit accessible
+  uri:
+    url: "http://localhost:{{ control_plane_port }}/api/health"
+    status_code: [200, 401]
+  register: cp_health
+  retries: 5
+  delay: 3
+  until: cp_health.status in [200, 401]
+  ignore_errors: true
+
+- name: Afficher le statut du Control Plane
+  debug:
+    msg: >
+      Control Plane {{ control_plane_version }} deploye.
+      URL: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ control_plane_port }}
+      Config: {{ control_plane_config }}

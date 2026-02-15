@@ -1,0 +1,14 @@
+---
+control_plane_image: "essensyshub/essensys-control-plane"
+control_plane_version: "{{ essensys_version }}"
+control_plane_name: "essensys-control-plane"
+control_plane_port: 9100
+control_plane_data_dir: "/opt/essensys/control-plane"
+control_plane_config: "{{ control_plane_data_dir }}/config.yaml"
+
+# Redis (installe par raspberry_common)
+control_plane_redis_addr: "localhost:6379"
+control_plane_redis_db: 0
+
+# Log level: debug, info, warn, error
+control_plane_log_level: "info"
