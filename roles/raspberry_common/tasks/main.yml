@@ -14,7 +14,6 @@
       - python3-yaml
       - ca-certificates
       - openssh-client
-      - redis-server
       - apache2-utils
       - openssl
     state: present
@@ -43,14 +42,10 @@
     - "{{ config_dir }}/traefik"
     - "{{ config_dir }}/traefik/dynamic"
     - "{{ data_dir }}/control-plane"
+    - "{{ config_dir }}/redis"
+    - "{{ data_dir }}/redis"
     - "{{ data_dir }}/frontend"
     - "{{ data_dir }}/logs"
-
-- name: S'assurer que Redis est actif
-  service:
-    name: redis-server
-    state: started
-    enabled: true
 
 - name: Lire le domaine WAN
   slurp:

@@ -1,0 +1,7 @@
+---
+redis_image: "essensyshub/essensys-redis"
+redis_version: "{{ essensys_version }}"
+redis_container_name: "essensys-redis"
+redis_port: 6379
+redis_config_dir: "{{ config_dir }}/redis"
+redis_data_dir: "{{ data_dir }}/redis"

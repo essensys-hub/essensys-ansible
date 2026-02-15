@@ -1,0 +1,50 @@
+---
+- name: Arreter le Redis systeme (migration vers Docker)
+  service:
+    name: redis-server
+    state: stopped
+    enabled: false
+  failed_when: false
+  changed_when: false
+
+- name: Creer les repertoires Redis
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop:
+    - "{{ redis_config_dir }}"
+    - "{{ redis_data_dir }}"
+
+- name: Pull de l'image Redis
+  community.docker.docker_image:
+    name: "{{ redis_image }}:{{ redis_version }}"
+    source: pull
+    force_source: true
+  notify: restart redis
+
+- name: Lancer le conteneur Redis
+  community.docker.docker_container:
+    name: "{{ redis_container_name }}"
+    image: "{{ redis_image }}:{{ redis_version }}"
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - "{{ redis_data_dir }}:/data"
+      - "{{ redis_config_dir }}:/etc/redis"
+    comparisons:
+      image: strict
+
+- name: Attendre que Redis soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ redis_port }}"
+    delay: 2
+    timeout: 30
+
+- name: Afficher le statut Redis
+  debug:
+    msg: "Redis {{ redis_version }} deploye sur le port {{ redis_port }}"

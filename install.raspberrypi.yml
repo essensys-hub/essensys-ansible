@@ -26,6 +26,7 @@
     # --- Systeme de base ---
     - raspberry_common
     - raspberry_docker
+    - raspberry_redis
 
     # --- Services metier (Docker) ---
     - raspberry_backend

@@ -1,0 +1,12 @@
+---
+- name: restart redis
+  community.docker.docker_container:
+    name: "{{ redis_container_name }}"
+    image: "{{ redis_image }}:{{ redis_version }}"
+    state: started
+    restart: true
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - "{{ redis_data_dir }}:/data"
+      - "{{ redis_config_dir }}:/etc/redis"
