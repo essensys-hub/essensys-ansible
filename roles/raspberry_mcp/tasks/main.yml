@@ -1,136 +1,20 @@
 ---
-- name: Definir variables MCP
-  set_fact:
-    mcp_src_dir: "/home/{{ service_user }}/essensys-server-backend/cmd/mcp-server"
-    mcp_bin_dir: "/usr/local/bin"
-    mcp_service_name: "essensys-mcp"
-    mcp_config_dir: "/etc/essensys"
-    mcp_token_file: "/etc/essensys/mcp.token"
-
-- name: Verifier la presence du code source MCP
-  stat:
-    path: "{{ mcp_src_dir }}"
-  register: mcp_src_stat
-
-- name: Forcer la mise a jour git avant compilation MCP
-  shell: |
-    set -e
-    cd /home/{{ service_user }}/essensys-server-backend
-    git fetch origin || true
-    git checkout -f {{ backend_version | default('V.1.2.2') }} || git checkout -b {{ backend_version | default('V.1.2.2') }} origin/{{ backend_version | default('V.1.2.2') }}
-    git reset --hard origin/{{ backend_version | default('V.1.2.2') }}
-    git clean -fd
-  become_user: "{{ service_user }}"
-  when: mcp_src_stat.stat.exists
-  register: git_force_update
-  changed_when: true
-
-- name: Afficher le commit actuel apres mise a jour
-  command: git rev-parse HEAD
-  args:
-    chdir: "/home/{{ service_user }}/essensys-server-backend"
-  become_user: "{{ service_user }}"
-  when: mcp_src_stat.stat.exists
-  register: current_commit
-
-- name: Afficher le commit pour verification
-  debug:
-    msg: "Commit actuel: {{ current_commit.stdout | default('N/A') }}"
-
-- name: Verifier le contenu autour de la ligne 283 du fichier main.go
-  command: sed -n '280,285p' cmd/mcp-server/main.go
-  args:
-    chdir: "/home/{{ service_user }}/essensys-server-backend"
-  become_user: "{{ service_user }}"
-  when: mcp_src_stat.stat.exists
-  register: lines_280_285
-  ignore_errors: yes
-
-- name: Afficher les lignes 280-285 pour verification
-  debug:
-    msg: "Lignes 280-285:\n{{ lines_280_285.stdout | default('N/A') }}"
-
-- name: Verifier si NewSSEServer utilise WithBaseURL
-  command: grep -n "NewSSEServer" cmd/mcp-server/main.go
-  args:
-    chdir: "/home/{{ service_user }}/essensys-server-backend"
-  become_user: "{{ service_user }}"
-  when: mcp_src_stat.stat.exists
-  register: grep_newsseserver
-  ignore_errors: yes
-
-- name: Afficher les lignes contenant NewSSEServer
-  debug:
-    msg: "Lignes avec NewSSEServer:\n{{ grep_newsseserver.stdout | default('N/A') }}"
-
-- name: Telecharger les dependances MCP
-  command: /usr/local/go/bin/go mod tidy
-  args:
-    chdir: "{{ mcp_src_dir }}"
-  environment:
-    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
-    GOTOOLCHAIN: local
-  when: mcp_src_stat.stat.exists
-  register: mcp_deps
-  changed_when: mcp_deps.rc == 0
-
-- name: Obtenir le commit git actuel pour la version
-  command: git rev-parse --short HEAD
-  args:
-    chdir: "/home/{{ service_user }}/essensys-server-backend"
-  become_user: "{{ service_user }}"
-  register: git_commit_short
-  changed_when: false
-  when: mcp_src_stat.stat.exists
-
-- name: Obtenir la date de build
-  command: date -u +"%Y-%m-%dT%H:%M:%SZ"
-  register: build_time
-  changed_when: false
-  when: mcp_src_stat.stat.exists
-
-- name: Compiler le serveur MCP avec informations de version
-  command: >
-    /usr/local/go/bin/go build
-    -ldflags "-X main.version={{ backend_version | default('V.1.2.2') }}
-              -X main.buildTime={{ build_time.stdout }}
-              -X main.gitCommit={{ git_commit_short.stdout }}"
-    -o essensys-mcp
-  args:
-    chdir: "{{ mcp_src_dir }}"
-  environment:
-    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
-    GOTOOLCHAIN: local
-  when: mcp_src_stat.stat.exists
-  register: mcp_build
-  changed_when: mcp_build.rc == 0
-
-- name: Installer le binaire MCP
-  copy:
-    src: "{{ mcp_src_dir }}/essensys-mcp"
-    dest: "{{ mcp_bin_dir }}/essensys-mcp"
-    mode: '0755'
-    remote_src: yes
-  when: mcp_src_stat.stat.exists and mcp_build.rc == 0
-  notify: Restart MCP
-
-- name: Creer le repertoire de configuration
+- name: Creer le repertoire de configuration MCP
   file:
     path: "{{ mcp_config_dir }}"
     state: directory
     mode: '0755'
 
-- name: Verifier si le token existe
+- name: Verifier si le token MCP existe
   stat:
     path: "{{ mcp_token_file }}"
-  register: token_stat
+  register: mcp_token_stat
 
 - name: Generer un token MCP aleatoire
   shell: openssl rand -hex 32 > {{ mcp_token_file }}
   args:
     creates: "{{ mcp_token_file }}"
-  when: not token_stat.stat.exists
-  register: token_gen
+  when: not mcp_token_stat.stat.exists
 
 - name: Fixer les permissions du token
   file:
@@ -148,52 +32,48 @@
   set_fact:
     mcp_token: "{{ mcp_token_b64['content'] | b64decode | trim }}"
 
-- name: Installer le service systemd MCP
-  template:
-    src: essensys-mcp.service.j2
-    dest: /etc/systemd/system/essensys-mcp.service
-    mode: '0644'
-  notify: Restart MCP
-
-- name: Installer le script de diagnostic MCP
-  copy:
-    src: diagnose-mcp.sh
-    dest: /usr/local/bin/diagnose-mcp
-    mode: '0755'
-
-- name: Verifier si le port MCP est deja utilise
-  command: ss -tlnp | grep :{{ mcp_port | default(8083) }} || true
-  register: port_check
-  changed_when: false
+- name: Arreter l'ancien service systemd MCP (migration)
+  service:
+    name: essensys-mcp
+    state: stopped
+    enabled: false
   failed_when: false
+  changed_when: false
 
-- name: Avertir si le port est deja utilise
-  debug:
-    msg: |
-      ATTENTION: Le port {{ mcp_port | default(8083) }} est deja utilise!
-      Processus: {{ port_check.stdout }}
-      Le service MCP ne pourra pas demarrer.
-      Arretez le processus ou changez le port dans defaults/main.yml.
-  when: port_check.stdout != ""
+- name: Supprimer l'ancien service systemd MCP
+  file:
+    path: /etc/systemd/system/essensys-mcp.service
+    state: absent
+  notify: reload systemd mcp
 
 - name: Arreter tout processus essensys-mcp existant
-  command: pkill -f essensys-mcp || true
+  command: pkill -f essensys-mcp
   changed_when: false
   failed_when: false
 
-- name: Activer et demarrer le service MCP
-  service:
-    name: "{{ mcp_service_name }}"
-    enabled: yes
+- name: Lancer le conteneur MCP
+  community.docker.docker_container:
+    name: "{{ mcp_container_name }}"
+    image: "{{ mcp_image }}:{{ mcp_version }}"
     state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    entrypoint: ["mcp-server"]
+    command: ["-mode", "sse", "-port", "{{ mcp_port }}", "-token", "{{ mcp_token }}"]
+    comparisons:
+      image: strict
+  notify: restart mcp
 
-- name: Afficher le statut du service MCP apres demarrage
-  shell: systemctl status {{ mcp_service_name }} --no-pager -l || true
-  register: mcp_status
-  changed_when: false
-  failed_when: false
+- name: Verifier que le MCP repond
+  uri:
+    url: "http://localhost:{{ mcp_port }}/sse"
+    status_code: [200, 401, 405]
+  register: mcp_health
+  retries: 5
+  delay: 3
+  until: mcp_health.status is defined
+  ignore_errors: true
 
-- name: Afficher le statut si le service a des problemes
+- name: Afficher le statut MCP
   debug:
-    msg: "{{ mcp_status.stdout_lines }}"
-  when: mcp_status.rc != 0 and mcp_status.stdout != ""
+    msg: "MCP {{ mcp_version }} deploye sur le port {{ mcp_port }}"

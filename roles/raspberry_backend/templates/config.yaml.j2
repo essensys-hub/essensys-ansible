@@ -1,0 +1,26 @@
+server:
+  port: {{ backend_port }}
+  read_timeout: 10s
+  write_timeout: 10s
+  idle_timeout: 60s
+
+auth:
+  enabled: false
+  clients:
+    testclient: testpass
+
+logging:
+  level: {{ backend_log_level }}
+  format: text
+
+redis:
+  addr: "{{ backend_redis_addr }}"
+  password: ""
+  db: {{ backend_redis_db }}
+
+mqtt:
+  enabled: {{ backend_mqtt_enabled | lower }}
+  broker: "{{ backend_mqtt_broker }}"
+  username: "{{ backend_mqtt_username }}"
+  password: "{{ backend_mqtt_password }}"
+  client_id: "essensys-backend"

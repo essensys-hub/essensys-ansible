@@ -1,60 +1,31 @@
 ---
-- name: Definir variables frontend
-  set_fact:
-    frontend_repo_dir: "/home/{{ service_user }}/essensys-server-frontend"
+- name: Pull de l'image frontend
+  community.docker.docker_image:
+    name: "{{ frontend_image }}:{{ frontend_version }}"
+    source: pull
+    force_source: true
+  notify: restart frontend
 
-- name: Cloner ou mettre a jour le frontend
-  git:
-    repo: "{{ frontend_repo }}"
-    dest: "{{ frontend_repo_dir }}"
-    version: "{{ frontend_version }}"
-    force: true
-    update: yes
-  become_user: "{{ service_user }}"
-  register: frontend_git_update
+- name: Lancer le conteneur frontend
+  community.docker.docker_container:
+    name: "{{ frontend_container_name }}"
+    image: "{{ frontend_image }}:{{ frontend_version }}"
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    comparisons:
+      image: strict
 
-- name: Forcer la mise a jour git du frontend (toujours executer)
-  shell: |
-    set -e
-    cd {{ frontend_repo_dir }}
-    git fetch origin
-    git checkout -f {{ frontend_version }}
-    git reset --hard origin/{{ frontend_version }}
-    git clean -fd
-  become_user: "{{ service_user }}"
-  changed_when: true
+- name: Verifier que le frontend repond
+  uri:
+    url: "http://localhost:{{ frontend_port }}/"
+    status_code: [200]
+  register: frontend_health
+  retries: 5
+  delay: 3
+  until: frontend_health.status == 200
+  ignore_errors: true
 
-- name: Copier le frontend vers le repertoire d'installation
-  command: rsync -a --delete "{{ frontend_repo_dir }}/" "{{ frontend_dir }}/"
-  register: frontend_sync
-  changed_when: frontend_sync.rc == 0
-
-- name: Installer les dependances npm
-  command: npm install
-  args:
-    chdir: "{{ frontend_dir }}"
-  become_user: "{{ service_user }}"
-
-- name: Builder le frontend
-  command: npm run build
-  args:
-    chdir: "{{ frontend_dir }}"
-  become_user: "{{ service_user }}"
-
-- name: Verifier la presence du build
-  stat:
-    path: "{{ frontend_dir }}/dist"
-  register: frontend_dist
-
-- name: Echouer si le build est absent
-  fail:
-    msg: "Le build du frontend a echoue: {{ frontend_dir }}/dist manquant."
-  when: not frontend_dist.stat.exists
-
-- name: Definir les permissions du frontend
-  file:
-    path: "{{ frontend_dir }}"
-    state: directory
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    recurse: true
+- name: Afficher le statut frontend
+  debug:
+    msg: "Frontend {{ frontend_version }} deploye sur le port {{ frontend_port }}"

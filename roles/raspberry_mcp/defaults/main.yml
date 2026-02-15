@@ -1,2 +1,7 @@
 ---
+mcp_image: "essensyshub/essensys-backend"
+mcp_version: "{{ essensys_version }}"
+mcp_container_name: "essensys-mcp"
 mcp_port: 8083
+mcp_config_dir: "/etc/essensys"
+mcp_token_file: "{{ mcp_config_dir }}/mcp.token"

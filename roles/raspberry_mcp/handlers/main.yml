@@ -1,7 +1,15 @@
 ---
-- name: Restart MCP
+- name: restart mcp
+  community.docker.docker_container:
+    name: "{{ mcp_container_name }}"
+    image: "{{ mcp_image }}:{{ mcp_version }}"
+    state: started
+    restart: true
+    restart_policy: unless-stopped
+    network_mode: host
+    entrypoint: ["mcp-server"]
+    command: ["-mode", "sse", "-port", "{{ mcp_port }}", "-token", "{{ mcp_token }}"]
+
+- name: reload systemd mcp
   systemd:
-    name: "{{ mcp_service_name }}"
-    state: restarted
-    enabled: yes
-  listen: "Restart MCP"
+    daemon_reload: true

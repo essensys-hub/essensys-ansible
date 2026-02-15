@@ -1,2 +1,18 @@
 ---
-# Variables par défaut pour le rôle raspberry_backend
+backend_image: "essensyshub/essensys-backend"
+backend_version: "{{ essensys_version }}"
+backend_container_name: "essensys-backend"
+backend_port: 7070
+backend_data_dir: "/opt/essensys/backend"
+backend_config: "{{ backend_data_dir }}/config.yaml"
+backend_log_level: "info"
+
+# Redis (installe par raspberry_common)
+backend_redis_addr: "localhost:6379"
+backend_redis_db: 0
+
+# MQTT (mosquitto installe par raspberry_mosquitto)
+backend_mqtt_enabled: false
+backend_mqtt_broker: "tcp://localhost:1883"
+backend_mqtt_username: "essensys"
+backend_mqtt_password: "essensys_mqtt_password"

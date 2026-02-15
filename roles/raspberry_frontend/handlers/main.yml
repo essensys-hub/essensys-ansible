@@ -1,0 +1,9 @@
+---
+- name: restart frontend
+  community.docker.docker_container:
+    name: "{{ frontend_container_name }}"
+    image: "{{ frontend_image }}:{{ frontend_version }}"
+    state: started
+    restart: true
+    restart_policy: unless-stopped
+    network_mode: host
