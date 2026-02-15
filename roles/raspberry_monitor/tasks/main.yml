@@ -9,9 +9,9 @@
     update_cache: yes
 
 - name: Créer l'environnement virtuel Python pour MQTT Debug
-  command: python3 -m venv {{ install_dir }}/mqtt_debug_venv
+  command: python3 -m venv {{ data_dir }}/mqtt_debug_venv
   args:
-    creates: "{{ install_dir }}/mqtt_debug_venv"
+    creates: "{{ data_dir }}/mqtt_debug_venv"
   become_user: "{{ service_user }}"
 
 - name: Installer les dépendances Python pour MQTT Debug dans le venv
@@ -23,27 +23,27 @@
       - python-socketio==5.10.0
       - eventlet==0.33.3
     state: present
-    virtualenv: "{{ install_dir }}/mqtt_debug_venv"
+    virtualenv: "{{ data_dir }}/mqtt_debug_venv"
 
 - name: Copier le script de monitoring
   copy:
     src: monitor.py
-    dest: "{{ install_dir }}/monitor.py"
+    dest: "{{ data_dir }}/monitor.py"
     mode: '0755'
 
 - name: Copier le setup du monitoring
   copy:
     src: setup_monitor.sh
-    dest: "{{ install_dir }}/setup_monitor.sh"
+    dest: "{{ data_dir }}/setup_monitor.sh"
     mode: '0755'
 
 - name: Executer le setup du monitoring
-  command: "{{ install_dir }}/setup_monitor.sh"
+  command: "{{ data_dir }}/setup_monitor.sh"
 
 - name: Copier l'interface web MQTT Debug
   copy:
     src: mqtt_debug.py
-    dest: "{{ install_dir }}/mqtt_debug.py"
+    dest: "{{ data_dir }}/mqtt_debug.py"
     mode: '0755'
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
@@ -57,7 +57,7 @@
         "username": "{{ mosquitto_user }}",
         "password": "{{ mosquitto_password }}"
       }
-    dest: "{{ install_dir }}/mqtt_debug_config.json"
+    dest: "{{ data_dir }}/mqtt_debug_config.json"
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0600'

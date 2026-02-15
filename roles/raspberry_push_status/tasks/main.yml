@@ -2,7 +2,7 @@
 - name: Copier le script de push status
   copy:
     src: push_status.py
-    dest: "{{ install_dir }}/push_status.py"
+    dest: "{{ data_dir }}/push_status.py"
     mode: '0755'
 
 - name: Installer le service systemd de push status
