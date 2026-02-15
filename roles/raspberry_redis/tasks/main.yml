@@ -18,6 +18,31 @@
     - "{{ redis_config_dir }}"
     - "{{ redis_data_dir }}"
 
+- name: Deployer la config Redis si absente
+  copy:
+    dest: "{{ redis_config_dir }}/redis.conf"
+    content: |
+      bind 0.0.0.0
+      port {{ redis_port }}
+      protected-mode no
+      dir /data
+      dbfilename dump.rdb
+      save 900 1
+      save 300 10
+      save 60 10000
+      maxmemory 128mb
+      maxmemory-policy allkeys-lru
+      loglevel notice
+      logfile ""
+      tcp-backlog 128
+      tcp-keepalive 300
+      timeout 0
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+    force: false
+  notify: restart redis
+
 - name: Pull de l'image Redis
   community.docker.docker_image:
     name: "{{ redis_image }}:{{ redis_version }}"
@@ -34,7 +59,7 @@
     network_mode: host
     volumes:
       - "{{ redis_data_dir }}:/data"
-      - "{{ redis_config_dir }}:/etc/redis"
+      - "{{ redis_config_dir }}/redis.conf:/etc/redis/redis.conf:ro"
     comparisons:
       image: strict
 
