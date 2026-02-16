@@ -4,3 +4,6 @@ traefik_version_docker: "{{ essensys_version }}"
 traefik_container_name: "essensys-traefik"
 traefik_config_dir: "{{ config_dir }}/traefik"
 traefik_log_dir: "{{ data_dir }}/logs/traefik"
+
+# Control Plane WAN subdomain (requires DNS CNAME pointing to same public IP)
+control_plane_wan_domain: "cp.{{ wan_domain }}"

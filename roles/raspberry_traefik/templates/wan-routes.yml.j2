@@ -9,6 +9,7 @@ http:
         usersFile: /etc/traefik/users.htpasswd
 
   routers:
+    # --- Frontend WAN ---
     frontend-wan:
       rule: "Host(`{{ wan_domain }}`) && !PathPrefix(`/api/`)"
       entryPoints:
@@ -40,6 +41,18 @@ http:
         certResolver: letsencrypt
       priority: 15
 
+    # --- Control Plane WAN ---
+    control-plane-wan:
+      rule: "Host(`{{ control_plane_wan_domain }}`)"
+      entryPoints:
+        - websecure
+      service: control-plane-service
+      middlewares:
+        - auth-wan
+      tls:
+        certResolver: letsencrypt
+      priority: 20
+
   services:
     frontend-service:
       loadBalancer:
@@ -57,4 +70,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://127.0.0.1:8082"
+        passHostHeader: true
+
+    control-plane-service:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:{{ control_plane_port }}"
         passHostHeader: true
