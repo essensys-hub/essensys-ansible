@@ -51,8 +51,8 @@ if [ -z "$USERNAME" ]; then
     exit 1
 fi
 
-# Fichier de sortie
-HTPASSWD_FILE="/etc/traefik/users.htpasswd"
+# Fichier de sortie (chemin coherent avec le montage Docker Compose)
+HTPASSWD_FILE="/opt/data/config/traefik/users.htpasswd"
 
 # Creer le repertoire si necessaire
 mkdir -p "$(dirname "$HTPASSWD_FILE")"
@@ -71,21 +71,15 @@ if [ -z "$PASSWORD" ]; then
     exit 1
 fi
 
-# Generer le fichier htpasswd
+# Generer le fichier htpasswd (ecrase l'existant avec le nouvel utilisateur)
 log_info "Generation du fichier htpasswd..."
 htpasswd -nbB "$USERNAME" "$PASSWORD" > "$HTPASSWD_FILE"
 
-# Si le fichier existe deja, ajouter l'utilisateur au lieu de le remplacer
-if [ -f "$HTPASSWD_FILE" ] && [ $(wc -l < "$HTPASSWD_FILE") -gt 0 ]; then
-    log_warn "Le fichier existe deja. Ajout de l'utilisateur..."
-    htpasswd -nbB "$USERNAME" "$PASSWORD" >> "$HTPASSWD_FILE"
-fi
-
 # Definir les permissions
 chmod 600 "$HTPASSWD_FILE"
-chown root:root "$HTPASSWD_FILE"
 
-log_info "Fichier htpasswd cree avec succes: $HTPASSWD_FILE"
+log_info "Fichier htpasswd mis a jour: $HTPASSWD_FILE"
 log_info "Utilisateur: $USERNAME"
 log_info ""
+log_info "Traefik recharge automatiquement le fichier (watch: true)"
 log_info "Pour ajouter d'autres utilisateurs, executez a nouveau ce script"
