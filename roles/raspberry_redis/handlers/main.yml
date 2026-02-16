@@ -4,9 +4,9 @@
     name: "{{ redis_container_name }}"
     image: "{{ redis_image }}:{{ redis_version }}"
     state: started
-    restart: true
+    recreate: true
     restart_policy: unless-stopped
     network_mode: host
     volumes:
       - "{{ redis_data_dir }}:/data"
-      - "{{ redis_config_dir }}:/etc/redis"
+      - "{{ redis_config_dir }}/redis.conf:/etc/redis/redis.conf:ro"

@@ -4,7 +4,7 @@
     name: "{{ nginx_container_name }}"
     image: "{{ nginx_image }}:{{ nginx_version }}"
     state: started
-    restart: true
+    recreate: true
     restart_policy: unless-stopped
     network_mode: host
     volumes:

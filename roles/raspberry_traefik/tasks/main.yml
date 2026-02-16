@@ -84,6 +84,7 @@
     name: "{{ traefik_image }}:{{ traefik_version_docker }}"
     source: pull
     force_source: true
+  register: traefik_pull_result
   notify: restart traefik
 
 - name: Lancer le conteneur Traefik
@@ -91,13 +92,12 @@
     name: "{{ traefik_container_name }}"
     image: "{{ traefik_image }}:{{ traefik_version_docker }}"
     state: started
+    recreate: "{{ traefik_pull_result is changed }}"
     restart_policy: unless-stopped
     network_mode: host
     volumes:
       - "{{ traefik_config_dir }}:/etc/traefik"
       - "{{ traefik_log_dir }}:/var/log/traefik"
-    comparisons:
-      image: strict
 
 - name: Afficher le statut Traefik
   debug:

@@ -21,6 +21,7 @@
     name: "{{ nginx_image }}:{{ nginx_version }}"
     source: pull
     force_source: true
+  register: nginx_pull_result
   notify: restart nginx
 
 - name: Lancer le conteneur Nginx
@@ -28,13 +29,12 @@
     name: "{{ nginx_container_name }}"
     image: "{{ nginx_image }}:{{ nginx_version }}"
     state: started
+    recreate: "{{ nginx_pull_result is changed }}"
     restart_policy: unless-stopped
     network_mode: host
     volumes:
       - "{{ nginx_config_dir }}/default.conf:/etc/nginx/http.d/default.conf:ro"
       - "{{ nginx_frontend_dir }}:/var/www/html:ro"
-    comparisons:
-      image: strict
 
 - name: Afficher le statut Nginx
   debug:

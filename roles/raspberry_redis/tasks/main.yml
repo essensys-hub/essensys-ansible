@@ -48,6 +48,7 @@
     name: "{{ redis_image }}:{{ redis_version }}"
     source: pull
     force_source: true
+  register: redis_pull_result
   notify: restart redis
 
 - name: Lancer le conteneur Redis
@@ -55,13 +56,12 @@
     name: "{{ redis_container_name }}"
     image: "{{ redis_image }}:{{ redis_version }}"
     state: started
+    recreate: "{{ redis_pull_result is changed }}"
     restart_policy: unless-stopped
     network_mode: host
     volumes:
       - "{{ redis_data_dir }}:/data"
       - "{{ redis_config_dir }}/redis.conf:/etc/redis/redis.conf:ro"
-    comparisons:
-      image: strict
 
 - name: Attendre que Redis soit pret
   wait_for:

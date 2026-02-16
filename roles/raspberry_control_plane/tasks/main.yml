@@ -34,6 +34,7 @@
     name: "{{ control_plane_image }}:{{ control_plane_version }}"
     source: pull
     force_source: true
+  register: cp_pull_result
   notify: restart control plane
 
 - name: Lancer le conteneur Control Plane
@@ -41,6 +42,7 @@
     name: "{{ control_plane_name }}"
     image: "{{ control_plane_image }}:{{ control_plane_version }}"
     state: started
+    recreate: "{{ cp_pull_result is changed }}"
     restart_policy: unless-stopped
     network_mode: host
     volumes:
@@ -48,8 +50,6 @@
       - "{{ control_plane_data }}:/data"
       - "{{ control_plane_config }}:/etc/controlplane/config.yaml:ro"
       - "{{ data_dir }}:/opt/data:ro"
-    comparisons:
-      image: strict
 
 - name: Afficher le statut du Control Plane
   debug:

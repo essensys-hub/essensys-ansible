@@ -19,6 +19,7 @@
     name: "{{ backend_image }}:{{ backend_version }}"
     source: pull
     force_source: true
+  register: backend_pull_result
   notify: restart backend
 
 - name: Arreter l'ancien service systemd backend (migration)
@@ -39,14 +40,13 @@
     name: "{{ backend_container_name }}"
     image: "{{ backend_image }}:{{ backend_version }}"
     state: started
+    recreate: "{{ backend_pull_result is changed }}"
     restart_policy: unless-stopped
     network_mode: host
     entrypoint: ["server"]
     command: ["-config", "/etc/essensys/config.yaml"]
     volumes:
       - "{{ backend_config }}:/etc/essensys/config.yaml:ro"
-    comparisons:
-      image: strict
 
 - name: Afficher le statut backend
   debug:

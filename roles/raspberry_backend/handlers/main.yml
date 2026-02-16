@@ -4,14 +4,13 @@
     name: "{{ backend_container_name }}"
     image: "{{ backend_image }}:{{ backend_version }}"
     state: started
-    restart: true
+    recreate: true
     restart_policy: unless-stopped
     network_mode: host
     entrypoint: ["server"]
     command: ["-config", "/etc/essensys/config.yaml"]
     volumes:
       - "{{ backend_config }}:/etc/essensys/config.yaml:ro"
-      - "{{ backend_data_dir }}:/data"
 
 - name: reload systemd
   systemd:

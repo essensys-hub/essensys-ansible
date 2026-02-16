@@ -4,7 +4,7 @@
     name: "{{ traefik_container_name }}"
     image: "{{ traefik_image }}:{{ traefik_version_docker }}"
     state: started
-    restart: true
+    recreate: true
     restart_policy: unless-stopped
     network_mode: host
     volumes:

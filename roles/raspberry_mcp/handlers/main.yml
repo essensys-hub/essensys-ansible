@@ -4,7 +4,7 @@
     name: "{{ mcp_container_name }}"
     image: "{{ mcp_image }}:{{ mcp_version }}"
     state: started
-    restart: true
+    recreate: true
     restart_policy: unless-stopped
     network_mode: host
     entrypoint: ["mcp-server"]

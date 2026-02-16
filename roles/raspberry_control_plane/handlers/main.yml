@@ -4,10 +4,11 @@
     name: "{{ control_plane_name }}"
     image: "{{ control_plane_image }}:{{ control_plane_version }}"
     state: started
-    restart: true
+    recreate: true
     restart_policy: unless-stopped
     network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - "{{ control_plane_data_dir }}:/data"
+      - "{{ control_plane_data }}:/data"
       - "{{ control_plane_config }}:/etc/controlplane/config.yaml:ro"
+      - "{{ data_dir }}:/opt/data:ro"

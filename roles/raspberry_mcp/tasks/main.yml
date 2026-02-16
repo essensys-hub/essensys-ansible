@@ -44,17 +44,24 @@
   changed_when: false
   failed_when: false
 
+- name: Pull de l'image MCP
+  community.docker.docker_image:
+    name: "{{ mcp_image }}:{{ mcp_version }}"
+    source: pull
+    force_source: true
+  register: mcp_pull_result
+  notify: restart mcp
+
 - name: Lancer le conteneur MCP
   community.docker.docker_container:
     name: "{{ mcp_container_name }}"
     image: "{{ mcp_image }}:{{ mcp_version }}"
     state: started
+    recreate: "{{ mcp_pull_result is changed }}"
     restart_policy: unless-stopped
     network_mode: host
     entrypoint: ["mcp-server"]
     command: ["-mode", "sse", "-port", "{{ mcp_port }}", "-token", "{{ mcp_token }}"]
-    comparisons:
-      image: strict
 
 - name: Afficher le statut MCP
   debug:
