@@ -1,9 +1,4 @@
 ---
-- name: Verifier si la config backend existe
-  stat:
-    path: "{{ backend_config }}"
-  register: backend_config_stat
-
 - name: Deployer la configuration backend
   template:
     src: config.yaml.j2
@@ -11,7 +6,6 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
-  when: not backend_config_stat.stat.exists
   notify: restart backend
 
 - name: Pull de l'image backend
