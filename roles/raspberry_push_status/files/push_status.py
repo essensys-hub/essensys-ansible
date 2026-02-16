@@ -12,9 +12,9 @@ GATEWAY_URL = "http://gateway.essensys.fr/api/infos" # User requested HTTP for n
 
 SERVICES = [
     "essensys-backend", 
-    "nginx", 
-    "traefik", 
-    "AdGuardHome"
+    "essensys-nginx", 
+    "essensys-traefik", 
+    "essensys-adguard"
 ]
 
 def get_cpu_usage():
@@ -81,8 +81,11 @@ def get_disk_usage(path='/'):
 
 def get_service_status(service_name):
     try:
-        ret = subprocess.call(["systemctl", "is-active", "--quiet", service_name])
-        return ret == 0
+        output = subprocess.check_output(
+            ["docker", "inspect", "-f", "{{.State.Running}}", service_name],
+            stderr=subprocess.DEVNULL
+        ).decode().strip()
+        return output == "true"
     except:
         return False
 

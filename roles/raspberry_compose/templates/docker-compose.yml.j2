@@ -75,6 +75,17 @@ services:
       - {{ control_plane_config }}:/etc/controlplane/config.yaml:ro
       - {{ data_dir }}:/opt/data:ro
 
+  # --- DNS & Ad Blocking ---
+
+  essensys-adguard:
+    image: {{ adguard_image }}:{{ adguard_version }}
+    container_name: {{ adguard_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - {{ adguard_config_dir }}:/opt/adguardhome/conf
+      - {{ adguard_data_dir }}:/opt/adguardhome/work
+
   # --- Monitoring Stack ---
 
   essensys-prometheus:

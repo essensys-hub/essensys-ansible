@@ -1,0 +1,8 @@
+---
+adguard_image: "adguard/adguardhome"
+adguard_version: "latest"
+adguard_container_name: "essensys-adguard"
+adguard_config_dir: "{{ config_dir }}/adguard"
+adguard_data_dir: "{{ data_dir }}/adguard"
+adguard_dns_port: 53
+adguard_web_port: 3000

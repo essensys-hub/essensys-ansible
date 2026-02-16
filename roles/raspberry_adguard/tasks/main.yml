@@ -1,7 +1,5 @@
 ---
-- name: Definir l'architecture AdGuard
-  set_fact:
-    adguard_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'armv7' }}"
+# --- Liberer le port 53 (requis pour AdGuard DNS) ---
 
 - name: Verifier resolved.conf
   stat:
@@ -28,49 +26,63 @@
     state: link
   when: resolv_source.stat.exists
 
-- name: Installer AdGuard Home
-  unarchive:
-    src: "https://static.adguard.com/adguardhome/release/AdGuardHome_linux_{{ adguard_arch }}.tar.gz"
-    dest: /opt
-    remote_src: true
-    creates: /opt/AdGuardHome/AdGuardHome
+# --- Migration depuis l'ancienne installation binaire ---
 
-- name: Deployer la configuration AdGuard Home
-  template:
-    src: AdGuardHome.yaml.j2
-    dest: /opt/AdGuardHome/AdGuardHome.yaml
-    mode: '0644'
-    force: false
+- name: Verifier si AdGuard Home binaire existe
+  stat:
+    path: /opt/AdGuardHome/AdGuardHome
+  register: adguard_binary
 
-- name: Installer le service AdGuard Home
-  command: /opt/AdGuardHome/AdGuardHome -s install
-  args:
-    chdir: /opt/AdGuardHome
-  register: adguard_install
-  changed_when: "'installed' in adguard_install.stdout.lower()"
-  failed_when: false
-
-- name: Demarrer AdGuard Home
+- name: Arreter le service systemd AdGuard Home (migration)
   service:
     name: AdGuardHome
-    state: restarted
-    enabled: true
+    state: stopped
+    enabled: false
+  when: adguard_binary.stat.exists
+  failed_when: false
 
-- name: Attendre l'API AdGuard
-  wait_for:
-    host: 127.0.0.1
-    port: 3000
-    timeout: 30
+- name: Desinstaller le service systemd AdGuard Home
+  command: /opt/AdGuardHome/AdGuardHome -s uninstall
+  args:
+    chdir: /opt/AdGuardHome
+  when: adguard_binary.stat.exists
+  failed_when: false
 
-- name: Configurer le rewrite DNS pour mon.essensys.fr
-  uri:
-    url: http://127.0.0.1:3000/control/rewrite/add
-    method: POST
-    headers:
-      Content-Type: application/json
-    body_format: json
-    body:
-      domain: mon.essensys.fr
-      answer: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
-    status_code: [200, 201]
-  ignore_errors: true
+# --- Preparation des repertoires pour le conteneur Docker ---
+
+- name: Creer le repertoire de configuration AdGuard
+  file:
+    path: "{{ adguard_config_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Creer le repertoire de donnees AdGuard
+  file:
+    path: "{{ adguard_data_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Migrer la configuration existante vers le nouveau repertoire
+  copy:
+    src: /opt/AdGuardHome/AdGuardHome.yaml
+    dest: "{{ adguard_config_dir }}/AdGuardHome.yaml"
+    remote_src: true
+    force: false
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+  when: adguard_binary.stat.exists
+  failed_when: false
+
+- name: Deployer la configuration AdGuard Home (si pas de config existante)
+  template:
+    src: AdGuardHome.yaml.j2
+    dest: "{{ adguard_config_dir }}/AdGuardHome.yaml"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+    force: false

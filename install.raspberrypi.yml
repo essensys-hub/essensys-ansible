@@ -38,6 +38,9 @@
     - raspberry_traefik
     - raspberry_control_plane
 
+    # --- DNS & Ad Blocking ---
+    - raspberry_adguard
+
     # --- Monitoring (Prometheus, Alertmanager, Node Exporter, cAdvisor) ---
     - raspberry_prometheus
 
@@ -45,7 +48,6 @@
     - raspberry_compose
 
     # --- Services complementaires (non-Docker) ---
-    - raspberry_adguard
     - raspberry_monitor
     - raspberry_logrotate
     - raspberry_push_status

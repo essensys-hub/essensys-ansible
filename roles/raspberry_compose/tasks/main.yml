@@ -12,6 +12,8 @@
     - "{{ redis_container_name }}"
     - "{{ mosquitto_container_name }}"
     - mosquitto
+    - adguardhome
+    - "{{ adguard_container_name }}"
   failed_when: false
 
 - name: Deployer le fichier docker-compose.yml
@@ -58,6 +60,26 @@
     delay: 2
     timeout: 30
 
+- name: Attendre que AdGuard soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ adguard_web_port }}"
+    delay: 2
+    timeout: 30
+
+- name: Configurer le rewrite DNS pour mon.essensys.fr
+  uri:
+    url: http://127.0.0.1:{{ adguard_web_port }}/control/rewrite/add
+    method: POST
+    headers:
+      Content-Type: application/json
+    body_format: json
+    body:
+      domain: mon.essensys.fr
+      answer: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+    status_code: [200, 201]
+  ignore_errors: true
+
 - name: Attendre que Prometheus soit pret
   wait_for:
     host: 127.0.0.1
@@ -72,3 +94,4 @@
       Fichier: {{ compose_file }}
       Control Plane: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ control_plane_port }}
       Prometheus: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ prometheus_port }}
+      AdGuard: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ adguard_web_port }}
