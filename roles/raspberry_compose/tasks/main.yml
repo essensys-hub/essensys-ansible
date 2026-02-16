@@ -21,11 +21,11 @@
     mode: '0644'
 
 - name: Pull des images Docker
-  command: docker compose -f {{ compose_file }} -p {{ compose_project_name }} pull
+  command: docker compose -f {{ compose_file }} pull
   changed_when: true
 
 - name: Lancer les services via Docker Compose
-  command: docker compose -f {{ compose_file }} -p {{ compose_project_name }} up -d --remove-orphans
+  command: docker compose -f {{ compose_file }} up -d --remove-orphans
   changed_when: true
 
 - name: Attendre que Redis soit pret
