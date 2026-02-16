@@ -58,9 +58,17 @@
     delay: 2
     timeout: 30
 
+- name: Attendre que Prometheus soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ prometheus_port }}"
+    delay: 2
+    timeout: 30
+
 - name: Afficher le statut Docker Compose
   debug:
     msg: >
       Services deployes via Docker Compose ({{ compose_project_name }}).
       Fichier: {{ compose_file }}
       Control Plane: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ control_plane_port }}
+      Prometheus: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ prometheus_port }}

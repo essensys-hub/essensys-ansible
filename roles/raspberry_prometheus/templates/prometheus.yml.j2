@@ -1,0 +1,54 @@
+global:
+  scrape_interval: {{ prometheus_scrape_interval }}
+  evaluation_interval: 15s
+
+  external_labels:
+    instance: essensys-rpi
+    environment: production
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 127.0.0.1:{{ alertmanager_port }}
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - 127.0.0.1:{{ prometheus_port }}
+    metrics_path: /metrics
+
+  # Node Exporter - Metriques systeme (CPU, RAM, Disque, Reseau)
+  - job_name: node
+    static_configs:
+      - targets:
+          - 127.0.0.1:{{ node_exporter_port }}
+
+  # cAdvisor - Metriques conteneurs Docker
+  - job_name: cadvisor
+    static_configs:
+      - targets:
+          - 127.0.0.1:{{ cadvisor_port }}
+
+  # Control Plane - Metriques application
+  - job_name: control-plane
+    static_configs:
+      - targets:
+          - 127.0.0.1:{{ control_plane_port }}
+
+  # Backend - Metriques application
+  - job_name: backend
+    static_configs:
+      - targets:
+          - 127.0.0.1:{{ backend_port }}
+
+  # Traefik - Metriques reverse proxy
+  - job_name: traefik
+    static_configs:
+      - targets:
+          - 127.0.0.1:8081

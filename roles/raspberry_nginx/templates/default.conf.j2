@@ -134,6 +134,22 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
+    # Proxy Prometheus
+    location /prometheus/ {
+        proxy_pass http://127.0.0.1:{{ prometheus_port }}/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_http_version 1.1;
+    }
+
+    # Proxy Alertmanager
+    location /alertmanager/ {
+        proxy_pass http://127.0.0.1:{{ alertmanager_port }}/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_http_version 1.1;
+    }
+
     # Servir le frontend (SPA) directement sur / - PAS DE REDIRECTION
     location / {
         absolute_redirect off;

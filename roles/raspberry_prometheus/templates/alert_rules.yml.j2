@@ -1,0 +1,277 @@
+groups:
+  # ============================================================
+  # INFRASTRUCTURE - CPU, Memoire, Disque
+  # ============================================================
+  - name: infrastructure
+    rules:
+      - alert: HighCpuUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU eleve ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}%)"
+          description: "L'utilisation CPU depasse 85% depuis 5 minutes."
+
+      - alert: CriticalCpuUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU critique ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}%)"
+          description: "L'utilisation CPU depasse 95% depuis 2 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memoire elevee ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}%)"
+          description: "L'utilisation memoire depasse 85% depuis 5 minutes."
+
+      - alert: CriticalMemoryUsage
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memoire critique ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}%)"
+          description: "L'utilisation memoire depasse 95% depuis 2 minutes."
+
+      - alert: DiskSpaceLow
+        expr: (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Espace disque faible ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}% utilise)"
+          description: "L'espace disque sur / depasse 85%."
+
+      - alert: DiskSpaceCritical
+        expr: (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Espace disque critique ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}% utilise)"
+          description: "L'espace disque sur / depasse 95%. Intervention urgente requise."
+
+      - alert: HighSystemLoad
+        expr: node_load5 / count without(cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Load average eleve ({{ '{{' }} $value | printf \"%.2f\" {{ '}}' }})"
+          description: "Le load average sur 5 minutes est superieur a 2x le nombre de CPUs."
+
+      - alert: HighTemperature
+        expr: node_hwmon_temp_celsius > 75
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Temperature elevee ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}°C)"
+          description: "La temperature du Raspberry Pi depasse 75°C. Risque de thermal throttling."
+
+      - alert: CriticalTemperature
+        expr: node_hwmon_temp_celsius > 82
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Temperature critique ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}°C)"
+          description: "La temperature du Raspberry Pi depasse 82°C. Thermal throttling actif."
+
+      - alert: NetworkInterfaceDown
+        expr: node_network_up{device=~"eth0|wlan0"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Interface reseau {{ '{{' }} $labels.device {{ '}}' }} down"
+          description: "L'interface reseau {{ '{{' }} $labels.device {{ '}}' }} est hors service."
+
+  # ============================================================
+  # CONTENEURS DOCKER
+  # ============================================================
+  - name: containers
+    rules:
+      - alert: ContainerDown
+        expr: |
+          absent(container_last_seen{name="essensys-backend"})
+          or absent(container_last_seen{name="essensys-nginx"})
+          or absent(container_last_seen{name="essensys-redis"})
+          or absent(container_last_seen{name="essensys-mosquitto"})
+          or absent(container_last_seen{name="essensys-control-plane"})
+          or absent(container_last_seen{name="essensys-traefik"})
+          or absent(container_last_seen{name="essensys-mcp"})
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Un conteneur Essensys est arrete"
+          description: "Un ou plusieurs conteneurs ne sont plus detectes par cAdvisor."
+
+      - alert: ContainerRestartLoop
+        expr: increase(container_start_time_seconds{name=~"essensys-.*"}[15m]) > 3
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} en boucle de redemarrage"
+          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} a redemarré plus de 3 fois en 15 minutes."
+
+      - alert: ContainerHighCpu
+        expr: rate(container_cpu_usage_seconds_total{name=~"essensys-.*"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} CPU eleve ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}%)"
+          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} utilise plus de 80% CPU."
+
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes{name=~"essensys-.*"} / container_spec_memory_limit_bytes{name=~"essensys-.*"} * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} memoire elevee"
+          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} utilise plus de 80% de sa limite memoire."
+
+      - alert: ContainerOOMKilled
+        expr: increase(container_oom_events_total{name=~"essensys-.*"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} OOM killed"
+          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} a ete tue par manque de memoire (OOM)."
+
+  # ============================================================
+  # SERVICES APPLICATIFS
+  # ============================================================
+  - name: services
+    rules:
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend Essensys down"
+          description: "Le backend ne repond plus sur le port {{ backend_port }}."
+
+      - alert: ControlPlaneDown
+        expr: up{job="control-plane"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Control Plane down"
+          description: "Le Control Plane ne repond plus sur le port {{ control_plane_port }}."
+
+      - alert: TraefikDown
+        expr: up{job="traefik"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Traefik down"
+          description: "Traefik ne repond plus. Le trafic HTTPS est coupe."
+
+      - alert: NodeExporterDown
+        expr: up{job="node"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node Exporter down"
+          description: "Les metriques systeme ne sont plus collectees."
+
+  # ============================================================
+  # PERFORMANCE API
+  # ============================================================
+  - name: api_performance
+    rules:
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(essensys_cp_http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence API elevee (p95 > 2s)"
+          description: "Le 95eme percentile de latence des requetes API depasse 2 secondes."
+
+      - alert: HighBackendLatency
+        expr: histogram_quantile(0.95, rate(essensys_backend_http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence Backend elevee (p95 > 2s)"
+          description: "Le 95eme percentile de latence du backend depasse 2 secondes."
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(essensys_backend_http_requests_total{status=~"5.."}[5m]))
+          / sum(rate(essensys_backend_http_requests_total[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taux d'erreurs HTTP 5xx eleve ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}%)"
+          description: "Plus de 5% des requetes du backend retournent des erreurs 5xx."
+
+      - alert: TraefikHighErrorRate
+        expr: |
+          sum(rate(traefik_service_requests_total{code=~"5.."}[5m]))
+          / sum(rate(traefik_service_requests_total[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Traefik - Taux d'erreurs 5xx eleve"
+          description: "Plus de 5% des requetes passant par Traefik retournent des erreurs 5xx."
+
+  # ============================================================
+  # REDIS
+  # ============================================================
+  - name: redis
+    rules:
+      - alert: RedisHighMemory
+        expr: |
+          container_memory_usage_bytes{name="essensys-redis"}
+          / on() node_memory_MemTotal_bytes * 100 > 25
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis utilise plus de 25% de la RAM systeme"
+          description: "Redis consomme une part importante de la memoire disponible."
+
+  # ============================================================
+  # CERTIFICATS SSL
+  # ============================================================
+  - name: ssl
+    rules:
+      - alert: SSLCertExpiringSoon
+        expr: traefik_tls_certs_not_after - time() < 14 * 24 * 3600
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Certificat SSL expire dans moins de 14 jours"
+          description: "Un certificat TLS gere par Traefik expire bientot. Verifier le renouvellement ACME."
+
+      - alert: SSLCertExpired
+        expr: traefik_tls_certs_not_after - time() < 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Certificat SSL expire !"
+          description: "Un certificat TLS est expire. L'acces HTTPS est compromis."

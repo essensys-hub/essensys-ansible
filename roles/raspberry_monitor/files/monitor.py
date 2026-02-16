@@ -21,6 +21,10 @@ SERVICES = [
     {"name": "Redis",    "container": "essensys-redis",          "key": "d"},
     {"name": "MQTT",     "container": "essensys-mosquitto",      "key": "q"},
     {"name": "CtrlPlan", "container": "essensys-control-plane",  "key": "c"},
+    {"name": "Prometh", "container": "essensys-prometheus",      "key": "p"},
+    {"name": "AlertMgr", "container": "essensys-alertmanager",   "key": "l"},
+    {"name": "NodeExp", "container": "essensys-node-exporter",   "key": "x"},
+    {"name": "cAdvisr", "container": "essensys-cadvisor",        "key": "v"},
     {"name": "AdGuard",  "container": "adguardhome",             "key": "a"},
 ]
 

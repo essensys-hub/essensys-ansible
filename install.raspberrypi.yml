@@ -38,6 +38,9 @@
     - raspberry_traefik
     - raspberry_control_plane
 
+    # --- Monitoring (Prometheus, Alertmanager, Node Exporter, cAdvisor) ---
+    - raspberry_prometheus
+
     # --- Lancement de TOUS les conteneurs via Docker Compose ---
     - raspberry_compose
 

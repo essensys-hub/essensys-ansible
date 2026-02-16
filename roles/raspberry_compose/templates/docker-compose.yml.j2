@@ -74,3 +74,66 @@ services:
       - {{ control_plane_data }}:/data
       - {{ control_plane_config }}:/etc/controlplane/config.yaml:ro
       - {{ data_dir }}:/opt/data:ro
+
+  # --- Monitoring Stack ---
+
+  essensys-prometheus:
+    image: {{ prometheus_image }}:{{ prometheus_version }}
+    container_name: {{ prometheus_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    user: "65534:65534"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time={{ prometheus_retention }}
+      - --web.listen-address=:{{ prometheus_port }}
+      - --web.enable-lifecycle
+    volumes:
+      - {{ prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - {{ prometheus_config_dir }}/rules:/etc/prometheus/rules:ro
+      - {{ prometheus_data_dir }}:/prometheus
+
+  essensys-alertmanager:
+    image: {{ alertmanager_image }}:{{ alertmanager_version }}
+    container_name: {{ alertmanager_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --web.listen-address=:{{ alertmanager_port }}
+      - --storage.path=/alertmanager
+    volumes:
+      - {{ prometheus_config_dir }}/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+
+  essensys-node-exporter:
+    image: {{ node_exporter_image }}:{{ node_exporter_version }}
+    container_name: {{ node_exporter_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    pid: host
+    command:
+      - --web.listen-address=:{{ node_exporter_port }}
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    volumes:
+      - /:/host:ro,rslave
+
+  essensys-cadvisor:
+    image: {{ cadvisor_image }}:{{ cadvisor_version }}
+    container_name: {{ cadvisor_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    privileged: true
+    command:
+      - --port={{ cadvisor_port }}
+      - --housekeeping_interval=30s
+      - --docker_only=true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg

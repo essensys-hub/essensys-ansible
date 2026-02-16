@@ -1,0 +1,28 @@
+---
+# Prometheus
+prometheus_image: "prom/prometheus"
+prometheus_version: "v3.2.1"
+prometheus_container_name: "essensys-prometheus"
+prometheus_port: 9092
+prometheus_config_dir: "{{ config_dir }}/prometheus"
+prometheus_data_dir: "{{ data_dir }}/prometheus"
+prometheus_retention: "30d"
+prometheus_scrape_interval: "15s"
+
+# Alertmanager
+alertmanager_image: "prom/alertmanager"
+alertmanager_version: "v0.28.1"
+alertmanager_container_name: "essensys-alertmanager"
+alertmanager_port: 9093
+
+# Node Exporter
+node_exporter_image: "prom/node-exporter"
+node_exporter_version: "v1.9.0"
+node_exporter_container_name: "essensys-node-exporter"
+node_exporter_port: 9101
+
+# cAdvisor
+cadvisor_image: "gcr.io/cadvisor/cadvisor"
+cadvisor_version: "v0.51.0"
+cadvisor_container_name: "essensys-cadvisor"
+cadvisor_port: 9095
