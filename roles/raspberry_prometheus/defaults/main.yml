@@ -20,9 +20,3 @@ node_exporter_image: "prom/node-exporter"
 node_exporter_version: "v1.9.0"
 node_exporter_container_name: "essensys-node-exporter"
 node_exporter_port: 9101
-
-# cAdvisor
-cadvisor_image: "gcr.io/cadvisor/cadvisor"
-cadvisor_version: "v0.51.0"
-cadvisor_container_name: "essensys-cadvisor"
-cadvisor_port: 9095

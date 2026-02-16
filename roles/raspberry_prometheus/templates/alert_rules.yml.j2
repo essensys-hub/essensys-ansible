@@ -95,61 +95,18 @@ groups:
           description: "L'interface reseau {{ '{{' }} $labels.device {{ '}}' }} est hors service."
 
   # ============================================================
-  # CONTENEURS DOCKER
+  # CONTENEURS DOCKER (via metriques Control Plane)
   # ============================================================
   - name: containers
     rules:
-      - alert: ContainerDown
-        expr: |
-          absent(container_last_seen{name="essensys-backend"})
-          or absent(container_last_seen{name="essensys-nginx"})
-          or absent(container_last_seen{name="essensys-redis"})
-          or absent(container_last_seen{name="essensys-mosquitto"})
-          or absent(container_last_seen{name="essensys-control-plane"})
-          or absent(container_last_seen{name="essensys-traefik"})
-          or absent(container_last_seen{name="essensys-mcp"})
-        for: 1m
+      - alert: DockerContainersUnhealthy
+        expr: essensys_cp_docker_containers{state="running"} < 10
+        for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "Un conteneur Essensys est arrete"
-          description: "Un ou plusieurs conteneurs ne sont plus detectes par cAdvisor."
-
-      - alert: ContainerRestartLoop
-        expr: increase(container_start_time_seconds{name=~"essensys-.*"}[15m]) > 3
-        for: 0m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} en boucle de redemarrage"
-          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} a redemarré plus de 3 fois en 15 minutes."
-
-      - alert: ContainerHighCpu
-        expr: rate(container_cpu_usage_seconds_total{name=~"essensys-.*"}[5m]) * 100 > 80
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} CPU eleve ({{ '{{' }} $value | printf \"%.1f\" {{ '}}' }}%)"
-          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} utilise plus de 80% CPU."
-
-      - alert: ContainerHighMemory
-        expr: container_memory_usage_bytes{name=~"essensys-.*"} / container_spec_memory_limit_bytes{name=~"essensys-.*"} * 100 > 80
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} memoire elevee"
-          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} utilise plus de 80% de sa limite memoire."
-
-      - alert: ContainerOOMKilled
-        expr: increase(container_oom_events_total{name=~"essensys-.*"}[5m]) > 0
-        for: 0m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Conteneur {{ '{{' }} $labels.name {{ '}}' }} OOM killed"
-          description: "Le conteneur {{ '{{' }} $labels.name {{ '}}' }} a ete tue par manque de memoire (OOM)."
+          summary: "Conteneurs Docker insuffisants ({{ '{{' }} $value {{ '}}' }} running)"
+          description: "Le nombre de conteneurs running est inferieur a 10. Un ou plusieurs services sont probablement arretes."
 
   # ============================================================
   # SERVICES APPLICATIFS
@@ -236,22 +193,6 @@ groups:
         annotations:
           summary: "Traefik - Taux d'erreurs 5xx eleve"
           description: "Plus de 5% des requetes passant par Traefik retournent des erreurs 5xx."
-
-  # ============================================================
-  # REDIS
-  # ============================================================
-  - name: redis
-    rules:
-      - alert: RedisHighMemory
-        expr: |
-          container_memory_usage_bytes{name="essensys-redis"}
-          / on() node_memory_MemTotal_bytes * 100 > 25
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Redis utilise plus de 25% de la RAM systeme"
-          description: "Redis consomme une part importante de la memoire disponible."
 
   # ============================================================
   # CERTIFICATS SSL

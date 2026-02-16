@@ -29,12 +29,6 @@ scrape_configs:
       - targets:
           - 127.0.0.1:{{ node_exporter_port }}
 
-  # cAdvisor - Metriques conteneurs Docker
-  - job_name: cadvisor
-    static_configs:
-      - targets:
-          - 127.0.0.1:{{ cadvisor_port }}
-
   # Control Plane - Metriques application
   - job_name: control-plane
     static_configs:

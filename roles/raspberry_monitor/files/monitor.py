@@ -24,7 +24,6 @@ SERVICES = [
     {"name": "Prometh", "container": "essensys-prometheus",      "key": "p"},
     {"name": "AlertMgr", "container": "essensys-alertmanager",   "key": "l"},
     {"name": "NodeExp", "container": "essensys-node-exporter",   "key": "x"},
-    {"name": "cAdvisr", "container": "essensys-cadvisor",        "key": "v"},
     {"name": "AdGuard",  "container": "essensys-adguard",         "key": "a"},
 ]
 
