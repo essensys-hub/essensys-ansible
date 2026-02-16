@@ -1,7 +1,7 @@
 [Unit]
 Description=MQTT Debug Web Interface
-After=network.target mosquitto.service
-Requires=mosquitto.service
+After=network.target docker.service
+Wants=docker.service
 
 [Service]
 Type=simple
