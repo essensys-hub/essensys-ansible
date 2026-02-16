@@ -28,7 +28,8 @@
     - raspberry_common
     - raspberry_docker
 
-    # --- Configuration des services ---
+    # --- Configuration des services (pas de conteneurs ici) ---
+    - raspberry_mosquitto
     - raspberry_redis
     - raspberry_backend
     - raspberry_mcp
@@ -37,12 +38,11 @@
     - raspberry_traefik
     - raspberry_control_plane
 
-    # --- Lancement des conteneurs via Docker Compose ---
+    # --- Lancement de TOUS les conteneurs via Docker Compose ---
     - raspberry_compose
 
-    # --- Services complementaires ---
+    # --- Services complementaires (non-Docker) ---
     - raspberry_adguard
-    - raspberry_mosquitto
     - raspberry_monitor
     - raspberry_logrotate
     - raspberry_push_status

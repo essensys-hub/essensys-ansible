@@ -1,24 +1,26 @@
 ---
-- name: Check Docker installation
-  shell: command -v docker
-  register: docker_check
-  ignore_errors: yes
+# --- Migration depuis l'ancien Mosquitto (docker-compose + systemd) ---
+- name: Arreter l'ancien service systemd Mosquitto
+  systemd:
+    name: mosquitto
+    state: stopped
+    enabled: false
+  failed_when: false
   changed_when: false
 
-- name: Install Docker
-  shell: curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
-  args:
-    chdir: /tmp
-    creates: /usr/bin/docker
-  when: docker_check.failed
+- name: Arreter l'ancien conteneur mosquitto
+  community.docker.docker_container:
+    name: mosquitto
+    state: absent
+  failed_when: false
 
-- name: Add user to docker group
-  user:
-    name: "{{ service_user }}"
-    groups: docker
-    append: yes
+- name: Supprimer l'ancien service systemd Mosquitto
+  file:
+    path: /etc/systemd/system/mosquitto.service
+    state: absent
 
-- name: Create Mosquitto directories
+# --- Config dans /opt/data/config/mosquitto ---
+- name: Creer les repertoires Mosquitto
   file:
     path: "{{ item }}"
     state: directory
@@ -26,51 +28,51 @@
     group: "{{ service_user }}"
     mode: '0755'
   loop:
-    - "{{ mosquitto_dir }}"
-    - "{{ mosquitto_dir }}/config"
-    - "{{ mosquitto_dir }}/data"
-    - "{{ mosquitto_dir }}/log"
+    - "{{ mosquitto_config_dir }}"
+    - "{{ mosquitto_data_dir }}"
+    - "{{ mosquitto_log_dir }}"
 
-- name: Generate Mosquitto password file using Docker container
-  shell: |
-    docker run --rm -v {{ mosquitto_dir }}/config:/mosquitto/config eclipse-mosquitto:2 sh -c "mosquitto_passwd -c -b /mosquitto/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}"
-  args:
-    creates: "{{ mosquitto_dir }}/config/passwd"
+- name: Deployer mosquitto.conf
+  template:
+    src: mosquitto.conf.j2
+    dest: "{{ mosquitto_config_dir }}/mosquitto.conf"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
 
-- name: Set ownership of password file
-  file:
-    path: "{{ mosquitto_dir }}/config/passwd"
+- name: Migrer le fichier password depuis l'ancien emplacement
+  copy:
+    src: "{{ mosquitto_legacy_dir }}/config/passwd"
+    dest: "{{ mosquitto_config_dir }}/passwd"
+    remote_src: true
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0600'
+    force: false
+  failed_when: false
 
-- name: Deploy mosquitto.conf
-  template:
-    src: mosquitto.conf.j2
-    dest: "{{ mosquitto_dir }}/config/mosquitto.conf"
+- name: Verifier si le fichier password existe
+  stat:
+    path: "{{ mosquitto_config_dir }}/passwd"
+  register: mqtt_passwd_stat
+
+- name: Generer le fichier password Mosquitto si absent
+  shell: |
+    docker run --rm -v {{ mosquitto_config_dir }}:/mosquitto/config eclipse-mosquitto:2 \
+      sh -c "mosquitto_passwd -c -b /mosquitto/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}"
+  when: not mqtt_passwd_stat.stat.exists
+
+- name: Fixer les permissions du fichier password
+  file:
+    path: "{{ mosquitto_config_dir }}/passwd"
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
-    mode: '0644'
+    mode: '0600'
+  when: mqtt_passwd_stat.stat.exists or not mqtt_passwd_stat.stat.exists
 
-- name: Deploy docker-compose.yml
-  template:
-    src: docker-compose.yml.j2
-    dest: "{{ mosquitto_dir }}/docker-compose.yml"
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0644'
-
-- name: Install Mosquitto Systemd Service
-  template:
-    src: mosquitto.service.j2
-    dest: /etc/systemd/system/mosquitto.service
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: Enable and Start Mosquitto
-  systemd:
-    name: mosquitto
-    state: started
-    enabled: yes
-    daemon_reload: yes
+- name: Migrer les donnees depuis l'ancien emplacement
+  shell: |
+    if [ -d "{{ mosquitto_legacy_dir }}/data" ] && [ -n "$(ls -A {{ mosquitto_legacy_dir }}/data 2>/dev/null)" ]; then
+      cp -n {{ mosquitto_legacy_dir }}/data/* {{ mosquitto_data_dir }}/ 2>/dev/null || true
+    fi
+  changed_when: false

@@ -10,6 +10,8 @@
     - "{{ nginx_container_name }}"
     - "{{ traefik_container_name }}"
     - "{{ redis_container_name }}"
+    - "{{ mosquitto_container_name }}"
+    - mosquitto
   failed_when: false
 
 - name: Deployer le fichier docker-compose.yml
@@ -28,6 +30,13 @@
   command: docker compose -f {{ compose_file }} up -d --remove-orphans
   changed_when: true
 
+- name: Attendre que Mosquitto soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ mosquitto_port }}"
+    delay: 2
+    timeout: 30
+
 - name: Attendre que Redis soit pret
   wait_for:
     host: 127.0.0.1
@@ -40,7 +49,7 @@
     host: 127.0.0.1
     port: "{{ backend_port }}"
     delay: 2
-    timeout: 30
+    timeout: 60
 
 - name: Attendre que Nginx soit pret
   wait_for:

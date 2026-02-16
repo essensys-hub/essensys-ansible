@@ -1,4 +1,12 @@
-mosquitto_dir: "/opt/essensys/mosquitto"
+---
+mosquitto_image: "essensyshub/essensys-mosquitto"
+mosquitto_version: "{{ essensys_version }}"
+mosquitto_container_name: "essensys-mosquitto"
 mosquitto_port: 1883
+mosquitto_config_dir: "{{ config_dir }}/mosquitto"
+mosquitto_data_dir: "{{ data_dir }}/mosquitto/data"
+mosquitto_log_dir: "{{ data_dir }}/mosquitto/log"
 mosquitto_user: "essensys"
 mosquitto_password: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits') }}"
+# Legacy path (migration)
+mosquitto_legacy_dir: "/opt/essensys/mosquitto"
