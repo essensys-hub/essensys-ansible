@@ -15,8 +15,8 @@ services:
     container_name: {{ backend_container_name }}
     network_mode: host
     restart: unless-stopped
+    working_dir: /etc/essensys
     entrypoint: ["server"]
-    command: ["-config", "/etc/essensys/config.yaml"]
     volumes:
       - {{ backend_config }}:/etc/essensys/config.yaml:ro
     depends_on:
