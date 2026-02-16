@@ -1,6 +1,7 @@
 server:
   port: {{ control_plane_port }}
-  auth_token: "{{ control_plane_auth_token }}"
+  token: "{{ control_plane_auth_token }}"
+  base_path: "{{ control_plane_base_path }}"
 
 docker:
   socket: /var/run/docker.sock

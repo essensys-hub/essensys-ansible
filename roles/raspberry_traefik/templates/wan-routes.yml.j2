@@ -43,7 +43,7 @@ http:
 
     # --- Control Plane WAN ---
     control-plane-wan:
-      rule: "Host(`{{ control_plane_wan_domain }}`)"
+      rule: "Host(`{{ wan_domain }}`) && PathPrefix(`/controle_plane`)"
       entryPoints:
         - websecure
       service: control-plane-service

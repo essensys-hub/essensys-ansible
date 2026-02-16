@@ -8,3 +8,4 @@ control_plane_data: "{{ data_dir }}/control-plane"
 control_plane_redis_addr: "localhost:6379"
 control_plane_redis_db: 0
 control_plane_log_level: "info"
+control_plane_base_path: "/controle_plane"
