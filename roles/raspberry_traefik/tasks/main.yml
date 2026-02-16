@@ -42,7 +42,6 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
-  notify: restart traefik
 
 - name: Deployer les routes WAN
   template:
@@ -51,7 +50,6 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
-  notify: restart traefik
 
 - name: Creer acme.json si absent
   file:
@@ -78,27 +76,3 @@
     src: generate-htpasswd.sh
     dest: /usr/local/bin/generate-htpasswd-essensys.sh
     mode: '0755'
-
-- name: Pull de l'image Traefik
-  community.docker.docker_image:
-    name: "{{ traefik_image }}:{{ traefik_version_docker }}"
-    source: pull
-    force_source: true
-  register: traefik_pull_result
-  notify: restart traefik
-
-- name: Lancer le conteneur Traefik
-  community.docker.docker_container:
-    name: "{{ traefik_container_name }}"
-    image: "{{ traefik_image }}:{{ traefik_version_docker }}"
-    state: started
-    recreate: "{{ traefik_pull_result is changed }}"
-    restart_policy: unless-stopped
-    network_mode: host
-    volumes:
-      - "{{ traefik_config_dir }}:/etc/traefik"
-      - "{{ traefik_log_dir }}:/var/log/traefik"
-
-- name: Afficher le statut Traefik
-  debug:
-    msg: "Traefik {{ traefik_version_docker }} deploye (HTTPS:443, dashboard:8080)"

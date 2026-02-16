@@ -1,15 +1,2 @@
 ---
-- name: restart mcp
-  community.docker.docker_container:
-    name: "{{ mcp_container_name }}"
-    image: "{{ mcp_image }}:{{ mcp_version }}"
-    state: started
-    recreate: true
-    restart_policy: unless-stopped
-    network_mode: host
-    entrypoint: ["mcp-server"]
-    command: ["-mode", "sse", "-port", "{{ mcp_port }}", "-token", "{{ mcp_token }}"]
-
-- name: reload systemd mcp
-  systemd:
-    daemon_reload: true
+# Les conteneurs sont geres par Docker Compose (role raspberry_compose)

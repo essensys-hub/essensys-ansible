@@ -1,12 +1,2 @@
 ---
-- name: restart traefik
-  community.docker.docker_container:
-    name: "{{ traefik_container_name }}"
-    image: "{{ traefik_image }}:{{ traefik_version_docker }}"
-    state: started
-    recreate: true
-    restart_policy: unless-stopped
-    network_mode: host
-    volumes:
-      - "{{ traefik_config_dir }}:/etc/traefik"
-      - "{{ traefik_log_dir }}:/var/log/traefik"
+# Les conteneurs sont geres par Docker Compose (role raspberry_compose)

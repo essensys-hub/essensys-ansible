@@ -5,6 +5,7 @@
   become: true
   vars:
     essensys_version: "V.1.3.0"
+    control_plane_version: "V.1.3.1"
     service_user: essensys
 
     # Structure de donnees centralisee (backup par le Control Plane)
@@ -26,19 +27,18 @@
     # --- Systeme de base ---
     - raspberry_common
     - raspberry_docker
-    - raspberry_redis
 
-    # --- Services metier (Docker) ---
+    # --- Configuration des services ---
+    - raspberry_redis
     - raspberry_backend
     - raspberry_mcp
     - raspberry_frontend
-
-    # --- Reverse proxy (Docker) ---
     - raspberry_nginx
     - raspberry_traefik
-
-    # --- Control Plane (Docker) ---
     - raspberry_control_plane
+
+    # --- Lancement des conteneurs via Docker Compose ---
+    - raspberry_compose
 
     # --- Services complementaires ---
     - raspberry_adguard

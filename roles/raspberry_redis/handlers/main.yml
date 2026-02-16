@@ -1,12 +1,2 @@
 ---
-- name: restart redis
-  community.docker.docker_container:
-    name: "{{ redis_container_name }}"
-    image: "{{ redis_image }}:{{ redis_version }}"
-    state: started
-    recreate: true
-    restart_policy: unless-stopped
-    network_mode: host
-    volumes:
-      - "{{ redis_data_dir }}:/data"
-      - "{{ redis_config_dir }}/redis.conf:/etc/redis/redis.conf:ro"
+# Les conteneurs sont geres par Docker Compose (role raspberry_compose)

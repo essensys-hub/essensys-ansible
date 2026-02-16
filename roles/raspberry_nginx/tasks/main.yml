@@ -14,28 +14,3 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
-  notify: restart nginx
-
-- name: Pull de l'image Nginx
-  community.docker.docker_image:
-    name: "{{ nginx_image }}:{{ nginx_version }}"
-    source: pull
-    force_source: true
-  register: nginx_pull_result
-  notify: restart nginx
-
-- name: Lancer le conteneur Nginx
-  community.docker.docker_container:
-    name: "{{ nginx_container_name }}"
-    image: "{{ nginx_image }}:{{ nginx_version }}"
-    state: started
-    recreate: "{{ nginx_pull_result is changed }}"
-    restart_policy: unless-stopped
-    network_mode: host
-    volumes:
-      - "{{ nginx_config_dir }}/default.conf:/etc/nginx/http.d/default.conf:ro"
-      - "{{ nginx_frontend_dir }}:/var/www/html:ro"
-
-- name: Afficher le statut Nginx
-  debug:
-    msg: "Nginx {{ nginx_version }} deploye sur le port 80 (frontend + reverse proxy)"

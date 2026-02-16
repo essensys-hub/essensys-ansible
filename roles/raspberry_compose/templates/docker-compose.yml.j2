@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  essensys-redis:
+    image: {{ redis_image }}:{{ redis_version }}
+    container_name: {{ redis_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - {{ redis_data_dir }}:/data
+      - {{ redis_config_dir }}/redis.conf:/etc/redis/redis.conf:ro
+
+  essensys-backend:
+    image: {{ backend_image }}:{{ backend_version }}
+    container_name: {{ backend_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    entrypoint: ["server"]
+    command: ["-config", "/etc/essensys/config.yaml"]
+    volumes:
+      - {{ backend_config }}:/etc/essensys/config.yaml:ro
+    depends_on:
+      - essensys-redis
+
+  essensys-mcp:
+    image: {{ mcp_image }}:{{ mcp_version }}
+    container_name: {{ mcp_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    entrypoint: ["mcp-server"]
+    command: ["-mode", "sse", "-port", "{{ mcp_port }}", "-token", "{{ mcp_token }}"]
+    depends_on:
+      - essensys-redis
+
+  essensys-nginx:
+    image: {{ nginx_image }}:{{ nginx_version }}
+    container_name: {{ nginx_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - {{ nginx_config_dir }}/default.conf:/etc/nginx/http.d/default.conf:ro
+      - {{ nginx_frontend_dir }}:/var/www/html:ro
+    depends_on:
+      - essensys-backend
+
+  essensys-traefik:
+    image: {{ traefik_image }}:{{ traefik_version_docker }}
+    container_name: {{ traefik_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - {{ traefik_config_dir }}:/etc/traefik
+      - {{ traefik_log_dir }}:/var/log/traefik
+
+  essensys-control-plane:
+    image: {{ control_plane_image }}:{{ control_plane_version }}
+    container_name: {{ control_plane_name }}
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - {{ control_plane_data }}:/data
+      - {{ control_plane_config }}:/etc/controlplane/config.yaml:ro
+      - {{ data_dir }}:/opt/data:ro

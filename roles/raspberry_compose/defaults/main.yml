@@ -1,0 +1,3 @@
+---
+compose_project_name: "essensys"
+compose_file: "{{ data_dir }}/docker-compose.yml"

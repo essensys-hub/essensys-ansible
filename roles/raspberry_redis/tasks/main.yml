@@ -41,35 +41,3 @@
     group: "{{ service_user }}"
     mode: '0644'
     force: false
-  notify: restart redis
-
-- name: Pull de l'image Redis
-  community.docker.docker_image:
-    name: "{{ redis_image }}:{{ redis_version }}"
-    source: pull
-    force_source: true
-  register: redis_pull_result
-  notify: restart redis
-
-- name: Lancer le conteneur Redis
-  community.docker.docker_container:
-    name: "{{ redis_container_name }}"
-    image: "{{ redis_image }}:{{ redis_version }}"
-    state: started
-    recreate: "{{ redis_pull_result is changed }}"
-    restart_policy: unless-stopped
-    network_mode: host
-    volumes:
-      - "{{ redis_data_dir }}:/data"
-      - "{{ redis_config_dir }}/redis.conf:/etc/redis/redis.conf:ro"
-
-- name: Attendre que Redis soit pret
-  wait_for:
-    host: 127.0.0.1
-    port: "{{ redis_port }}"
-    delay: 2
-    timeout: 30
-
-- name: Afficher le statut Redis
-  debug:
-    msg: "Redis {{ redis_version }} deploye sur le port {{ redis_port }}"

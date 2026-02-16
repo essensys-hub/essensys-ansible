@@ -27,33 +27,11 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0600'
-  notify: restart control plane
 
-- name: Pull de l'image Control Plane
-  community.docker.docker_image:
-    name: "{{ control_plane_image }}:{{ control_plane_version }}"
-    source: pull
-    force_source: true
-  register: cp_pull_result
-  notify: restart control plane
-
-- name: Lancer le conteneur Control Plane
-  community.docker.docker_container:
-    name: "{{ control_plane_name }}"
-    image: "{{ control_plane_image }}:{{ control_plane_version }}"
-    state: started
-    recreate: "{{ cp_pull_result is changed }}"
-    restart_policy: unless-stopped
-    network_mode: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - "{{ control_plane_data }}:/data"
-      - "{{ control_plane_config }}:/etc/controlplane/config.yaml:ro"
-      - "{{ data_dir }}:/opt/data:ro"
-
-- name: Afficher le statut du Control Plane
-  debug:
-    msg: >
-      Control Plane {{ control_plane_version }} deploye.
-      URL: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ control_plane_port }}
-      Backup: {{ data_dir }}/
+- name: Creer le repertoire de donnees Control Plane
+  file:
+    path: "{{ control_plane_data }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'

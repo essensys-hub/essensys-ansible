@@ -6,15 +6,6 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
-  notify: restart backend
-
-- name: Pull de l'image backend
-  community.docker.docker_image:
-    name: "{{ backend_image }}:{{ backend_version }}"
-    source: pull
-    force_source: true
-  register: backend_pull_result
-  notify: restart backend
 
 - name: Arreter l'ancien service systemd backend (migration)
   service:
@@ -28,20 +19,3 @@
   file:
     path: /etc/systemd/system/essensys-backend.service
     state: absent
-
-- name: Lancer le conteneur backend
-  community.docker.docker_container:
-    name: "{{ backend_container_name }}"
-    image: "{{ backend_image }}:{{ backend_version }}"
-    state: started
-    recreate: "{{ backend_pull_result is changed }}"
-    restart_policy: unless-stopped
-    network_mode: host
-    entrypoint: ["server"]
-    command: ["-config", "/etc/essensys/config.yaml"]
-    volumes:
-      - "{{ backend_config }}:/etc/essensys/config.yaml:ro"
-
-- name: Afficher le statut backend
-  debug:
-    msg: "Backend {{ backend_version }} deploye sur le port {{ backend_port }}"

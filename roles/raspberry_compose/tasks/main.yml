@@ -1,0 +1,57 @@
+---
+- name: Arreter les conteneurs Docker individuels (migration vers compose)
+  community.docker.docker_container:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ control_plane_name }}"
+    - "{{ backend_container_name }}"
+    - "{{ mcp_container_name }}"
+    - "{{ nginx_container_name }}"
+    - "{{ traefik_container_name }}"
+    - "{{ redis_container_name }}"
+  failed_when: false
+
+- name: Deployer le fichier docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ compose_file }}"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+
+- name: Pull des images Docker
+  command: docker compose -f {{ compose_file }} -p {{ compose_project_name }} pull
+  changed_when: true
+
+- name: Lancer les services via Docker Compose
+  command: docker compose -f {{ compose_file }} -p {{ compose_project_name }} up -d --remove-orphans
+  changed_when: true
+
+- name: Attendre que Redis soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ redis_port }}"
+    delay: 2
+    timeout: 30
+
+- name: Attendre que le backend soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ backend_port }}"
+    delay: 2
+    timeout: 30
+
+- name: Attendre que Nginx soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: 80
+    delay: 2
+    timeout: 30
+
+- name: Afficher le statut Docker Compose
+  debug:
+    msg: >
+      Services deployes via Docker Compose ({{ compose_project_name }}).
+      Fichier: {{ compose_file }}
+      Control Plane: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ control_plane_port }}
