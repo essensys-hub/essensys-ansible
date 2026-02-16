@@ -1,27 +1,124 @@
+# Configuration principale: Frontend sur / et API sur /api/ (port 80)
+# IMPORTANT: Nginx gere le frontend local ET les API locales
+# Traefik gere uniquement le frontend WAN (port 443)
 server {
-    listen 80;
+    listen 80 default_server;
     server_name _;
 
-    root /var/www/html;
-    index index.html;
+    # Bloquer l'acces HTTP depuis Internet (autoriser LAN/localhost)
+    allow 127.0.0.1;
+    allow 10.0.0.0/8;
+    allow 172.16.0.0/12;
+    allow 192.168.0.0/16;
+    deny all;
 
-    # SPA routing (frontend React)
-    location / {
-        try_files $uri $uri/ /index.html;
+    # Desactiver toute redirection automatique
+    port_in_redirect off;
+
+    root /var/www/html;
+    index index.html index.htm;
+
+    # Charset
+    charset utf-8;
+
+    # Logs
+    access_log /var/log/nginx/essensys-access.log;
+    error_log /var/log/nginx/essensys-error.log warn;
+
+    # Gzip compression (sauf API)
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
+
+    # Cache pour les assets statiques
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
     }
 
-    # Proxy API vers le backend
+    # Servir les fichiers HTML directement
+    location ~* \.html$ {
+        expires -1;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+    }
+
+    # Proxy pour les API vers le backend
+    # CRITIQUE: Configuration compatible avec client legacy BP_MQX_ETH
+    # Le client necessite des reponses en un seul paquet TCP
     location /api/ {
-        proxy_pass http://127.0.0.1:7070;
+        client_body_buffer_size 64k;
+        client_max_body_size 64k;
+
+        proxy_pass http://127.0.0.1:{{ backend_port }}/api/;
+        proxy_http_version 1.1;
+
+        # Headers de requete
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # CRITIQUE: Bufferiser la reponse complete pour single-packet TCP
+        # Le client legacy ne peut pas gerer les reponses fragmentees
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+        proxy_busy_buffers_size 8k;
+        proxy_max_temp_file_size 0;
+
+        # Desactiver gzip pour les API (evite la fragmentation)
+        gzip off;
+
+        # Preserver les headers originaux du backend
+        proxy_pass_header Content-Type;
+        proxy_pass_header Content-Length;
+        proxy_pass_header Connection;
+
+        # Ne pas modifier les headers de reponse
+        proxy_hide_header X-Powered-By;
+        proxy_hide_header Server;
+
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+
+        # Fermer la connexion apres la reponse (compatible avec Connection: close)
+        proxy_set_header Connection "close";
+
+        proxy_intercept_errors on;
+    }
+
+    # Health check endpoint
+    location /health {
+        proxy_pass http://127.0.0.1:{{ backend_port }}/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        access_log off;
+    }
+
+    # Debug Interface
+    location /debug {
+        proxy_pass http://127.0.0.1:{{ backend_port }}/debug;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        access_log off;
+    }
+
+    # Reference Table (Redis Dump)
+    location /table_ref {
+        proxy_pass http://127.0.0.1:{{ backend_port }}/table_ref;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        access_log off;
     }
 
     # Proxy MCP
     location /mcp/ {
-        proxy_pass http://127.0.0.1:8083;
+        proxy_pass http://127.0.0.1:{{ mcp_port }}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_http_version 1.1;
@@ -30,16 +127,56 @@ server {
 
     # Proxy Control Plane
     location /admin/ {
-        proxy_pass http://127.0.0.1:9100/;
+        proxy_pass http://127.0.0.1:{{ control_plane_port }}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
     }
 
-    # Cache assets statiques
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 30d;
-        add_header Cache-Control "public, immutable";
+    # Servir le frontend (SPA) directement sur / - PAS DE REDIRECTION
+    location / {
+        absolute_redirect off;
+        port_in_redirect off;
+        try_files $uri $uri/ /index.html;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    # Securite - bloquer l'acces aux fichiers caches
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+
+    location = /robots.txt {
+        log_not_found off;
+        access_log off;
+    }
+}
+
+# Dashboard Traefik (traefik.essensys.fr)
+server {
+    listen 80;
+    server_name traefik.essensys.fr;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
     }
 }
