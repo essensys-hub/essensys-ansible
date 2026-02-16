@@ -6,6 +6,7 @@ services:
     container_name: {{ mosquitto_container_name }}
     network_mode: host
     restart: unless-stopped
+    user: "0:0"
     volumes:
       - {{ mosquitto_config_dir }}/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - {{ mosquitto_config_dir }}/passwd:/mosquitto/config/passwd:ro
