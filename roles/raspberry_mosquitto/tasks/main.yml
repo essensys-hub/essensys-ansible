@@ -24,9 +24,9 @@
   file:
     path: "{{ item }}"
     state: directory
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0755'
+    owner: root
+    group: root
+    mode: '0777'
   loop:
     - "{{ mosquitto_config_dir }}"
     - "{{ mosquitto_data_dir }}"
@@ -36,8 +36,6 @@
   template:
     src: mosquitto.conf.j2
     dest: "{{ mosquitto_config_dir }}/mosquitto.conf"
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
     mode: '0644'
 
 - name: Migrer le fichier password depuis l'ancien emplacement
@@ -45,9 +43,7 @@
     src: "{{ mosquitto_legacy_dir }}/config/passwd"
     dest: "{{ mosquitto_config_dir }}/passwd"
     remote_src: true
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0600'
+    mode: '0644'
     force: false
   failed_when: false
 
@@ -58,16 +54,14 @@
 
 - name: Generer le fichier password Mosquitto si absent
   shell: |
-    docker run --rm -v {{ mosquitto_config_dir }}:/mosquitto/config eclipse-mosquitto:2 \
+    docker run --rm --user 0:0 -v {{ mosquitto_config_dir }}:/mosquitto/config eclipse-mosquitto:2 \
       sh -c "mosquitto_passwd -c -b /mosquitto/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}"
   when: not mqtt_passwd_stat.stat.exists
 
 - name: Fixer les permissions du fichier password
   file:
     path: "{{ mosquitto_config_dir }}/passwd"
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0600'
+    mode: '0644'
   when: mqtt_passwd_stat.stat.exists or not mqtt_passwd_stat.stat.exists
 
 - name: Migrer les donnees depuis l'ancien emplacement
