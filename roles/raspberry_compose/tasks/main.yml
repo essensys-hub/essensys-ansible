@@ -94,6 +94,13 @@
     port: "{{ openclaw_port }}"
     delay: 5
     timeout: 120
+  ignore_errors: true
+  register: openclaw_wait_result
+
+- name: Avertir si OpenClaw n'est pas pret
+  debug:
+    msg: "ATTENTION: OpenClaw n'a pas demarre sur le port {{ openclaw_port }}. Verifier les logs avec: docker logs {{ openclaw_container_name }}"
+  when: openclaw_wait_result is failed
 
 - name: Afficher le statut Docker Compose
   debug:
