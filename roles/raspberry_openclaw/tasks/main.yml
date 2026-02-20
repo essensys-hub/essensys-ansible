@@ -79,6 +79,23 @@
   set_fact:
     openclaw_hooks_token: "{{ openclaw_hooks_token_b64['content'] | b64decode | trim }}"
 
+# --- Cle API OpenAI (depuis /home/essensys/OpenIA.txt si present) ---
+- name: Verifier si le fichier OpenIA.txt existe
+  stat:
+    path: "/home/{{ service_user }}/OpenIA.txt"
+  register: openai_key_file
+
+- name: Lire la cle API OpenAI depuis OpenIA.txt
+  slurp:
+    src: "/home/{{ service_user }}/OpenIA.txt"
+  register: openai_key_b64
+  when: openai_key_file.stat.exists
+
+- name: Definir la cle API OpenAI
+  set_fact:
+    openclaw_openai_api_key: "{{ openai_key_b64['content'] | b64decode | trim }}"
+  when: openai_key_file.stat.exists
+
 # --- Config ---
 - name: Deployer la configuration OpenClaw
   template:

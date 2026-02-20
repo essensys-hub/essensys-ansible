@@ -39,6 +39,33 @@
     group: "{{ service_user }}"
     mode: '0644'
 
+# --- Charger le token hooks OpenClaw pour Alertmanager ---
+- name: Verifier si le token hooks OpenClaw existe
+  stat:
+    path: "{{ config_dir }}/openclaw/hooks.token"
+  register: prometheus_openclaw_hooks_stat
+
+- name: Lire le token hooks OpenClaw
+  slurp:
+    src: "{{ config_dir }}/openclaw/hooks.token"
+  register: prometheus_openclaw_hooks_b64
+  when: prometheus_openclaw_hooks_stat.stat.exists
+
+- name: Definir le token hooks OpenClaw pour Alertmanager
+  set_fact:
+    openclaw_hooks_token: "{{ prometheus_openclaw_hooks_b64['content'] | b64decode | trim }}"
+  when: prometheus_openclaw_hooks_stat.stat.exists
+
+- name: Definir un token hooks placeholder si absent
+  set_fact:
+    openclaw_hooks_token: "NOT_YET_CONFIGURED"
+  when: not prometheus_openclaw_hooks_stat.stat.exists
+
+- name: Definir le port OpenClaw par defaut
+  set_fact:
+    openclaw_port: 18789
+  when: openclaw_port is not defined
+
 - name: Deployer la configuration Alertmanager
   template:
     src: alertmanager.yml.j2
