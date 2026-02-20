@@ -14,6 +14,7 @@
     - mosquitto
     - adguardhome
     - "{{ adguard_container_name }}"
+    - "{{ openclaw_container_name }}"
   failed_when: false
 
 - name: Deployer le fichier docker-compose.yml
@@ -87,6 +88,13 @@
     delay: 2
     timeout: 30
 
+- name: Attendre que OpenClaw soit pret
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ openclaw_port }}"
+    delay: 5
+    timeout: 120
+
 - name: Afficher le statut Docker Compose
   debug:
     msg: >
@@ -95,3 +103,4 @@
       Control Plane: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ control_plane_port }}
       Prometheus: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ prometheus_port }}
       AdGuard: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ adguard_web_port }}
+      OpenClaw: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ openclaw_port }}

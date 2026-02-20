@@ -1,0 +1,60 @@
+{
+  "identity": {
+    "name": "Essensys Assistant"
+  },
+  "models": {
+    "default": "{{ openclaw_model }}"
+  },
+  "channels": {
+    "whatsapp": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "groupPolicy": "disabled",
+      "sendReadReceipts": true,
+      "ackReaction": {
+        "emoji": "👀",
+        "direct": true,
+        "group": "never"
+      }
+    }
+  },
+  "hooks": {
+    "enabled": true,
+    "token": "{{ openclaw_hooks_token }}",
+    "path": "/hooks",
+    "defaultSessionKey": "hook:alertmanager",
+    "allowRequestSessionKey": false,
+    "allowedSessionKeyPrefixes": ["hook:"],
+    "allowedAgentIds": ["*"],
+    "mappings": {
+      "alertmanager": {
+        "match": {
+          "source": "alertmanager"
+        },
+        "action": "agent",
+        "defaults": {
+          "name": "Alertmanager",
+          "deliver": true,
+          "channel": "whatsapp",
+          "sessionKey": "hook:alertmanager"
+        }
+      }
+    }
+  },
+  "mcpServers": {
+    "essensys": {
+      "url": "http://127.0.0.1:{{ mcp_port }}/sse",
+      "headers": {
+        "Authorization": "Bearer {{ mcp_token }}"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "systemPrompt": "Tu es l'assistant IA du systeme domotique Essensys. Tu reponds en francais. Quand tu recois une alerte Alertmanager, reformule-la de maniere claire et concise pour l'utilisateur. Indique la severite, le service concerne, et une recommandation d'action si possible. Tu as acces au MCP Essensys pour consulter l'etat du systeme (Redis, services, exchange table)."
+    }
+  },
+  "session": {
+    "dmScope": "main"
+  }
+}

@@ -17,10 +17,22 @@ route:
 
 receivers:
   - name: default
-    webhook_configs: []
+    webhook_configs:
+      - url: 'http://127.0.0.1:{{ openclaw_port }}/hooks/agent'
+        send_resolved: true
+        http_config:
+          authorization:
+            type: Bearer
+            credentials: '{{ openclaw_hooks_token }}'
 
   - name: critical
-    webhook_configs: []
+    webhook_configs:
+      - url: 'http://127.0.0.1:{{ openclaw_port }}/hooks/agent'
+        send_resolved: true
+        http_config:
+          authorization:
+            type: Bearer
+            credentials: '{{ openclaw_hooks_token }}'
 
 inhibit_rules:
   - source_match:

@@ -1,0 +1,97 @@
+---
+- name: Creer le repertoire de configuration OpenClaw
+  file:
+    path: "{{ openclaw_config_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Creer le repertoire de donnees OpenClaw
+  file:
+    path: "{{ openclaw_data_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Creer le repertoire .openclaw dans data
+  file:
+    path: "{{ openclaw_data_dir }}/.openclaw"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+# --- Gateway token ---
+- name: Verifier si le token gateway OpenClaw existe
+  stat:
+    path: "{{ openclaw_gateway_token_file }}"
+  register: openclaw_gw_token_stat
+
+- name: Generer un token gateway OpenClaw
+  shell: openssl rand -hex 32 > {{ openclaw_gateway_token_file }}
+  args:
+    creates: "{{ openclaw_gateway_token_file }}"
+  when: not openclaw_gw_token_stat.stat.exists
+
+- name: Fixer les permissions du token gateway
+  file:
+    path: "{{ openclaw_gateway_token_file }}"
+    mode: '0600'
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+
+- name: Lire le token gateway OpenClaw
+  slurp:
+    src: "{{ openclaw_gateway_token_file }}"
+  register: openclaw_gw_token_b64
+
+- name: Definir variable token gateway
+  set_fact:
+    openclaw_gateway_token: "{{ openclaw_gw_token_b64['content'] | b64decode | trim }}"
+
+# --- Hooks token ---
+- name: Verifier si le token hooks OpenClaw existe
+  stat:
+    path: "{{ openclaw_hooks_token_file }}"
+  register: openclaw_hooks_token_stat
+
+- name: Generer un token hooks OpenClaw
+  shell: openssl rand -hex 32 > {{ openclaw_hooks_token_file }}
+  args:
+    creates: "{{ openclaw_hooks_token_file }}"
+  when: not openclaw_hooks_token_stat.stat.exists
+
+- name: Fixer les permissions du token hooks
+  file:
+    path: "{{ openclaw_hooks_token_file }}"
+    mode: '0600'
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+
+- name: Lire le token hooks OpenClaw
+  slurp:
+    src: "{{ openclaw_hooks_token_file }}"
+  register: openclaw_hooks_token_b64
+
+- name: Definir variable token hooks
+  set_fact:
+    openclaw_hooks_token: "{{ openclaw_hooks_token_b64['content'] | b64decode | trim }}"
+
+# --- Config ---
+- name: Deployer la configuration OpenClaw
+  template:
+    src: openclaw.json.j2
+    dest: "{{ openclaw_data_dir }}/.openclaw/openclaw.json"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'
+
+- name: Creer le fichier .env OpenClaw
+  template:
+    src: env.j2
+    dest: "{{ openclaw_config_dir }}/.env"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'

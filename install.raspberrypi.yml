@@ -41,8 +41,11 @@
     # --- DNS & Ad Blocking ---
     - raspberry_adguard
 
-    # --- Monitoring (Prometheus, Alertmanager, Node Exporter, cAdvisor) ---
+    # --- Monitoring (Prometheus, Alertmanager, Node Exporter) ---
     - raspberry_prometheus
+
+    # --- AI Assistant (OpenClaw + WhatsApp) ---
+    - raspberry_openclaw
 
     # --- Lancement de TOUS les conteneurs via Docker Compose ---
     - raspberry_compose

@@ -129,3 +129,19 @@ services:
       - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
     volumes:
       - /:/host:ro,rslave
+
+  # --- AI Assistant (OpenClaw) ---
+
+  essensys-openclaw:
+    image: {{ openclaw_image }}:{{ openclaw_version }}
+    container_name: {{ openclaw_container_name }}
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - {{ openclaw_config_dir }}/.env
+    environment:
+      - OPENCLAW_HOME=/data/.openclaw
+    volumes:
+      - {{ openclaw_data_dir }}:/data
+    depends_on:
+      - essensys-mcp
