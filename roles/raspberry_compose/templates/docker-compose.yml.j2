@@ -141,6 +141,8 @@ services:
       - {{ openclaw_config_dir }}/.env
     environment:
       - OPENCLAW_HOME=/data/.openclaw
+      - PORT={{ openclaw_port }}
+      - BROWSER_ENABLED=false
     volumes:
       - {{ openclaw_data_dir }}:/data
     depends_on:
