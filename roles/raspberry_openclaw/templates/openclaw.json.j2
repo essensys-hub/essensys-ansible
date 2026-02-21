@@ -1,21 +1,21 @@
 {
-  "models": {
-    "default": "{{ openclaw_model }}"
-  },
   "agents": {
+    "defaults": {
+      "model": {
+        "primary": "{{ openclaw_model }}"
+      }
+    },
     "list": [
       {
         "id": "main",
         "identity": {
           "name": "Essensys Assistant"
-        },
-        "systemPrompt": "Tu es l'assistant IA du systeme domotique Essensys. Tu reponds en francais. Quand tu recois une alerte Alertmanager, reformule-la de maniere claire et concise pour l'utilisateur. Indique la severite, le service concerne, et une recommandation d'action si possible. Tu as acces au MCP Essensys pour consulter l'etat du systeme (Redis, services, exchange table)."
+        }
       }
     ]
   },
   "channels": {
     "whatsapp": {
-      "enabled": true,
       "dmPolicy": "pairing",
       "groupPolicy": "disabled",
       "sendReadReceipts": true,
@@ -34,28 +34,19 @@
     "allowRequestSessionKey": false,
     "allowedSessionKeyPrefixes": ["hook:"],
     "allowedAgentIds": ["*"],
-    "mappings": {
-      "alertmanager": {
+    "mappings": [
+      {
+        "id": "alertmanager",
         "match": {
           "source": "alertmanager"
         },
         "action": "agent",
-        "defaults": {
-          "name": "Alertmanager",
-          "deliver": true,
-          "channel": "whatsapp",
-          "sessionKey": "hook:alertmanager"
-        }
+        "name": "Alertmanager",
+        "deliver": true,
+        "channel": "whatsapp",
+        "sessionKey": "hook:alertmanager"
       }
-    }
-  },
-  "mcpServers": {
-    "essensys": {
-      "url": "http://127.0.0.1:{{ mcp_port }}/sse",
-      "headers": {
-        "Authorization": "Bearer {{ mcp_token }}"
-      }
-    }
+    ]
   },
   "session": {
     "dmScope": "main"
