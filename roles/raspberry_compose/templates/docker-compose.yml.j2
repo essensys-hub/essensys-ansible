@@ -142,6 +142,7 @@ services:
     environment:
       - OPENCLAW_HOME=/data/.openclaw
       - PORT={{ openclaw_port }}
+      - OPENCLAW_GATEWAY_PORT=18790
       - BROWSER_ENABLED=false
     extra_hosts:
       - "browser:127.0.0.1"
