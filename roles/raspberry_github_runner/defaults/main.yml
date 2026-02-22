@@ -1,0 +1,2 @@
+---
+runner_name: "{{ inventory_hostname }}-runner"

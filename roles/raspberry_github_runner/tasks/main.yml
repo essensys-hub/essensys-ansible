@@ -1,0 +1,85 @@
+---
+- name: Ensure target directory exists for GitHub Actions Runner
+  ansible.builtin.file:
+    path: "{{ runner_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Get latest GitHub Actions Runner release info
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/actions/runner/releases/latest
+    return_content: true
+  register: runner_release_info
+
+- name: Extract download URL for Linux ARM64
+  ansible.builtin.set_fact:
+    runner_download_url: "{{ (runner_release_info.json.assets | selectattr('name', 'search', 'actions-runner-linux-arm64') | first).browser_download_url }}"
+
+- name: Download and extract runner binaries
+  ansible.builtin.unarchive:
+    src: "{{ runner_download_url }}"
+    dest: "{{ runner_dir }}"
+    remote_src: true
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    creates: "{{ runner_dir }}/config.sh"
+
+- name: Check if runner is already configured
+  ansible.builtin.stat:
+    path: "{{ runner_dir }}/.runner"
+  register: runner_configured_file
+
+- name: Install runner dependencies
+  ansible.builtin.command:
+    cmd: "./bin/installdependencies.sh"
+    chdir: "{{ runner_dir }}"
+  become: true
+  when: not runner_configured_file.stat.exists
+
+- name: Check if repo_url or token are empty
+  ansible.builtin.fail:
+    msg: "github_repo_url and github_runner_token must be provided to register a new runner."
+  when: >
+    not runner_configured_file.stat.exists and
+    (github_repo_url | default('') | length == 0 or github_runner_token | default('') | length == 0)
+
+- name: Configure the GitHub Actions Runner
+  become: true
+  become_user: "{{ service_user }}"
+  ansible.builtin.command:
+    cmd: "./config.sh --url {{ github_repo_url }} --token {{ github_runner_token }} --unattended --replace --name {{ runner_name }}"
+    chdir: "{{ runner_dir }}"
+  when: not runner_configured_file.stat.exists
+
+- name: Check if runner service is installed
+  ansible.builtin.stat:
+    path: "{{ runner_dir }}/.service"
+  register: service_file_check
+
+- name: Install runner service
+  ansible.builtin.command:
+    cmd: "./svc.sh install {{ service_user }}"
+    chdir: "{{ runner_dir }}"
+  when: not service_file_check.stat.exists
+
+- name: Ensure runner service is started
+  ansible.builtin.command:
+    cmd: "./svc.sh start"
+    chdir: "{{ runner_dir }}"
+  when: not service_file_check.stat.exists
+
+- name: Read service name
+  ansible.builtin.slurp:
+    src: "{{ runner_dir }}/.service"
+  register: service_name_file
+  ignore_errors: true
+
+- name: Enable and ensure runner service is running
+  ansible.builtin.systemd:
+    name: "{{ service_name_file.content | b64decode | trim }}"
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: service_name_file.content is defined

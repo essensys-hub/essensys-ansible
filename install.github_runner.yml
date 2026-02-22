@@ -1,0 +1,17 @@
+---
+- name: Deploy GitHub Actions Runner
+  hosts: raspberrypi
+  gather_facts: true
+  become: true
+  vars_prompt:
+    - name: github_repo_url
+      prompt: "Enter GitHub Repository URL (e.g. https://github.com/essensys-hub/essensys-control-plane) [Empty if already configured]"
+      private: false
+    - name: github_runner_token
+      prompt: "Enter GitHub Runner Token (from Repo Settings > Actions > Runners > New runner) [Empty if already configured]"
+      private: true
+  vars:
+    service_user: essensys
+    runner_dir: "/home/{{ service_user }}/actions-runner"
+  roles:
+    - raspberry_github_runner
