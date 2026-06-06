@@ -1,0 +1,151 @@
+---
+- name: Installation Essensys Gateway (CM5 double NIC + NVMe)
+  hosts: raspberrypi
+  gather_facts: true
+  become: true
+  vars:
+    essensys_version: "V.1.3.0"
+    control_plane_version: "V.1.3.7"
+    service_user: essensys
+
+    # Structure de donnees centralisee
+    data_dir: /opt/data
+    config_dir: "{{ data_dir }}/config"
+
+    # Domaine WAN
+    domain_file: "/home/{{ service_user }}/domain.txt"
+    wan_domain_default: essensys.acme.com
+    acme_email: admin@acme.com
+    use_staging: false
+
+    # Versions des outils systeme
+    go_version: "1.23.4"
+    node_setup_script: "https://deb.nodesource.com/setup_20.x"
+    traefik_version: v2.11.3
+
+    # Repertoires d'installation (backend compile depuis les sources)
+    install_dir: /opt/essensys
+    backend_dir: "{{ install_dir }}/backend"
+    frontend_dir: "{{ install_dir }}/frontend"
+
+    # Depots sources et versions
+    backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
+    frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
+    backend_version: "{{ essensys_version }}"
+    frontend_version: "{{ essensys_version }}"
+
+    # UniFi (desactive par defaut)
+    unifi_enabled: false
+    unifi_base_url: "https://192.168.0.1"
+    unifi_api_key: ""
+
+    # --- Profil gateway double NIC ---
+    gateway_dual_nic: true
+
+    # Renseigner dans l'inventaire ou group_vars/host_vars :
+    # gateway_eth0_mac: "dc:a6:32:xx:xx:xx"   # MAC de eth0 (LAN)
+    # gateway_eth1_mac: "dc:a6:32:xx:xx:xx"   # MAC de eth1 (armoire)
+    # gateway_eth0_ip: ""                       # IP eth0 (auto si vide)
+    # gateway_eth1_ip: "10.0.1.1"
+    # gateway_eth1_prefix: "24"
+    # gateway_dhcp_range_start: "10.0.1.100"
+    # gateway_dhcp_range_end: "10.0.1.200"
+    # gateway_dhcp_lease_time: "12h"
+    # gateway_dhcp_reservations: []
+    # gateway_upstream_dns: "9.9.9.9"
+    # gateway_armoire_hostname: "mon.essensys.fr"
+    # gateway_nvme_device: "/dev/nvme0n1"
+    # essensys_nvme_mount: "/mnt/nvme"
+    # gateway_nvme_bind_mounts_enabled: true
+
+  pre_tasks:
+    - name: Detecter l'adresse IP de eth0 (gateway_eth0_ip auto)
+      ansible.builtin.shell: ip -4 addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1 | head -1
+      register: eth0_ip_detected
+      changed_when: false
+      failed_when: false
+      when: gateway_dual_nic | default(false) | bool
+
+    - name: Definir gateway_eth0_ip depuis l'interface si non specifie
+      ansible.builtin.set_fact:
+        gateway_eth0_ip: "{{ eth0_ip_detected.stdout }}"
+      when:
+        - gateway_dual_nic | default(false) | bool
+        - gateway_eth0_ip | default('') == ''
+        - eth0_ip_detected.stdout | default('') != ''
+
+    - name: Creer les repertoires d'installation
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ service_user }}"
+        group: "{{ service_user }}"
+        mode: '0755'
+      loop:
+        - "{{ install_dir }}"
+        - "{{ backend_dir }}"
+        - "{{ frontend_dir }}"
+
+    - name: Verifier si Go est installe
+      ansible.builtin.stat:
+        path: /usr/local/go/bin/go
+      register: go_binary
+
+    - name: Installer pip3 et setuptools
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-setuptools
+          - python3-docker
+        state: present
+
+    - name: Telecharger et installer Go {{ go_version }}
+      ansible.builtin.shell: |
+        wget -q "https://go.dev/dl/go{{ go_version }}.linux-arm64.tar.gz" -O /tmp/go.tar.gz && \
+        tar -C /usr/local -xzf /tmp/go.tar.gz && \
+        rm /tmp/go.tar.gz
+      args:
+        creates: /usr/local/go/bin/go
+      when: not go_binary.stat.exists
+
+  roles:
+    # --- Stockage NVMe (doit tourner en premier) ---
+    - raspberry_gateway_nvme
+
+    # --- Reseau double NIC ---
+    - raspberry_gateway_network
+
+    # --- DHCP + DNS split sur eth1 ---
+    - raspberry_gateway_dhcp
+
+    # --- Systeme de base ---
+    - raspberry_common
+    - raspberry_avahi
+    - raspberry_docker
+
+    # --- Configuration des services (pas de conteneurs ici) ---
+    - raspberry_mosquitto
+    - raspberry_redis
+    - raspberry_backend
+    - raspberry_mcp
+    - raspberry_frontend
+    - raspberry_nginx
+    - raspberry_traefik
+    - raspberry_control_plane
+
+    # --- DNS & Ad Blocking ---
+    - raspberry_adguard
+
+    # --- Monitoring (Prometheus, Alertmanager, Node Exporter) ---
+    - raspberry_prometheus
+
+    # --- AI Assistant (OpenClaw + WhatsApp) ---
+    - raspberry_openclaw
+
+    # --- Lancement de TOUS les conteneurs via Docker Compose ---
+    - raspberry_compose
+
+    # --- Services complementaires (non-Docker) ---
+    - raspberry_monitor
+    - raspberry_logrotate
+    - raspberry_push_status

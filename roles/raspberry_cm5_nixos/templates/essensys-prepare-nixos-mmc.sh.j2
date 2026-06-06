@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Prepare eMMC ({{ cm5_emmc_device }}) for NixOS install — OFFLINE ONLY
+# Do NOT run while booted from this eMMC. Use Raspberry Pi imager live / recovery boot.
+set -euo pipefail
+
+EMMC="{{ cm5_emmc_device }}"
+BOOT_MB="{{ cm5_emmc_boot_size_mb }}"
+ROOT_LABEL="{{ cm5_emmc_root_label }}"
+BOOT_LABEL="{{ cm5_emmc_boot_label }}"
+
+if findmnt -rn -S "$EMMC" >/dev/null 2>&1 || findmnt -rn | grep -q "^$EMMC"; then
+  echo "ERROR: $EMMC appears to be the boot device. Boot from SD/USB recovery first." >&2
+  exit 1
+fi
+
+echo "Partitioning $EMMC for NixOS (GPT: boot firmware + root)..."
+parted -s "$EMMC" mklabel gpt
+parted -s "$EMMC" mkpart boot fat32 1MiB "${BOOT_MB}MiB"
+parted -s "$EMMC" set 1 esp on
+parted -s "$EMMC" mkpart root ext4 "${BOOT_MB}MiB" 100%
+
+BOOT_PART="${EMMC}p1"
+ROOT_PART="${EMMC}p2"
+[[ "$EMMC" == *mmcblk* ]] && BOOT_PART="${EMMC}p1" && ROOT_PART="${EMMC}p2"
+
+mkfs.vfat -F 32 -n "$BOOT_LABEL" "$BOOT_PART"
+mkfs.ext4 -F -L "$ROOT_LABEL" "$ROOT_PART"
+
+echo "Done. Mount root and run: nixos-install --flake {{ cm5_nixos_checkout_dir }}#{{ cm5_nixos_flake_host }}"

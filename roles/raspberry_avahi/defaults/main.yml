@@ -1,0 +1,4 @@
+---
+avahi_hostname: mon.essensys
+avahi_domain: local
+avahi_use_ipv6: false

@@ -1,0 +1,16 @@
+---
+# Plage DHCP pour le segment armoire (eth1)
+gateway_dhcp_range_start: "10.0.1.100"
+gateway_dhcp_range_end: "10.0.1.200"
+gateway_dhcp_lease_time: "12h"
+
+# Reservations statiques MAC->IP (liste de dicts: {mac, ip, name})
+# Exemple:
+# gateway_dhcp_reservations:
+#   - mac: "aa:bb:cc:dd:ee:ff"
+#     ip: "10.0.1.10"
+#     name: "armoire-principale"
+gateway_dhcp_reservations: []
+
+# DNS upstream pour les clients eth1 (forwarding pour noms hors armoire)
+gateway_upstream_dns: "9.9.9.9"

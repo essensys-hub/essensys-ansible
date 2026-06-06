@@ -53,11 +53,42 @@ http:
         certResolver: letsencrypt
       priority: 20
 
+{% if gateway_dual_nic | default(false) %}
+    # --- Acces LAN local via mDNS (mon.essensys.local) ---
+    frontend-local:
+      rule: "Host(`{{ avahi_hostname }}.{{ avahi_domain }}`)"
+      entryPoints:
+        - websecure
+      service: frontend-service
+      tls: {}
+      priority: 5
+
+    api-local:
+      rule: "Host(`{{ avahi_hostname }}.{{ avahi_domain }}`) && PathPrefix(`/api/`)"
+      entryPoints:
+        - websecure
+      service: backend-service
+      tls: {}
+      priority: 8
+
+    control-plane-local:
+      rule: "Host(`{{ avahi_hostname }}.{{ avahi_domain }}`) && PathPrefix(`/controle_plane`)"
+      entryPoints:
+        - websecure
+      service: control-plane-service
+      tls: {}
+      priority: 8
+{% endif %}
+
   services:
     frontend-service:
       loadBalancer:
         servers:
+{% if gateway_dual_nic | default(false) %}
+          - url: "http://{{ gateway_eth1_ip }}:80"
+{% else %}
           - url: "http://127.0.0.1:80"
+{% endif %}
         passHostHeader: true
 
     backend-service:

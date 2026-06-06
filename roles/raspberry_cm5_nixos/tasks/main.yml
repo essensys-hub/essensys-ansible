@@ -1,0 +1,233 @@
+---
+- name: CM5 NixOS - verifier confirmation preparation
+  ansible.builtin.assert:
+    that:
+      - confirm_cm5_nixos_prep | bool
+    fail_msg: "Definissez confirm_cm5_nixos_prep=true pour preparer la migration NixOS CM5."
+
+- name: CM5 NixOS - verifier la presence de l'eMMC
+  ansible.builtin.stat:
+    path: "{{ cm5_emmc_device }}"
+  register: cm5_emmc_stat
+
+- name: CM5 NixOS - echec si eMMC absent
+  ansible.builtin.fail:
+    msg: "Peripherique eMMC {{ cm5_emmc_device }} introuvable."
+  when: not cm5_emmc_stat.stat.exists
+
+- name: CM5 NixOS - detecter MAC eth0
+  ansible.builtin.shell: ip link show eth0 | awk '/ether/ {print $2}'
+  register: cm5_eth0_mac_detected
+  changed_when: false
+  when: gateway_eth0_mac | default('') == ''
+
+- name: CM5 NixOS - detecter MAC eth1
+  ansible.builtin.shell: ip link show eth1 | awk '/ether/ {print $2}'
+  register: cm5_eth1_mac_detected
+  changed_when: false
+  when: gateway_eth1_mac | default('') == ''
+
+- name: CM5 NixOS - appliquer MAC eth0 detectee
+  ansible.builtin.set_fact:
+    gateway_eth0_mac: "{{ cm5_eth0_mac_detected.stdout | trim }}"
+  when:
+    - gateway_eth0_mac | default('') == ''
+    - cm5_eth0_mac_detected.stdout | default('') != ''
+
+- name: CM5 NixOS - appliquer MAC eth1 detectee
+  ansible.builtin.set_fact:
+    gateway_eth1_mac: "{{ cm5_eth1_mac_detected.stdout | trim }}"
+  when:
+    - gateway_eth1_mac | default('') == ''
+    - cm5_eth1_mac_detected.stdout | default('') != ''
+
+- name: CM5 NixOS - detecter IP eth0
+  ansible.builtin.shell: ip -4 addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1 | head -1
+  register: cm5_eth0_ip_detected
+  changed_when: false
+  when: gateway_eth0_ip | default('') == ''
+
+- name: CM5 NixOS - appliquer IP eth0 detectee
+  ansible.builtin.set_fact:
+    gateway_eth0_ip: "{{ cm5_eth0_ip_detected.stdout | trim }}"
+  when:
+    - gateway_eth0_ip | default('') == ''
+    - cm5_eth0_ip_detected.stdout | default('') != ''
+
+# --- NVMe : conserver les donnees pour NixOS ---
+- name: CM5 NixOS - verifier NVMe
+  ansible.builtin.stat:
+    path: "{{ cm5_nvme_device }}"
+  register: cm5_nvme_stat
+  when: cm5_nixos_prepare_nvme | bool
+
+- name: CM5 NixOS - verifier label NVMe essensys-data
+  ansible.builtin.command: blkid -s LABEL -o value {{ cm5_nvme_device }}p1
+  register: cm5_nvme_label_check
+  changed_when: false
+  failed_when: false
+  when:
+    - cm5_nixos_prepare_nvme | bool
+    - cm5_nvme_stat.stat.exists | default(false)
+
+- name: CM5 NixOS - avertissement NVMe label inattendu
+  ansible.builtin.debug:
+    msg: >
+      Label NVMe actuel='{{ cm5_nvme_label_check.stdout | default('') | trim }}',
+      attendu='{{ cm5_nvme_label }}'. Le role gateway_nvme peut etre reapplique sous NixOS.
+  when:
+    - cm5_nixos_prepare_nvme | bool
+    - cm5_nvme_stat.stat.exists | default(false)
+    - cm5_nvme_label_check.stdout | default('') | trim != cm5_nvme_label
+
+- name: CM5 NixOS - s'assurer que le point de montage NVMe existe
+  ansible.builtin.file:
+    path: "{{ essensys_nvme_mount }}"
+    state: directory
+    mode: "0755"
+  when:
+    - cm5_nixos_prepare_nvme | bool
+    - cm5_nvme_stat.stat.exists | default(false)
+
+# --- Flake gateway (git ou rsync local) ---
+- name: CM5 NixOS - creer le repertoire checkout
+  ansible.builtin.file:
+    path: "{{ cm5_nixos_checkout_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: cm5_nixos_local_src | default('') != ''
+
+- name: CM5 NixOS - synchroniser le flake depuis le poste Ansible
+  ansible.posix.synchronize:
+    src: "{{ cm5_nixos_local_src }}/"
+    dest: "{{ cm5_nixos_checkout_dir }}/"
+    delete: true
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=.cursor"
+      - "--exclude=.claude"
+      - "--exclude=assets"
+      - "--exclude=src"
+  delegate_to: localhost
+  when: cm5_nixos_local_src | default('') != ''
+
+- name: CM5 NixOS - synchroniser essensys-nginx depuis le poste Ansible
+  ansible.builtin.file:
+    path: "{{ cm5_nixos_essensys_nginx_checkout }}"
+    state: directory
+    mode: "0755"
+  when: cm5_nixos_nginx_local_src | default('') != ''
+
+- name: CM5 NixOS - rsync essensys-nginx local
+  ansible.posix.synchronize:
+    src: "{{ cm5_nixos_nginx_local_src }}/"
+    dest: "{{ cm5_nixos_essensys_nginx_checkout }}/"
+    delete: true
+    rsync_opts:
+      - "--exclude=.git"
+  delegate_to: localhost
+  when: cm5_nixos_nginx_local_src | default('') != ''
+
+- name: CM5 NixOS - installer git
+  ansible.builtin.apt:
+    name: git
+    state: present
+    update_cache: true
+  when:
+    - cm5_nixos_clone_flake | bool
+    - cm5_nixos_local_src | default('') == ''
+
+- name: CM5 NixOS - cloner essensys-raspberry-gateway (branche nixos)
+  ansible.builtin.git:
+    repo: "{{ cm5_nixos_gateway_repo }}"
+    dest: "{{ cm5_nixos_checkout_dir }}"
+    version: "{{ cm5_nixos_branch }}"
+    force: true
+  when:
+    - cm5_nixos_clone_flake | bool
+    - cm5_nixos_local_src | default('') == ''
+
+- name: CM5 NixOS - cloner essensys-nginx (input flake sibling)
+  ansible.builtin.git:
+    repo: "{{ cm5_nixos_essensys_nginx_repo }}"
+    dest: "{{ cm5_nixos_essensys_nginx_checkout }}"
+    version: "V.1.3.0"
+    force: true
+  when:
+    - cm5_nixos_clone_flake | bool
+    - cm5_nixos_nginx_local_src | default('') == ''
+
+- name: CM5 NixOS - deployer l'override hardware genere
+  ansible.builtin.template:
+    src: hardware-cm5.generated.nix.j2
+    dest: "{{ cm5_nixos_checkout_dir }}/nix/hosts/gateway-cm5/hardware-cm5.generated.nix"
+    mode: "0644"
+
+- name: CM5 NixOS - verifier que default.nix existe
+  ansible.builtin.stat:
+    path: "{{ cm5_nixos_checkout_dir }}/nix/hosts/gateway-cm5/default.nix"
+  register: cm5_default_nix_stat
+
+- name: CM5 NixOS - inclure l'override hardware dans default.nix
+  ansible.builtin.replace:
+    path: "{{ cm5_nixos_checkout_dir }}/nix/hosts/gateway-cm5/default.nix"
+    regexp: '(\s+imports = \[ \(modulesPath \+ "/profiles/minimal\.nix"\) \];)'
+    replace: |-
+      imports = [
+        (modulesPath + "/profiles/minimal.nix")
+        ./hardware-cm5.generated.nix
+      ];
+  when:
+    - cm5_default_nix_stat.stat.exists
+    - cm5_default_nix_stat.stat.isreg
+
+# --- Installer Nix (flakes) ---
+- name: CM5 NixOS - verifier si nix est deja installe
+  ansible.builtin.command: nix --version
+  register: cm5_nix_version
+  changed_when: false
+  failed_when: false
+  when: cm5_nixos_install_nix | bool
+
+- name: CM5 NixOS - installer Nix via Determinate installer
+  ansible.builtin.shell: |
+    curl -fsSL https://install.determinate.systems/nix | sh -s -- install --no-confirm
+  args:
+    creates: /nix/var/nix/profiles/default/bin/nix
+  when:
+    - cm5_nixos_install_nix | bool
+    - cm5_nix_version.rc != 0
+
+- name: CM5 NixOS - activer flakes dans nix.conf
+  ansible.builtin.lineinfile:
+    path: /etc/nix/nix.conf
+    regexp: '^experimental-features\s*='
+    line: "experimental-features = nix-command flakes"
+    create: true
+    mode: "0644"
+  when: cm5_nixos_install_nix | bool
+
+# --- Script repartition eMMC (offline) ---
+- name: CM5 NixOS - deployer le script de preparation eMMC
+  ansible.builtin.template:
+    src: essensys-prepare-nixos-mmc.sh.j2
+    dest: /usr/local/sbin/essensys-prepare-nixos-mmc.sh
+    mode: "0750"
+  when: cm5_nixos_deploy_mmc_script | bool
+
+- name: CM5 NixOS - executer repartition eMMC (DANGEREUX — boot recovery requis)
+  ansible.builtin.command: /usr/local/sbin/essensys-prepare-nixos-mmc.sh
+  when: cm5_nixos_run_emmc_repartition | bool
+
+- name: CM5 NixOS - instructions post-preparation
+  ansible.builtin.debug:
+    msg: |
+      Preparation NixOS CM5 terminee.
+      - Flake : {{ cm5_nixos_checkout_dir }}#{{ cm5_nixos_flake_host }}
+      - Override hardware : nix/hosts/gateway-cm5/hardware-cm5.generated.nix
+      - NVMe preserve : {{ cm5_nixos_preserve_nvme_data }} (label {{ cm5_nvme_label }})
+      - Repartition eMMC : lancer /usr/local/sbin/essensys-prepare-nixos-mmc.sh depuis un boot recovery (PAS en prod)
+      - Puis : nixos-install --flake {{ cm5_nixos_checkout_dir }}#{{ cm5_nixos_flake_host }}
+      - Mises a jour : nixos-rebuild switch --flake {{ cm5_nixos_checkout_dir }}#{{ cm5_nixos_flake_host }} --use-remote-sudo

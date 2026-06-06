@@ -1,0 +1,165 @@
+---
+- name: CM5 uninstall - verifier confirmation
+  ansible.builtin.assert:
+    that:
+      - confirm_cm5_uninstall | bool
+    fail_msg: "Definissez confirm_cm5_uninstall=true pour desinstaller la gateway CM5."
+
+# --- Stack Docker Compose ---
+- name: CM5 uninstall - arreter Docker Compose Essensys
+  ansible.builtin.command: docker compose -f {{ compose_file }} down --remove-orphans
+  register: compose_down
+  changed_when: compose_down.rc == 0
+  failed_when: false
+  when: cm5_remove_docker_stack | bool
+
+- name: CM5 uninstall - supprimer le fichier docker-compose
+  ansible.builtin.file:
+    path: "{{ compose_file }}"
+    state: absent
+  when: cm5_remove_docker_stack | bool
+
+# --- Services complementaires gateway ---
+- name: CM5 uninstall - arreter les services systemd gateway
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - essensys-push.timer
+    - essensys-push.service
+    - mqtt-debug.service
+    - essensys-mcp.service
+  failed_when: false
+
+# --- dnsmasq (segment armoire) ---
+- name: CM5 uninstall - arreter dnsmasq
+  ansible.builtin.service:
+    name: dnsmasq
+    state: stopped
+    enabled: false
+  when:
+    - cm5_remove_dnsmasq | bool
+    - gateway_dual_nic | default(false) | bool
+  failed_when: false
+
+- name: CM5 uninstall - supprimer la configuration dnsmasq Essensys
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/dnsmasq.d/essensys-armoire-reservations.conf
+    - /etc/dnsmasq.conf
+  when:
+    - cm5_remove_dnsmasq | bool
+    - gateway_dual_nic | default(false) | bool
+
+- name: CM5 uninstall - desinstaller le paquet dnsmasq
+  ansible.builtin.apt:
+    name: dnsmasq
+    state: absent
+    autoremove: true
+  when:
+    - cm5_remove_dnsmasq | bool
+    - gateway_dual_nic | default(false) | bool
+
+# --- Bind mounts NVMe ---
+- name: CM5 uninstall - demontar les bind mounts NVMe
+  ansible.builtin.command: umount "{{ item.dest }}"
+  loop: "{{ gateway_nvme_bind_mounts }}"
+  register: umount_bind
+  failed_when: false
+  changed_when: umount_bind.rc == 0
+  when:
+    - cm5_remove_nvme_bind_mounts | bool
+    - gateway_nvme_bind_mounts | length > 0
+
+- name: CM5 uninstall - retirer les bind mounts du fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ item.src | regex_escape }}\\s"
+    state: absent
+  loop: "{{ gateway_nvme_bind_mounts }}"
+  notify: Reload fstab mounts
+  when:
+    - cm5_remove_nvme_bind_mounts | bool
+    - gateway_nvme_bind_mounts | length > 0
+
+- name: CM5 uninstall - demontar le point de montage NVMe principal
+  ansible.builtin.command: umount "{{ essensys_nvme_mount }}"
+  register: umount_nvme
+  failed_when: false
+  changed_when: umount_nvme.rc == 0
+  when: cm5_remove_nvme_fstab | bool
+
+- name: CM5 uninstall - retirer l'entree NVMe du fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "\\s{{ essensys_nvme_mount | regex_escape }}\\s"
+    state: absent
+  notify: Reload fstab mounts
+  when: cm5_remove_nvme_fstab | bool
+
+- name: CM5 uninstall - effacer les donnees NVMe (destructif)
+  ansible.builtin.command: wipefs -a "{{ gateway_nvme_device }}p1"
+  when:
+    - cm5_wipe_nvme_data | bool
+    - gateway_nvme_device != ""
+
+# --- Reseau systemd-networkd gateway ---
+- name: CM5 uninstall - sauvegarder les unites reseau avant suppression
+  ansible.builtin.copy:
+    src: "/etc/systemd/network/{{ item }}"
+    dest: "/etc/systemd/network/{{ item }}.bak-cm5-uninstall"
+    remote_src: true
+    mode: "0644"
+  loop:
+    - 10-eth0.network
+    - 20-eth1.network
+  failed_when: false
+  when:
+    - cm5_remove_gateway_network | bool
+    - gateway_dual_nic | default(false) | bool
+
+- name: CM5 uninstall - supprimer les unites reseau gateway
+  ansible.builtin.file:
+    path: "/etc/systemd/network/{{ item }}"
+    state: absent
+  loop:
+    - 10-eth0.network
+    - 20-eth1.network
+  notify: Reload systemd daemon
+  when:
+    - cm5_remove_gateway_network | bool
+    - gateway_dual_nic | default(false) | bool
+
+- name: CM5 uninstall - supprimer le drop-in Docker after-nvme
+  ansible.builtin.file:
+    path: /etc/systemd/system/docker.service.d/after-nvme.conf
+    state: absent
+  notify: Reload systemd daemon
+
+# --- Role uninstall standard Essensys ---
+- name: CM5 uninstall - executer raspberry_uninstall
+  ansible.builtin.import_role:
+    name: raspberry_uninstall
+
+- name: CM5 uninstall - desinstaller Docker (optionnel)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: absent
+    autoremove: true
+  when: cm5_remove_docker_packages | bool
+
+- name: CM5 uninstall - redemarrer systemd-networkd si actif
+  ansible.builtin.service:
+    name: systemd-networkd
+    state: restarted
+  when:
+    - cm5_remove_gateway_network | bool
+    - gateway_dual_nic | default(false) | bool
+  failed_when: false

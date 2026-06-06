@@ -1,0 +1,14 @@
+---
+- name: Restart avahi
+  ansible.builtin.service:
+    name: avahi-daemon
+    state: restarted
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart avahi-publish
+  ansible.builtin.service:
+    name: avahi-publish-essensys
+    state: restarted

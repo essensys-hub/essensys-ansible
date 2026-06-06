@@ -1,0 +1,34 @@
+---
+- name: DHCP gateway - installer dnsmasq
+  ansible.builtin.apt:
+    name: dnsmasq
+    state: present
+    update_cache: true
+  when: gateway_dual_nic | bool
+
+# Verifier qu'aucun autre processus n'ecoute deja sur gateway_eth1_ip:53
+# (hors dnsmasq lui-meme, qui peut deja tourner lors d'un re-play)
+- name: DHCP gateway - verifier absence de conflit port 53 sur eth1
+  ansible.builtin.shell: |
+    ss -tlnup 'sport = :53' | grep -v dnsmasq | grep "{{ gateway_eth1_ip }}"
+  register: port53_conflict
+  changed_when: false
+  failed_when: port53_conflict.rc == 0
+  when: gateway_dual_nic | bool
+
+- name: DHCP gateway - deployer la configuration dnsmasq
+  ansible.builtin.template:
+    src: dnsmasq.conf.j2
+    dest: /etc/dnsmasq.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload dnsmasq
+  when: gateway_dual_nic | bool
+
+- name: DHCP gateway - activer et demarrer dnsmasq
+  ansible.builtin.service:
+    name: dnsmasq
+    state: started
+    enabled: true
+  when: gateway_dual_nic | bool

@@ -1,4 +1,9 @@
+{% if gateway_dual_nic | default(false) %}
+# Profil gateway : restreindre l'interface web AdGuard a eth0 (LAN)
+bind_host: {{ gateway_eth0_ip | default(ansible_default_ipv4.address, true) }}
+{% else %}
 bind_host: 0.0.0.0
+{% endif %}
 bind_port: 3000
 users: []
 auth_attempts: 5
@@ -10,7 +15,12 @@ debug_pprof: false
 web_session_ttl: 720
 dns:
   bind_hosts:
+{% if gateway_dual_nic | default(false) %}
+  # Profil gateway : DNS AdGuard uniquement sur eth0 (evite conflit avec dnsmasq sur eth1:53)
+  - {{ gateway_eth0_ip | default(ansible_default_ipv4.address, true) }}
+{% else %}
   - 0.0.0.0
+{% endif %}
   port: 53
   statistics_interval: 1
   query_log_enabled: true
@@ -30,8 +40,7 @@ dns:
   ratelimit_whitelist: []
   refuse_any: true
   upstream_dns:
-  - https://dns.adguard-dns.com/dns-query
-  - https://dns.quad9.net/dns-query
+  - "{{ eth0_gateway.stdout | default(ansible_default_ipv4.gateway, true) | default('1.1.1.1', true) }}"
   upstream_dns_file: ""
   bootstrap_dns:
   - 9.9.9.10

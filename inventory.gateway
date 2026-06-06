@@ -1,0 +1,60 @@
+# Inventaire Ansible - Profil Gateway Essensys CM5 (double NIC + NVMe)
+#
+# Utilisation:
+#   ansible-playbook install.gateway.yml -i inventory.gateway
+#
+# Variables OBLIGATOIRES a renseigner avant le premier deploy :
+#   - gateway_eth0_mac    : recuperer via `ip link show eth0 | awk '/ether/{print $2}'`
+#   - gateway_eth1_mac    : recuperer via `ip link show eth1 | awk '/ether/{print $2}'`
+#
+# Variables OPTIONNELLES avec valeurs par defaut commentees ci-dessous.
+
+[raspberrypi]
+gateway-essensys ansible_host=192.168.0.14 ansible_user=essensys
+
+[raspberrypi:vars]
+# --- Profil double NIC ---
+gateway_dual_nic=true
+
+# MAC addresses des interfaces (OBLIGATOIRE)
+gateway_eth0_mac="88:a2:9e:34:27:61"
+gateway_eth1_mac="00:e0:4c:68:01:be"
+
+# IP gateway vue du LAN (eth0) - utilisee pour le binding des services HTTPS et AdGuard
+# Laisser vide pour utiliser ansible_default_ipv4.address (auto-detection)
+gateway_eth0_ip=""
+
+# IP statique sur le segment armoire (eth1)
+gateway_eth1_ip="10.0.1.1"
+gateway_eth1_prefix="24"
+
+# Hostname resolu par le firmware legacy BP_MQX_ETH
+gateway_armoire_hostname="mon.essensys.fr"
+
+# --- DHCP segment armoire ---
+gateway_dhcp_range_start="10.0.1.100"
+gateway_dhcp_range_end="10.0.1.200"
+gateway_dhcp_lease_time="12h"
+gateway_upstream_dns="9.9.9.9"
+
+# Reservations statiques (laisser vide ou surcharger en host_vars)
+# Format YAML multi-ligne a utiliser dans host_vars/gateway-essensys.yml :
+# gateway_dhcp_reservations:
+#   - mac: "aa:bb:cc:dd:ee:01"
+#     ip: "10.0.1.10"
+#     name: "armoire-principale"
+
+# --- Stockage NVMe ---
+gateway_nvme_device="/dev/nvme0n1"
+essensys_nvme_mount="/mnt/nvme"
+gateway_nvme_bind_mounts_enabled=true
+
+# --- Playbooks CM5 ---
+# ansible-playbook install.gateway.yml -i inventory.gateway
+# ansible-playbook uninstall.cm5.yml -i inventory.gateway -e confirm_cm5_uninstall=true
+# ansible-playbook prepare.nixos-cm5.yml -i inventory.gateway -e confirm_cm5_nixos_prep=true
+
+# --- Domaine WAN (front utilisateur) ---
+wan_domain_default="essensys.acme.com"
+acme_email="admin@acme.com"
+use_staging=false

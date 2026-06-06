@@ -1,4 +1,11 @@
 ---
+- name: Arreter le service systemd essensys-backend (gere par Docker Compose)
+  service:
+    name: essensys-backend
+    state: stopped
+    enabled: false
+  failed_when: false
+
 - name: Arreter les conteneurs Docker individuels (migration vers compose)
   community.docker.docker_container:
     name: "{{ item }}"
@@ -17,6 +24,59 @@
     - "{{ openclaw_container_name }}"
   failed_when: false
 
+- name: Creer le repertoire de configuration backend Docker
+  file:
+    path: "{{ config_dir }}/backend"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+
+- name: Supprimer config.yaml si c'est un repertoire (cree par Docker au premier demarrage)
+  ansible.builtin.shell: |
+    if [ -d "{{ config_dir }}/backend/config.yaml" ]; then
+      rm -rf "{{ config_dir }}/backend/config.yaml"
+    fi
+  changed_when: false
+
+- name: Deployer la configuration backend Docker (si absente)
+  copy:
+    dest: "{{ config_dir }}/backend/config.yaml"
+    content: |
+      server:
+        port: {{ backend_port }}
+        read_timeout: 10s
+        write_timeout: 10s
+        idle_timeout: 60s
+
+      auth:
+        enabled: false
+
+      logging:
+        level: info
+        format: text
+
+      redis:
+        addr: "localhost:6379"
+        password: ""
+        db: 0
+
+      unifi:
+        enabled: {{ unifi_enabled | lower }}
+        base_url: "{{ unifi_base_url }}"
+        api_key: "{{ unifi_api_key }}"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+    force: false
+
+- name: Forcer le port dans la configuration backend Docker
+  lineinfile:
+    path: "{{ config_dir }}/backend/config.yaml"
+    regexp: '^\s*port:'
+    line: '  port: {{ backend_port }}'
+    insertafter: '^server:'
+
 - name: Deployer le fichier docker-compose.yml
   template:
     src: docker-compose.yml.j2
@@ -30,7 +90,7 @@
   changed_when: true
 
 - name: Lancer les services via Docker Compose
-  command: docker compose -f {{ compose_file }} up -d --remove-orphans
+  command: docker compose -f {{ compose_file }} up -d --remove-orphans --force-recreate
   changed_when: true
 
 - name: Attendre que Mosquitto soit pret
@@ -56,21 +116,21 @@
 
 - name: Attendre que Nginx soit pret
   wait_for:
-    host: 127.0.0.1
+    host: "{{ gateway_eth1_ip | default('127.0.0.1') }}"
     port: 80
     delay: 2
     timeout: 30
 
 - name: Attendre que AdGuard soit pret
   wait_for:
-    host: 127.0.0.1
+    host: "{{ gateway_eth0_ip | default('127.0.0.1') }}"
     port: "{{ adguard_web_port }}"
     delay: 2
     timeout: 30
 
 - name: Configurer le rewrite DNS pour mon.essensys.fr
   uri:
-    url: http://127.0.0.1:{{ adguard_web_port }}/control/rewrite/add
+    url: http://{{ gateway_eth0_ip | default('127.0.0.1') }}:{{ adguard_web_port }}/control/rewrite/add
     method: POST
     headers:
       Content-Type: application/json

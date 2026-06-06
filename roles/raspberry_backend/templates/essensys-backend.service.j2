@@ -10,8 +10,8 @@ WorkingDirectory={{ backend_dir }}
 ExecStart={{ backend_dir }}/server
 Restart=always
 RestartSec=5
-StandardOutput=append:/var/logs/Essensys/backend/console.out.log
-StandardError=append:/var/logs/Essensys/backend/console.out.log
+StandardOutput=append:/var/log/essensys/backend.log
+StandardError=append:/var/log/essensys/backend.log
 
 # Environment variables
 Environment="LOG_LEVEL=info"
@@ -22,7 +22,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths={{ install_dir }} /var/logs/Essensys
+ReadWritePaths={{ install_dir }} /var/log/essensys
 
 [Install]
 WantedBy=multi-user.target

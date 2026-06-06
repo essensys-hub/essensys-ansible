@@ -1,0 +1,15 @@
+# Gere par Ansible - role raspberry_gateway_network
+# eth0 : interface LAN (client DHCP vers le routeur amont)
+[Match]
+MACAddress={{ gateway_eth0_mac }}
+Name=eth0
+
+[Network]
+DHCP=ipv4
+IPv6AcceptRA=no
+LinkLocalAddressing=no
+
+[DHCP]
+RouteMetric=10
+UseDNS=false
+UseDomains=false

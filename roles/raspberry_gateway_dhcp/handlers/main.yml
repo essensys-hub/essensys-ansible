@@ -1,0 +1,5 @@
+---
+- name: Reload dnsmasq
+  ansible.builtin.service:
+    name: dnsmasq
+    state: reloaded

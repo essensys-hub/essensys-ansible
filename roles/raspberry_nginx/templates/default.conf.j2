@@ -1,8 +1,25 @@
 # Configuration principale: Frontend sur / et API sur /api/ (port 80)
 # IMPORTANT: Nginx gere le frontend local ET les API locales
 # Traefik gere uniquement le frontend WAN (port 443)
+
+{% if gateway_dual_nic | default(false) %}
+# Profil gateway : rejeter les requetes HTTP arrivant sur eth0 (LAN)
+# Seul le segment armoire (eth1) doit pouvoir joindre ce Nginx en HTTP
 server {
+    listen {{ gateway_eth0_ip | default(ansible_default_ipv4.address, true) }}:80;
+    server_name _;
+    return 444;
+}
+{% endif %}
+
+server {
+{% if gateway_dual_nic | default(false) %}
+    # Profil gateway : ecouter uniquement sur eth1 (segment armoire)
+    # Compatibilite client legacy BP_MQX_ETH - port 80, single-packet TCP
+    listen {{ gateway_eth1_ip }}:80 default_server;
+{% else %}
     listen 80 default_server;
+{% endif %}
     server_name _;
 
     # Bloquer l'acces HTTP depuis Internet (autoriser LAN/localhost)
@@ -161,6 +178,10 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_http_version 1.1;
+
+        # Permettre l'intégration en iframe en masquant les en-têtes restrictifs d'OpenClaw
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Content-Security-Policy;
     }
 
     # Servir le frontend (SPA) directement sur / - PAS DE REDIRECTION
@@ -192,7 +213,11 @@ server {
 
 # Dashboard Traefik (traefik.essensys.fr)
 server {
+{% if gateway_dual_nic | default(false) %}
+    listen {{ gateway_eth1_ip }}:80;
+{% else %}
     listen 80;
+{% endif %}
     server_name traefik.essensys.fr;
 
     location / {

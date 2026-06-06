@@ -1,0 +1,66 @@
+---
+- name: Reseau gateway - verifier les MACs obligatoires
+  ansible.builtin.fail:
+    msg: "gateway_eth0_mac et gateway_eth1_mac doivent etre renseignes (voir README)"
+  when:
+    - gateway_dual_nic | bool
+    - (gateway_eth0_mac == "" or gateway_eth1_mac == "")
+
+- name: Reseau gateway - activer systemd-networkd
+  ansible.builtin.service:
+    name: systemd-networkd
+    state: started
+    enabled: true
+  when: gateway_dual_nic | bool
+
+- name: Reseau gateway - sauvegarder l'unite eth0 existante
+  ansible.builtin.copy:
+    src: /etc/systemd/network/10-eth0.network
+    dest: /etc/systemd/network/10-eth0.network.bak
+    remote_src: true
+    force: false
+  failed_when: false
+  changed_when: false
+  when: gateway_dual_nic | bool
+
+- name: Reseau gateway - sauvegarder l'unite eth1 existante
+  ansible.builtin.copy:
+    src: /etc/systemd/network/20-eth1.network
+    dest: /etc/systemd/network/20-eth1.network.bak
+    remote_src: true
+    force: false
+  failed_when: false
+  changed_when: false
+  when: gateway_dual_nic | bool
+
+- name: Reseau gateway - deployer l'unite eth0 (DHCP client LAN)
+  ansible.builtin.template:
+    src: 10-eth0.network.j2
+    dest: /etc/systemd/network/10-eth0.network
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart systemd-networkd
+  when: gateway_dual_nic | bool
+
+- name: Reseau gateway - deployer l'unite eth1 (IP statique armoire)
+  ansible.builtin.template:
+    src: 20-eth1.network.j2
+    dest: /etc/systemd/network/20-eth1.network
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart systemd-networkd
+  when: gateway_dual_nic | bool
+
+- name: Reseau gateway - recharger systemd-networkd pour appliquer les changements
+  ansible.builtin.command: networkctl reload
+  changed_when: false
+  when: gateway_dual_nic | bool
+
+- name: Reseau gateway - verifier que eth1 a son IP statique
+  ansible.builtin.command: ip addr show eth1
+  register: eth1_addr
+  changed_when: false
+  failed_when: gateway_eth1_ip not in eth1_addr.stdout
+  when: gateway_dual_nic | bool

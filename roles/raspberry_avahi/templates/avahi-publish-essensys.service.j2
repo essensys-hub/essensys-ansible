@@ -1,0 +1,15 @@
+# Gere par Ansible - role raspberry_avahi
+# Annonce mon.essensys.local via mDNS (Bonjour/Zeroconf) sur le LAN
+[Unit]
+Description=mDNS broadcast mon.essensys.local
+After=avahi-daemon.service network-online.target
+Requires=avahi-daemon.service
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=5
+ExecStart=/usr/bin/avahi-publish -a -R {{ avahi_hostname }}.{{ avahi_domain }} {{ gateway_eth0_ip | default(ansible_default_ipv4.address) }}
+
+[Install]
+WantedBy=multi-user.target

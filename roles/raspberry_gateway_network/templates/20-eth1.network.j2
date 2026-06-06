@@ -1,0 +1,12 @@
+# Gere par Ansible - role raspberry_gateway_network
+# eth1 : segment armoire (IP statique, pas de route par defaut)
+[Match]
+MACAddress={{ gateway_eth1_mac }}
+Name=eth1
+
+[Network]
+Address={{ gateway_eth1_ip }}/{{ gateway_eth1_prefix }}
+IPv6AcceptRA=no
+LinkLocalAddressing=no
+ConfigureWithoutCarrier=yes
+# Pas de route par defaut sur eth1 pour maintenir l'isolement du segment armoire

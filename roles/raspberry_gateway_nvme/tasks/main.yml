@@ -1,0 +1,142 @@
+---
+# === 4.1 : Detecter le peripherique NVMe ===
+- name: NVMe - verifier la presence du peripherique
+  ansible.builtin.stat:
+    path: "{{ gateway_nvme_device }}"
+  register: nvme_stat
+
+- name: NVMe - echec clair si peripherique absent
+  ansible.builtin.fail:
+    msg: >
+      Peripherique NVMe '{{ gateway_nvme_device }}' introuvable.
+      Verifiez le cablage PCIe, l'activation pciex1 dans /boot/firmware/config.txt,
+      et le BOOT_ORDER EEPROM du CM5. Consultez le README du role.
+  when: not nvme_stat.stat.exists
+
+# === 4.2 : Partitionner le NVMe (idempotent) ===
+- name: NVMe - verifier si une partition existe deja
+  ansible.builtin.command: lsblk -n -o NAME "{{ gateway_nvme_device }}"
+  register: nvme_partitions
+  changed_when: false
+
+- name: NVMe - creer une partition primaire occupant tout le disque
+  ansible.builtin.command: >
+    parted -s {{ gateway_nvme_device }}
+    mklabel gpt
+    mkpart primary ext4 0% 100%
+  when: nvme_partitions.stdout_lines | length <= 1
+
+# === 4.3 : Formater en ext4 avec label (idempotent) ===
+- name: NVMe - verifier le label du systeme de fichiers
+  ansible.builtin.command: blkid -s LABEL -o value "{{ gateway_nvme_device }}p1"
+  register: nvme_label
+  changed_when: false
+  failed_when: false
+
+- name: NVMe - formater en ext4 avec label essensys-data
+  ansible.builtin.command: mkfs.ext4 -L essensys-data "{{ gateway_nvme_device }}p1"
+  when: nvme_label.stdout | trim != 'essensys-data'
+
+# === 4.4 : Recuperer l'UUID de la partition ===
+- name: NVMe - lire l'UUID de la partition
+  ansible.builtin.command: blkid -s UUID -o value "{{ gateway_nvme_device }}p1"
+  register: nvme_uuid
+  changed_when: false
+
+# === 4.5 : Creer le point de montage ===
+- name: NVMe - creer le point de montage {{ essensys_nvme_mount }}
+  ansible.builtin.file:
+    path: "{{ essensys_nvme_mount }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+# === 4.6 & 4.7 : Ajouter l'entree fstab et monter ===
+- name: NVMe - ajouter l'entree fstab (UUID, noatime)
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "UUID={{ nvme_uuid.stdout | trim }}"
+    line: "UUID={{ nvme_uuid.stdout | trim }}  {{ essensys_nvme_mount }}  ext4  defaults,noatime  0  2"
+    state: present
+
+- name: NVMe - monter la partition si non montee
+  ansible.builtin.command: mount "{{ essensys_nvme_mount }}"
+  args:
+    creates: "{{ essensys_nvme_mount }}/lost+found"
+
+# === 4.8 : Creer les sous-repertoires sur NVMe et les attribuer a essensys ===
+- name: NVMe - creer les sous-repertoires de donnees
+  ansible.builtin.file:
+    path: "{{ item.src }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop: "{{ gateway_nvme_bind_mounts }}"
+  when: gateway_nvme_bind_mounts_enabled | bool
+
+# === 4.9 : Bind mounts (idempotent via fstab + mount) ===
+- name: NVMe - creer les repertoires cibles des bind mounts
+  ansible.builtin.file:
+    path: "{{ item.dest }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop: "{{ gateway_nvme_bind_mounts }}"
+  when: gateway_nvme_bind_mounts_enabled | bool
+
+- name: NVMe - ajouter les bind mounts dans fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ item.src | regex_escape }}\\s"
+    line: "{{ item.src }}  {{ item.dest }}  none  bind  0  0"
+    state: present
+  loop: "{{ gateway_nvme_bind_mounts }}"
+  when: gateway_nvme_bind_mounts_enabled | bool
+  notify: Reload systemd and mount all
+
+- name: NVMe - monter les bind mounts immediatement
+  ansible.builtin.command: mount --bind "{{ item.src }}" "{{ item.dest }}"
+  args:
+    creates: "{{ item.dest }}/.nvme_bind"
+  loop: "{{ gateway_nvme_bind_mounts }}"
+  when: gateway_nvme_bind_mounts_enabled | bool
+  register: bind_mount_result
+  failed_when: false
+
+- name: NVMe - marquer les bind mounts actifs
+  ansible.builtin.file:
+    path: "{{ item.dest }}/.nvme_bind"
+    state: touch
+    mode: '0400'
+  loop: "{{ gateway_nvme_bind_mounts }}"
+  when:
+    - gateway_nvme_bind_mounts_enabled | bool
+    - bind_mount_result is not skipped
+
+- name: NVMe - avertissement mode degrade (bind mounts desactives)
+  ansible.builtin.debug:
+    msg: >
+      ATTENTION: gateway_nvme_bind_mounts_enabled=false.
+      Le NVMe est monte sur {{ essensys_nvme_mount }} mais les donnees
+      restent sur l'eMMC. Mode degrade - voir README pour activer les bind mounts.
+  when: not (gateway_nvme_bind_mounts_enabled | bool)
+
+# === 4.10 : Docker demarre apres le montage NVMe ===
+- name: NVMe - creer le repertoire de drop-in Docker
+  ansible.builtin.file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    mode: '0755'
+
+- name: NVMe - configurer Docker pour demarrer apres le montage NVMe
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/docker.service.d/after-nvme.conf
+    content: |
+      [Unit]
+      After=local-fs.target
+      RequiresMountsFor={{ essensys_nvme_mount }}
+    mode: '0644'
+  notify: Reload systemd and mount all

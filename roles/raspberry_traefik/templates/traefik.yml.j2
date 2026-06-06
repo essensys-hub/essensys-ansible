@@ -14,7 +14,12 @@ entryPoints:
   dashboard:
     address: ":8080"
   websecure:
+{% if gateway_dual_nic | default(false) %}
+    # Profil gateway : restreindre HTTPS au LAN (eth0) uniquement
+    address: "{{ gateway_eth0_ip | default(ansible_default_ipv4.address, true) }}:443"
+{% else %}
     address: ":443"
+{% endif %}
     http:
       tls:
         certResolver: letsencrypt

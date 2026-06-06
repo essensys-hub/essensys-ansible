@@ -1,0 +1,19 @@
+---
+# Activer le profil gateway double NIC. false = comportement mono-interface inchange.
+gateway_dual_nic: false
+
+# MAC addresses des interfaces reseau (obligatoire si gateway_dual_nic: true)
+# Recuperer via : ip link show | grep -E "eth[01]" -A1
+gateway_eth0_mac: ""   # ex: dc:a6:32:ab:cd:ef
+gateway_eth1_mac: ""   # ex: dc:a6:32:ab:cd:f0
+
+# IP de l'interface eth1 (segment armoire)
+gateway_eth1_ip: "10.0.1.1"
+gateway_eth1_prefix: "24"
+
+# IP de l'interface eth0 (LAN) - utilise pour le binding des services
+# Laisser vide pour auto-detection via ansible_default_ipv4.address
+gateway_eth0_ip: ""
+
+# Hostname attendu par le firmware legacy BP_MQX_ETH
+gateway_armoire_hostname: "mon.essensys.fr"

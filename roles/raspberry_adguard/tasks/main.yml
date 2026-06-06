@@ -50,6 +50,26 @@
 
 # --- Preparation des repertoires pour le conteneur Docker ---
 
+- name: Retrieve eth0 gateway for AdGuard upstream DNS
+  shell: ip -4 route show default dev eth0 | awk '{print $3}' | head -1
+  register: eth0_gateway
+  changed_when: false
+  failed_when: false
+
+- name: Retrieve eth0 IP address
+  shell: ip -4 addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1 | head -1
+  register: eth0_ip_detected
+  changed_when: false
+  failed_when: false
+  when: gateway_dual_nic | default(false) | bool
+
+- name: Definir gateway_eth0_ip depuis l'interface si non defini
+  set_fact:
+    gateway_eth0_ip: "{{ eth0_ip_detected.stdout | default(ansible_default_ipv4.address, true) }}"
+  when:
+    - gateway_dual_nic | default(false) | bool
+    - gateway_eth0_ip | default('') == ''
+
 - name: Creer le repertoire de configuration AdGuard
   file:
     path: "{{ adguard_config_dir }}"
@@ -78,11 +98,30 @@
   when: adguard_binary.stat.exists
   failed_when: false
 
-- name: Deployer la configuration AdGuard Home (si pas de config existante)
+- name: Deployer la configuration AdGuard Home
   template:
     src: AdGuardHome.yaml.j2
     dest: "{{ adguard_config_dir }}/AdGuardHome.yaml"
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
-    force: false
+    force: true
+
+# --- Profil gateway : bloquer l'acces au web UI AdGuard depuis eth1 ---
+
+- name: AdGuard - installer iptables-persistent pour le profil gateway
+  ansible.builtin.apt:
+    name: iptables-persistent
+    state: present
+  when: gateway_dual_nic | default(false) | bool
+
+- name: AdGuard - bloquer acces web UI depuis le segment armoire (eth1)
+  ansible.builtin.iptables:
+    chain: INPUT
+    in_interface: eth1
+    protocol: tcp
+    destination_port: "{{ adguard_web_port }}"
+    jump: DROP
+    comment: "Block AdGuard UI from armoire segment"
+  when: gateway_dual_nic | default(false) | bool
+  notify: Save iptables rules

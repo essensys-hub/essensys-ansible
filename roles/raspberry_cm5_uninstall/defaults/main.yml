@@ -1,0 +1,34 @@
+---
+# Confirmation obligatoire (playbook pre_tasks ou -e confirm_cm5_uninstall=true)
+confirm_cm5_uninstall: false
+
+service_user: essensys
+data_dir: /opt/data
+config_dir: "{{ data_dir }}/config"
+install_dir: /opt/essensys
+compose_file: "{{ data_dir }}/docker-compose.yml"
+compose_project_name: essensys
+
+# Profil gateway (desinstallation reseau / NVMe / dnsmasq)
+gateway_dual_nic: true
+gateway_nvme_device: "/dev/nvme0n1"
+essensys_nvme_mount: "/mnt/nvme"
+gateway_nvme_bind_mounts:
+  - src: "{{ essensys_nvme_mount }}/data"
+    dest: "/opt/data"
+  - src: "{{ essensys_nvme_mount }}/logs"
+    dest: "/var/log/essensys"
+
+# Options de nettoyage
+cm5_remove_docker_stack: true
+cm5_remove_gateway_network: true
+cm5_remove_dnsmasq: true
+cm5_remove_nvme_bind_mounts: true
+cm5_remove_nvme_fstab: false
+cm5_wipe_nvme_data: false
+cm5_remove_docker_packages: false
+
+# Transmis au role raspberry_uninstall
+remove_nginx: false
+remove_redis: false
+delete_user: false

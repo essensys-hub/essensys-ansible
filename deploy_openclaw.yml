@@ -1,0 +1,11 @@
+---
+- name: Deploy OpenClaw
+  hosts: raspberrypi
+  gather_facts: true
+  become: true
+  vars:
+    service_user: essensys
+    data_dir: /opt/data
+    config_dir: "{{ data_dir }}/config"
+  roles:
+    - raspberry_openclaw

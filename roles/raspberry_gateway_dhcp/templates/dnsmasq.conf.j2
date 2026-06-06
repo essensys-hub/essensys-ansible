@@ -1,0 +1,35 @@
+# Gere par Ansible - role raspberry_gateway_dhcp
+# dnsmasq : DHCP + DNS split uniquement sur eth1 (segment armoire)
+
+# Ecouter uniquement sur eth1 - ne pas toucher eth0 ni le LAN
+interface=eth1
+bind-interfaces
+listen-address={{ gateway_eth1_ip }}
+no-dhcp-interface=eth0
+
+# Ne pas lire /etc/resolv.conf - serveurs upstream explicites ci-dessous
+no-resolv
+
+# Forwarder les requetes DNS non-locales vers upstream
+server={{ gateway_upstream_dns }}
+
+# Split-DNS : {{ gateway_armoire_hostname }} -> IP gateway eth1
+# Permet au firmware legacy BP_MQX_ETH de joindre la gateway via HTTP:80
+address=/{{ gateway_armoire_hostname }}/{{ gateway_eth1_ip }}
+
+# DHCP pool pour le segment armoire
+dhcp-range={{ gateway_dhcp_range_start }},{{ gateway_dhcp_range_end }},{{ gateway_dhcp_lease_time }}
+
+# Option 6 : indiquer la gateway comme serveur DNS aux clients DHCP
+dhcp-option=6,{{ gateway_eth1_ip }}
+
+# Option 3 : pas de route par defaut (segment armoire isole du LAN)
+dhcp-option=3
+
+# Reservations statiques MAC->IP
+{% for reservation in gateway_dhcp_reservations %}
+dhcp-host={{ reservation.mac }},{{ reservation.ip }},{{ reservation.name }}
+{% endfor %}
+
+# Logs DHCP dans syslog
+log-dhcp

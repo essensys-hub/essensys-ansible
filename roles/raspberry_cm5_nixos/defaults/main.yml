@@ -1,0 +1,43 @@
+---
+confirm_cm5_nixos_prep: false
+
+service_user: essensys
+gateway_dual_nic: true
+
+# Peripheriques CM5
+cm5_emmc_device: "/dev/mmcblk0"
+cm5_nvme_device: "/dev/nvme0n1"
+essensys_nvme_mount: "/mnt/nvme"
+cm5_nvme_label: "essensys-data"
+
+# Reseau (auto depuis facts si vide)
+gateway_eth0_mac: ""
+gateway_eth1_mac: ""
+gateway_eth0_ip: ""
+gateway_eth1_ip: "10.0.1.1"
+gateway_eth1_prefix: "24"
+gateway_armoire_hostname: "mon.essensys.fr"
+
+# Depot NixOS / flake
+cm5_nixos_gateway_repo: "https://github.com/essensys-hub/essensys-raspberry-gateway.git"
+cm5_nixos_branch: "nixos"
+cm5_nixos_checkout_dir: "/opt/essensys-nixos"
+cm5_nixos_flake_host: "gateway-cm5"
+cm5_nixos_essensys_nginx_repo: "https://github.com/essensys-hub/essensys-nginx.git"
+cm5_nixos_essensys_nginx_checkout: "/opt/essensys-nginx"
+
+# Etapes
+cm5_nixos_install_nix: true
+cm5_nixos_clone_flake: true
+# Chemin local sur le poste Ansible (branche nixos) si le remote n'a pas encore la branche
+cm5_nixos_local_src: ""
+cm5_nixos_nginx_local_src: ""
+cm5_nixos_prepare_nvme: true
+cm5_nixos_preserve_nvme_data: true
+cm5_nixos_deploy_mmc_script: true
+cm5_nixos_run_emmc_repartition: false
+
+# Partitionnement eMMC cible pour NixOS (script offline / recovery)
+cm5_emmc_boot_size_mb: 512
+cm5_emmc_root_label: "nixos"
+cm5_emmc_boot_label: "boot"

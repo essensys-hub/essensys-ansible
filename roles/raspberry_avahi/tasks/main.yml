@@ -1,0 +1,39 @@
+---
+- name: Avahi - installer avahi-daemon et avahi-utils
+  ansible.builtin.apt:
+    name:
+      - avahi-daemon
+      - avahi-utils
+    state: present
+
+- name: Avahi - deployer la configuration daemon
+  ansible.builtin.template:
+    src: avahi-daemon.conf.j2
+    dest: /etc/avahi/avahi-daemon.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart avahi
+
+- name: Avahi - activer et demarrer avahi-daemon
+  ansible.builtin.service:
+    name: avahi-daemon
+    state: started
+    enabled: true
+
+- name: Avahi - installer le service de publication mDNS
+  ansible.builtin.template:
+    src: avahi-publish-essensys.service.j2
+    dest: /etc/systemd/system/avahi-publish-essensys.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload systemd
+    - Restart avahi-publish
+
+- name: Avahi - activer et demarrer le service de publication
+  ansible.builtin.service:
+    name: avahi-publish-essensys
+    state: started
+    enabled: true

@@ -1,0 +1,20 @@
+---
+- name: Desinstallation Essensys Gateway CM5
+  hosts: raspberrypi
+  gather_facts: false
+  become: true
+  vars:
+    confirm_cm5_uninstall: false
+    service_user: essensys
+    data_dir: /opt/data
+    config_dir: "{{ data_dir }}/config"
+    install_dir: /opt/essensys
+    gateway_dual_nic: true
+  pre_tasks:
+    - name: Verifier confirmation de desinstallation CM5
+      ansible.builtin.assert:
+        that:
+          - confirm_cm5_uninstall | bool
+        fail_msg: "Definissez confirm_cm5_uninstall=true pour autoriser la desinstallation CM5."
+  roles:
+    - raspberry_cm5_uninstall
