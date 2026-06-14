@@ -12,7 +12,4 @@
     - portal_frontend
     - portal_nginx
 
-- name: Ensure production HTTPS after nginx deploy
-  hosts: essensys
-  become: yes
-  import_playbook: enable-https-prod.yml
+- import_playbook: enable-https-prod.yml
