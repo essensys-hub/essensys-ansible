@@ -412,6 +412,68 @@ Détails : `roles/raspberry_cm5_uninstall/README.md`, `roles/raspberry_cm5_nixos
 
 ---
 
+## Connectivité cloud (prérequis portail distant)
+
+Avant d’activer le **portail utilisateur** sur `https://mon.essensys.fr`, la gateway doit joindre le VPS OVH en **HTTPS sortant (port 443)** via **eth0**. Le canal gateway ↔ cloud **ne doit pas** utiliser `http://mon.essensys.fr`.
+
+### Checklist P0–P6
+
+| # | Test | Commande | Attendu |
+|---|------|----------|---------|
+| P0 | DNS | `dig +short mon.essensys.fr` | IP publique OVH |
+| P1 | TLS | `curl -sS -o /dev/null -w '%{http_code}\n' https://mon.essensys.fr/` | `200` ou `301` |
+| P2 | Certificat | `curl -vI https://mon.essensys.fr/ 2>&1 \| grep -i subject` | SAN `mon.essensys.fr` |
+| P3 | Pas HTTP WAN | `curl -sS -o /dev/null -w '%{http_code}\n' http://mon.essensys.fr/` | Redirect ou échec — l’agent cloud utilise **HTTPS uniquement** |
+| P4 | API gateway | `curl -sS -o /dev/null -w '%{http_code}\n' -X POST https://mon.essensys.fr/api/gateway/heartbeat` | `401` sans token (route déployée) |
+| P5 | Sortie eth0 | `ip route get $(dig +short mon.essensys.fr \| head -1)` | interface **eth0**, pas eth1 |
+| P6 | Pare-feu box | HTTPS sortant autorisé | Documenter si blocage client |
+
+### Script automatisé
+
+Depuis le dépôt `essensys-raspberry-gateway` (sur la gateway ou via SSH) :
+
+```bash
+./scripts/test-wan-https-ovh.sh
+# ou URL explicite :
+./scripts/test-wan-https-ovh.sh https://mon.essensys.fr
+```
+
+Variables backend edge (`config.yaml`) lorsque le cloud sync est activé :
+
+```yaml
+cloud:
+  enabled: true
+  hub_url: "https://mon.essensys.fr"
+  gateway_id: "gw-88a29e342761"   # ou vide → dérivé de eth0_mac
+  gateway_token: "<vault_cloud_gateway_token>"
+  poll_interval_seconds: 5
+  client_id: "default"
+  machine_id: 19
+  eth0_mac: "88:a2:9e:34:27:61"   # CM5 WAN (eth0)
+  eth1_mac: "00:e0:4c:68:01:be"   # bus armoire (eth1)
+```
+
+Enregistrement admin (triplet obligatoire) :
+
+```bash
+curl -X POST https://mon.essensys.fr/api/portal/admin/gateways/register \
+  -H "Authorization: Bearer $ADMIN_JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gateway_id": "gw-88a29e342761",
+    "token": "vault-token",
+    "machine_id": 19,
+    "eth0_mac": "88:a2:9e:34:27:61",
+    "eth1_mac": "00:e0:4c:68:01:be"
+  }'
+```
+
+Variables Ansible gateway : `cloud_gateway_id`, `cloud_gateway_token`, `cloud_gateway_machine_id`, `cloud_gateway_eth0_mac`, `cloud_gateway_eth1_mac` (vault).
+
+Poll gateway : headers `X-Gateway-ID`, `X-Gateway-Eth0-MAC`, `X-Gateway-Eth1-MAC` + Bearer token. Filtrage strict `cloud_actions.machine_id = gateway_sessions.machine_id`.
+
+---
+
 ## Dépannage
 
 | Symptôme | Cause probable | Action |

@@ -8,3 +8,6 @@
     - database
     - backend
     - frontend
+    - portal_backend
+    - portal_frontend
+    - portal_nginx

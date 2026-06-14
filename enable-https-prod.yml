@@ -22,3 +22,7 @@
         --agree-tos 
         -m support@essensys.fr 
         --redirect
+
+    - name: Re-apply portal nginx routes after certbot
+      import_role:
+        name: portal_nginx

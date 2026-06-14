@@ -1,0 +1,80 @@
+---
+- name: Clone user portal backend repository
+  git:
+    repo: "{{ portal_backend_repo }}"
+    dest: /opt/essensys/portal-backend-src
+    version: "{{ portal_backend_version | default('main') }}"
+    force: yes
+
+- name: Build portal backend
+  command: /usr/local/go/bin/go build -o portal-server ./cmd/server
+  args:
+    chdir: /opt/essensys/portal-backend-src
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+
+- name: Ensure portal backend directory
+  file:
+    path: /opt/essensys/portal-backend
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: '0755'
+
+- name: Install portal backend binary
+  copy:
+    src: /opt/essensys/portal-backend-src/portal-server
+    dest: /opt/essensys/portal-backend/portal-server
+    remote_src: yes
+    mode: '0755'
+    owner: essensys
+    group: essensys
+
+- name: Ensure portal backend .env
+  copy:
+    dest: /opt/essensys/portal-backend/.env
+    owner: essensys
+    group: essensys
+    mode: '0600'
+    force: no
+    content: |
+      DB_HOST=127.0.0.1
+      DB_PORT=5432
+      DB_USER=essensys
+      DB_PASSWORD={{ portal_db_password | default('essensys_secure_password') }}
+      DB_NAME=essensys_db
+      JWT_SECRET={{ portal_jwt_secret | default('changeme_random_secret') }}
+      PORT={{ portal_backend_port | default(8081) }}
+      CORS_ORIGIN={{ cloud_hub_public_url | default('https://mon.essensys.fr') }}
+      MIGRATIONS_DIR=/opt/essensys/portal-backend-src/migrations
+
+- name: Install portal backend systemd unit
+  copy:
+    dest: /etc/systemd/system/essensys-portal-backend.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Essensys User Portal Backend
+      After=network.target postgresql.service
+
+      [Service]
+      Type=simple
+      User=essensys
+      Group=essensys
+      WorkingDirectory=/opt/essensys/portal-backend
+      EnvironmentFile=/opt/essensys/portal-backend/.env
+      ExecStart=/opt/essensys/portal-backend/portal-server
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable portal backend
+  systemd:
+    name: essensys-portal-backend
+    daemon_reload: yes
+    enabled: yes
+    state: restarted
+
+- name: Optional gateway hub registration
+  import_tasks: register_gateway.yml

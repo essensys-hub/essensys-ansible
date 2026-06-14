@@ -1,0 +1,38 @@
+---
+- name: Clone user portal frontend repository
+  git:
+    repo: "{{ portal_frontend_repo }}"
+    dest: /opt/essensys/portal-frontend-src
+    version: "{{ portal_frontend_version | default('main') }}"
+    force: yes
+
+- name: Install npm dependencies
+  command: npm install
+  args:
+    chdir: /opt/essensys/portal-frontend-src
+
+- name: Build portal frontend
+  command: npm run build
+  args:
+    chdir: /opt/essensys/portal-frontend-src
+
+- name: Deploy portal frontend dist
+  file:
+    path: /opt/essensys/portal-frontend/dist
+    state: absent
+
+- name: Recreate portal frontend dist directory
+  file:
+    path: /opt/essensys/portal-frontend/dist
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: '0755'
+
+- name: Copy portal frontend artifacts
+  copy:
+    src: /opt/essensys/portal-frontend-src/dist/
+    dest: /opt/essensys/portal-frontend/dist/
+    remote_src: yes
+    owner: essensys
+    group: essensys

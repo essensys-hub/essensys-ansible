@@ -18,6 +18,11 @@ ansible-playbook -i inventory support-site.yml
 2.  **Database**: Sets up PostgreSQL user and database.
 3.  **Backend**: Clones source, builds Go binary, configures Systemd.
 4.  **Frontend**: Builds React app, installs Nginx site config.
+5.  **Portal backend** (`portal_backend`): `essensys-user-portal-backend` on port 8081.
+6.  **Portal frontend** (`portal_frontend`): SPA `/portal/` static assets.
+7.  **Portal nginx** (`portal_nginx`): Routes `/api/portal/`, `/api/gateway/`.
+
+Variables: `portal_backend_repo`, `portal_frontend_repo`, `portal_backend_port` (default 8081), `cloud_hub_public_url`.
 
 ---
 
