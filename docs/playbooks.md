@@ -23,14 +23,57 @@ ansible-playbook -i inventory support-site.yml
 
 ## Raspberry Pi
 
-### `install.raspberrypi.yml`
+### Installation Raspberry Pi (classique)
 
-Installation complete pour Raspberry Pi (Nginx + Traefik + Backend + Frontend + AdGuard + Monitor).
+#### `install.raspberrypi.yml`
+
+Installation complete pour Raspberry Pi **mono-NIC** (Nginx + Traefik + Backend + Frontend + AdGuard + Monitor + Docker Compose).
+
+**Inventaire :** `inventory`
 
 **Usage:**
 ```bash
 ansible-playbook -i inventory install.raspberrypi.yml
 ```
+
+---
+
+### Gateway CM5 (double NIC + NVMe)
+
+Documentation complete : **[install-gateway.md](install-gateway.md)**
+
+#### `install.gateway.yml`
+
+Installation **Gateway Essensys CM5** : NVMe, systemd-networkd dual-NIC, dnsmasq armoire, Avahi, stack Docker Compose identique au profil classique avec roles reseau/stockage supplementaires.
+
+**Inventaire :** `inventory.gateway`
+
+**Usage:**
+```bash
+ansible-playbook -i inventory.gateway install.gateway.yml
+```
+
+Variables obligatoires : `gateway_eth0_mac`, `gateway_eth1_mac` (voir inventaire).
+
+#### `uninstall.cm5.yml`
+
+Desinstallation de la stack Gateway CM5 (Docker, dnsmasq, units networkd gateway, bind mounts NVMe). **Ne supprime pas** l'OS ni le NVMe par defaut.
+
+**Usage:**
+```bash
+ansible-playbook -i inventory.gateway uninstall.cm5.yml -e confirm_cm5_uninstall=true
+```
+
+#### `prepare.nixos-cm5.yml`
+
+Preparation migration **NixOS** (clone flake, Nix, hardware genere, script eMMC). **N'installe pas** NixOS automatiquement.
+
+**Usage:**
+```bash
+ansible-playbook -i inventory.gateway prepare.nixos-cm5.yml -e confirm_cm5_nixos_prep=true
+```
+
+---
 
 ### `update.raspberrypi.yml`
 

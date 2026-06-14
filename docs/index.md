@@ -1,27 +1,43 @@
 # Essensys Ansible
 
-Welcome to the **Essensys Ansible** project documentation. This repository contains the Infrastructure-as-Code (IaC) to deploy and maintain the Essensys Support Site (`essensys-support-site`) on Ubuntu VPS servers.
+Documentation du dépôt **essensys-ansible** : déploiement automatisé du site support, des **Raspberry Pi / CM5** Essensys et de la **Gateway CM5** (double NIC + NVMe).
 
-## Overview
+## Vue d'ensemble
 
-This project uses **Ansible** to automate:
-- **System Setup**: Installing dependencies (Nginx, Go, Node.js, PostgreSQL).
-- **Backend Deployment**: Building and running the Go backend as a Systemd service.
-- **Frontend Deployment**: Building and serving the React application via Nginx.
-- **HTTPS Configuration**: Securing the site with Let's Encrypt certificates.
+Ansible automatise notamment :
 
-## Prerequisites
+- **Site support** (`support-site.yml`) : Nginx, Go, PostgreSQL sur VPS.
+- **Raspberry classique** ([`install.raspberrypi.yml`](playbooks.md#installation-raspberry-pi-classique)) : stack Essensys mono-NIC, Docker Compose.
+- **Gateway CM5** ([guide complet](install-gateway.md)) : CM5, eth0/eth1, NVMe, dnsmasq armoire, mDNS, TLS local `.local`.
+- **HTTPS** : Let's Encrypt (WAN) et CA locale (`mon.essensys.local`) — voir [tls-local-domain.md](tls-local-domain.md).
 
-- **Ansible**: Must be installed on your local machine (`brew install ansible` on macOS).
-- **SSH Access**: You must have SSH access to the target servers (e.g., `test.essensys.fr`).
+## Prérequis
 
-## Quick Start
+- **Ansible** sur le poste contrôleur (`brew install ansible` sur macOS).
+- **SSH** vers la cible (`ansible_user`, clé ou mot de passe).
 
-1.  **Check Connection**:
-    ```bash
-    ansible -i inventory essensys -m ping
-    ```
-2.  **Deploy Site**:
-    ```bash
-    ansible-playbook -i inventory support-site.yml
-    ```
+## Démarrage rapide
+
+### Site support (VPS)
+
+```bash
+ansible -i inventory essensys -m ping
+ansible-playbook -i inventory support-site.yml
+```
+
+### Gateway CM5
+
+```bash
+ansible -i inventory.gateway raspberrypi -m ping
+ansible-playbook -i inventory.gateway install.gateway.yml
+```
+
+Guide détaillé : **[Installation Gateway CM5](install-gateway.md)**.
+
+### Raspberry Pi (classique)
+
+```bash
+ansible-playbook -i inventory install.raspberrypi.yml
+```
+
+Voir [Playbooks — installation classique](playbooks.md#installation-raspberry-pi-classique).

@@ -6,6 +6,8 @@ theme:
 nav:
   - Home: index.md
   - Playbooks: playbooks.md
+  - Installation Gateway CM5: install-gateway.md
+  - Installation Raspberry (classique): playbooks.md
   - Roles: roles.md
   - Guide utilisateur HTTPS local: guide-utilisateur-https-local.md
   - HTTPS domaine local (admin): tls-local-domain.md
