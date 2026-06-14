@@ -4,7 +4,7 @@
     dest: /etc/nginx/snippets/essensys-portal.conf
     mode: '0644'
     content: |
-      location /portal/ {
+      location ^~ /portal/ {
           alias /opt/essensys/portal-frontend/dist/;
           try_files $uri $uri/ /portal/index.html;
       }
@@ -31,11 +31,23 @@
     regexp: '(server_name vps-22806d02\.vps\.ovh\.net test\.essensys\.fr;\n)(?!    include /etc/nginx/snippets/essensys-portal\.conf;)'
     replace: '\1    include /etc/nginx/snippets/essensys-portal.conf;\n'
 
-- name: Ensure portal snippet in production server block
+- name: Ensure portal snippet in production HTTPS server block
   replace:
     path: /etc/nginx/sites-available/essensys
-    regexp: '(server_name mon\.essensys\.fr www\.essensys\.fr gateway\.essensys\.fr essensys\.fr;\n)(?!    include /etc/nginx/snippets/essensys-portal\.conf;)'
+    regexp: '(listen \[::\]:443 ssl;\n    server_name mon\.essensys\.fr www\.essensys\.fr gateway\.essensys\.fr essensys\.fr;\n)(?!    include /etc/nginx/snippets/essensys-portal\.conf;)'
     replace: '\1    include /etc/nginx/snippets/essensys-portal.conf;\n'
+
+- name: Production domain serves support SPA instead of maintenance page
+  replace:
+    path: /etc/nginx/sites-available/essensys
+    regexp: 'root /opt/essensys/maintenance;'
+    replace: 'root /opt/essensys/frontend/dist;'
+
+- name: Ensure production root comment reflects SPA
+  replace:
+    path: /etc/nginx/sites-available/essensys
+    regexp: '# Root for Maintenance Site'
+    replace: '# Root for React App (support + portal)'
 
 - name: Reload nginx
   service:
