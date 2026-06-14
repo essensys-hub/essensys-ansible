@@ -76,3 +76,145 @@
     src: generate-htpasswd.sh
     dest: /usr/local/bin/generate-htpasswd-essensys.sh
     mode: '0755'
+
+# ---------------------------------------------------------------------------
+# TLS de confiance pour le domaine local (mon.essensys.local)
+# Let's Encrypt ne peut pas signer un .local. On cree une CA locale, on signe un
+# cert serveur pour le domaine mDNS, Traefik le sert via le provider file
+# (watch -> reload a chaud, pas de redemarrage du conteneur), puis on distribue
+# la CA aux clients (telechargement LAN + trust gateway + copie controleur).
+# ---------------------------------------------------------------------------
+
+- name: Local TLS - bloc principal
+  when: traefik_local_tls_enabled | bool
+  tags: [localtls]
+  block:
+    - name: Local TLS - installer openssl
+      apt:
+        name: openssl
+        state: present
+
+    - name: Local TLS - creer le repertoire des certs
+      file:
+        path: "{{ traefik_certs_dir }}"
+        state: directory
+        owner: "{{ service_user }}"
+        group: "{{ service_user }}"
+        mode: '0750'
+
+    - name: Local TLS - generer la cle privee de la CA
+      command: openssl genrsa -out {{ traefik_certs_dir }}/ca.key 4096
+      args:
+        creates: "{{ traefik_certs_dir }}/ca.key"
+
+    - name: Local TLS - generer le certificat de la CA
+      command: >
+        openssl req -x509 -new -nodes
+        -key {{ traefik_certs_dir }}/ca.key -sha256 -days {{ traefik_ca_days }}
+        -subj "/O=Essensys/CN=Essensys Local CA"
+        -out {{ traefik_certs_dir }}/ca.crt
+      args:
+        creates: "{{ traefik_certs_dir }}/ca.crt"
+
+    - name: Local TLS - deposer le fichier d'extensions x509
+      template:
+        src: local-cert.ext.j2
+        dest: "{{ traefik_certs_dir }}/local.ext"
+        owner: "{{ service_user }}"
+        group: "{{ service_user }}"
+        mode: '0644'
+
+    - name: Local TLS - verifier la validite du cert serveur existant
+      command: >
+        openssl x509 -checkend {{ (traefik_leaf_renew_days | int) * 86400 }}
+        -noout -in {{ traefik_certs_dir }}/local.crt
+      register: traefik_leaf_check
+      changed_when: false
+      failed_when: false
+
+    - name: Local TLS - (re)generer le cert serveur pour {{ traefik_local_domain }}
+      when: traefik_leaf_check.rc != 0
+      block:
+        - name: Local TLS - generer la cle privee serveur
+          command: openssl genrsa -out {{ traefik_certs_dir }}/local.key 2048
+
+        - name: Local TLS - generer la CSR
+          command: >
+            openssl req -new -key {{ traefik_certs_dir }}/local.key
+            -subj "/O=Essensys/CN={{ traefik_local_domain }}"
+            -out {{ traefik_certs_dir }}/local.csr
+
+        - name: Local TLS - signer le cert serveur avec la CA locale
+          command: >
+            openssl x509 -req -in {{ traefik_certs_dir }}/local.csr
+            -CA {{ traefik_certs_dir }}/ca.crt -CAkey {{ traefik_certs_dir }}/ca.key
+            -CAcreateserial -sha256 -days {{ traefik_leaf_days }}
+            -extfile {{ traefik_certs_dir }}/local.ext
+            -out {{ traefik_certs_dir }}/local.crt
+
+        - name: Local TLS - supprimer la CSR temporaire
+          file:
+            path: "{{ traefik_certs_dir }}/local.csr"
+            state: absent
+
+    - name: Local TLS - restreindre les permissions des cles privees
+      file:
+        path: "{{ item }}"
+        owner: "{{ service_user }}"
+        group: "{{ service_user }}"
+        mode: '0600'
+      loop:
+        - "{{ traefik_certs_dir }}/ca.key"
+        - "{{ traefik_certs_dir }}/local.key"
+
+    - name: Local TLS - deployer la config dynamique TLS (provider file)
+      template:
+        src: local-tls.yml.j2
+        dest: "{{ traefik_config_dir }}/dynamic/local-tls.yml"
+        owner: "{{ service_user }}"
+        group: "{{ service_user }}"
+        mode: '0644'
+
+    - name: Local TLS - s'assurer que le repertoire de telechargement existe
+      file:
+        path: "{{ traefik_ca_download_dir }}"
+        state: directory
+        mode: '0755'
+      when: traefik_publish_ca | bool
+
+    - name: Local TLS - publier la CA en telechargement sur le LAN
+      copy:
+        remote_src: true
+        src: "{{ traefik_certs_dir }}/ca.crt"
+        dest: "{{ traefik_ca_download_dir }}/{{ traefik_ca_download_name }}"
+        mode: '0644'
+      when: traefik_publish_ca | bool
+
+    - name: Local TLS - installer la CA dans le trust store de la gateway
+      when: traefik_install_ca_on_gateway | bool
+      block:
+        - name: Local TLS - copier la CA dans les ancres de confiance systeme
+          copy:
+            remote_src: true
+            src: "{{ traefik_certs_dir }}/ca.crt"
+            dest: /usr/local/share/ca-certificates/essensys-local-ca.crt
+            mode: '0644'
+          register: traefik_gw_ca_anchor
+
+        - name: Local TLS - mettre a jour le trust store systeme
+          command: update-ca-certificates
+          when: traefik_gw_ca_anchor.changed
+
+    - name: Local TLS - rapatrier la CA sur le controleur Ansible
+      fetch:
+        src: "{{ traefik_certs_dir }}/ca.crt"
+        dest: "files/local-ca/{{ inventory_hostname }}.crt"
+        flat: true
+      when: traefik_fetch_ca_to_controller | bool
+
+    - name: Local TLS - rappel d'installation sur les clients
+      debug:
+        msg:
+          - "CA locale Essensys publiee pour {{ traefik_local_domain }}."
+          - "Telechargement client : https://{{ traefik_local_domain }}/{{ traefik_ca_download_name }} (avertissement au 1er acces, normal)"
+          - "Copie locale (controleur) : files/local-ca/{{ inventory_hostname }}.crt"

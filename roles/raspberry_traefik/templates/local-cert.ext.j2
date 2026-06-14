@@ -1,0 +1,11 @@
+# Genere par Ansible - role raspberry_traefik
+# Extensions x509 pour le cert serveur de {{ traefik_local_domain }}
+authorityKeyIdentifier = keyid,issuer
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = {{ traefik_local_domain }}
+IP.1 = {{ gateway_eth0_ip | default(ansible_default_ipv4.address, true) }}

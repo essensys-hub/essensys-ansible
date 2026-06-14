@@ -1,0 +1,13 @@
+# Genere par Ansible - role raspberry_traefik
+# Cert local de confiance pour {{ traefik_local_domain }} (CA locale Essensys).
+# Charge par Traefik via le provider file (watch: true) -> reload a chaud.
+# Les chemins sont ceux VUS PAR LE CONTENEUR ({{ traefik_config_dir }}:/etc/traefik).
+tls:
+  certificates:
+    - certFile: "{{ traefik_certs_dir_container }}/local.crt"
+      keyFile: "{{ traefik_certs_dir_container }}/local.key"
+  stores:
+    default:
+      defaultCertificate:
+        certFile: "{{ traefik_certs_dir_container }}/local.crt"
+        keyFile: "{{ traefik_certs_dir_container }}/local.key"

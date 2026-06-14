@@ -130,7 +130,8 @@
     - raspberry_mcp
     - raspberry_frontend
     - raspberry_nginx
-    - raspberry_traefik
+    - role: raspberry_traefik
+      tags: [traefik]
     - raspberry_control_plane
 
     # --- DNS & Ad Blocking ---

@@ -7,3 +7,5 @@ nav:
   - Home: index.md
   - Playbooks: playbooks.md
   - Roles: roles.md
+  - Guide utilisateur HTTPS local: guide-utilisateur-https-local.md
+  - HTTPS domaine local (admin): tls-local-domain.md

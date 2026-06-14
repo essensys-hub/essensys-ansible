@@ -4,3 +4,34 @@ traefik_version_docker: "{{ essensys_version }}"
 traefik_container_name: "essensys-traefik"
 traefik_config_dir: "{{ config_dir }}/traefik"
 traefik_log_dir: "{{ data_dir }}/logs/traefik"
+
+# --- TLS de confiance pour le domaine local (mon.essensys.local) ---
+# Let's Encrypt ne peut pas signer un .local : on cree une CA locale, on signe
+# un certificat pour le domaine mDNS, Traefik le sert via le provider file
+# (watch -> reload a chaud), et on distribue la CA aux clients.
+traefik_local_tls_enabled: true
+traefik_local_domain: "mon.essensys.local"
+
+# Repertoire des certs cote host (monte dans le conteneur sur /etc/traefik/certs)
+traefik_certs_dir: "{{ traefik_config_dir }}/certs"
+# Chemin vu PAR LE CONTENEUR Traefik (volume {{ traefik_config_dir }}:/etc/traefik)
+traefik_certs_dir_container: "/etc/traefik/certs"
+
+# Durees de validite
+traefik_ca_days: 3650        # CA locale : 10 ans
+traefik_leaf_days: 820       # cert serveur : < 825j (limite de confiance Apple)
+traefik_leaf_renew_days: 30  # regenerer le cert s'il expire dans moins de N jours
+
+# Distribution de la CA
+# Publier la CA en telechargement sur le LAN. Nginx tourne en conteneur et sert
+# la racine frontend montee depuis l'hote ({{ data_dir }}/frontend -> /var/www/html).
+# En profil gateway, le LAN (eth0) n'expose QUE HTTPS (:80 sur eth0 = return 444),
+# donc le telechargement se fait via https://mon.essensys.local/<nom> (avertissement
+# au 1er acces, normal : on telecharge justement la CA qui le supprimera ensuite).
+traefik_publish_ca: true
+traefik_ca_download_dir: "{{ data_dir }}/frontend"
+traefik_ca_download_name: "essensys-local-ca.crt"
+# Installer la CA dans le trust store de la gateway elle-meme
+traefik_install_ca_on_gateway: true
+# Rapatrier la CA sur le controleur Ansible (files/local-ca/)
+traefik_fetch_ca_to_controller: true

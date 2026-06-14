@@ -1,0 +1,3 @@
+# Artefacts générés au déploiement
+# CA locale rapatriée par le rôle raspberry_traefik (regénérée à chaque deploy)
+files/local-ca/
