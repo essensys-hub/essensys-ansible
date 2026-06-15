@@ -28,5 +28,5 @@ newrelic_infra_integrations:
 cloud_backend_consolidated: true
 cloud_backend_legacy_mode: false
 cloud_backend_port: 8080
-cloud_backend_skip_git_clone: true
+cloud_backend_skip_git_clone: false
 exchange_stale_ttl_seconds: 120
