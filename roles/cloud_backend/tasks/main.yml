@@ -1,10 +1,25 @@
 ---
-- name: Clone cloud backend repository
+- name: Check cloud backend source git metadata
+  stat:
+    path: "{{ cloud_backend_src_dir }}/.git"
+  register: cloud_backend_git
+  when: not (cloud_backend_skip_git_clone | default(false) | bool)
+
+- name: Remove non-git cloud backend source tree
+  file:
+    path: "{{ cloud_backend_src_dir }}"
+    state: absent
+  when:
+    - not (cloud_backend_skip_git_clone | default(false) | bool)
+    - not cloud_backend_git.stat.exists | default(false)
+
+- name: Sync cloud backend repository
   git:
     repo: "{{ cloud_backend_repo }}"
     dest: "{{ cloud_backend_src_dir }}"
     version: "{{ cloud_backend_version }}"
     force: yes
+    update: yes
   when: not (cloud_backend_skip_git_clone | default(false) | bool)
 
 - name: Build cloud backend binary
