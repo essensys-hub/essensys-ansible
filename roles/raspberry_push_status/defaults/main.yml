@@ -1,0 +1,3 @@
+---
+# Cloud hub URL for gateway monitoring push (POST /api/infos)
+push_status_hub_url: "{{ cloud_hub_public_url | default('https://mon.essensys.fr') }}"

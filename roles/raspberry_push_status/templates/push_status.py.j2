@@ -6,39 +6,38 @@ import time
 import os
 import sys
 
-# Configuration
-GATEWAY_URL = "https://mon.essensys.fr/api/infos"
+# Configuration — cloud hub consolidated backend
+GATEWAY_URL = "{{ push_status_hub_url.rstrip('/') }}/api/infos"
 
 SERVICES = [
-    "essensys-backend", 
-    "essensys-nginx", 
-    "essensys-traefik", 
+    "essensys-backend",
+    "essensys-nginx",
+    "essensys-traefik",
     "essensys-adguard"
 ]
 
 def get_cpu_usage():
-    # Read /proc/stat for instantaneous usage
-    # We need two readings to calculate usage, so we sleep briefly
     def read_stat():
         with open('/proc/stat', 'r') as f:
             line = f.readline()
             parts = line.split()
-            return [int(x) for x in parts[1:6]] # user, nice, system, idle, iowait
-    
+            return [int(x) for x in parts[1:6]]
+
     try:
         stat1 = read_stat()
         time.sleep(0.5)
         stat2 = read_stat()
-        
+
         total1 = sum(stat1)
         total2 = sum(stat2)
-        idle1 = stat1[3] + stat1[4] # idle + iowait
+        idle1 = stat1[3] + stat1[4]
         idle2 = stat2[3] + stat2[4]
-        
+
         diff_total = total2 - total1
         diff_idle = idle2 - idle1
-        
-        if diff_total == 0: return 0.0
+
+        if diff_total == 0:
+            return 0.0
         return 100.0 * (diff_total - diff_idle) / diff_total
     except:
         return 0.0
@@ -51,9 +50,9 @@ def get_mem_usage():
                 parts = line.split(':')
                 if len(parts) == 2:
                     key = parts[0].strip()
-                    val = int(parts[1].split()[0]) # kB
+                    val = int(parts[1].split()[0])
                     mem[key] = val
-        
+
         total = mem.get('MemTotal', 1)
         avail = mem.get('MemAvailable', mem.get('MemFree', 0))
         used = total - avail
@@ -81,7 +80,9 @@ def get_disk_usage(path='/'):
 def get_service_status(service_name):
     try:
         output = subprocess.check_output(
+{% raw %}
             ["docker", "inspect", "-f", "{{.State.Running}}", service_name],
+{% endraw %}
             stderr=subprocess.DEVNULL
         ).decode().strip()
         return output == "true"
@@ -91,12 +92,12 @@ def get_service_status(service_name):
 def push_data(payload):
     import urllib.request
     import urllib.error
-    
+
     jsondata = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(GATEWAY_URL, data=jsondata, method='POST')
     req.add_header('Content-Type', 'application/json')
     req.add_header('User-Agent', 'Essensys-Monitor/1.0')
-    
+
     try:
         print(f"Pushing data to: {GATEWAY_URL} ...")
         with urllib.request.urlopen(req, timeout=10) as response:
@@ -119,11 +120,10 @@ def main():
         "disk": get_disk_usage(),
         "services": {}
     }
-    
+
     for svc in SERVICES:
         data["services"][svc] = get_service_status(svc)
-        
-    # Add client count (ss logic)
+
     try:
         cmd = "ss -tnH state established '( dport = :80 or dport = :443 or dport = :7070 )' | wc -l"
         output = subprocess.check_output(cmd, shell=True)
@@ -131,9 +131,6 @@ def main():
     except:
         data["client_count"] = 0
 
-    # Print for debug
-    # print(json.dumps(data, indent=2))
-    
     push_data(data)
 
 if __name__ == "__main__":
