@@ -7,15 +7,15 @@
 
 - name: Create essensys database user
   postgresql_user:
-    name: essensys
-    password: essensys_secure_password
+    name: "{{ portal_db_user | default('essensys') }}"
+    password: "{{ portal_db_password | default('essensys_secure_password') }}"
     role_attr_flags: NOSUPERUSER
   become: yes
   become_user: postgres
 
 - name: Create essensys database
   postgresql_db:
-    name: essensys_db
-    owner: essensys
+    name: "{{ portal_db_name | default('essensys_db') }}"
+    owner: "{{ portal_db_user | default('essensys') }}"
   become: yes
   become_user: postgres

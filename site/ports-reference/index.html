@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Référence des ports utilisés dans Essensys - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "R\u00e9f\u00e9rence des ports utilis\u00e9s dans Essensys";
+    var mkdocs_page_input_path = "ports-reference.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Référence des ports utilisés dans Essensys</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="reference-des-ports-utilises-dans-essensys">Référence des ports utilisés dans Essensys</h1>
+<p>Ce document liste tous les ports utilisés par les services Essensys pour éviter les conflits.</p>
+<h2 id="ports-utilises">Ports utilisés</h2>
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>Service</th>
+<th>Description</th>
+<th>Conflit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>53</strong></td>
+<td>AdGuard Home</td>
+<td>DNS</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>80</strong></td>
+<td>Nginx</td>
+<td>Frontend local + API locales (HTTP)</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>443</strong></td>
+<td>Traefik</td>
+<td>Frontend WAN (HTTPS)</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>1883</strong></td>
+<td>Mosquitto</td>
+<td>MQTT broker</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>3000</strong></td>
+<td>AdGuard Home</td>
+<td>Interface web AdGuard</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>6379</strong></td>
+<td>Redis</td>
+<td>Base de données Redis</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>7070</strong></td>
+<td>Backend Essensys</td>
+<td>API backend Go</td>
+<td>✅ Utilisé</td>
+</tr>
+<tr>
+<td><strong>8080</strong></td>
+<td>Traefik Dashboard</td>
+<td>Dashboard Traefik (accès local)</td>
+<td>⚠️ <strong>CONFLIT avec MCP</strong></td>
+</tr>
+<tr>
+<td><strong>8081</strong></td>
+<td>Traefik API</td>
+<td>API interne Traefik</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>8082</strong></td>
+<td>Block Service</td>
+<td>Service de blocage Traefik</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>8083</strong></td>
+<td>MCP Server</td>
+<td>Serveur MCP Essensys</td>
+<td>✅ <strong>À utiliser</strong></td>
+</tr>
+<tr>
+<td><strong>9091</strong></td>
+<td>Monitor MQTT Debug</td>
+<td>Interface de debug MQTT</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conflit-detecte">Conflit détecté</h2>
+<p><strong>Port 8080</strong> : Utilisé par :
+- ✅ Traefik Dashboard (dans <code>traefik.yml.j2</code>)
+- ❌ MCP Server (dans <code>essensys-mcp.service.j2</code>) - <strong>CONFLIT</strong></p>
+<h2 id="solution">Solution</h2>
+<p>Le serveur MCP doit utiliser le <strong>port 8083</strong> au lieu de 8080 pour éviter le conflit avec Traefik Dashboard.</p>
+<h2 id="verification-des-ports">Vérification des ports</h2>
+<p>Pour vérifier quels ports sont utilisés sur le système :</p>
+<pre><code class="language-bash"># Voir tous les ports en écoute
+sudo ss -tlnp
+
+# Vérifier un port spécifique
+sudo ss -tlnp | grep :PORT_NUMBER
+
+# Voir les processus utilisant un port
+sudo lsof -i :PORT_NUMBER
+</code></pre>
+<h2 id="ports-recommandes-pour-nouveaux-services">Ports recommandés pour nouveaux services</h2>
+<p>Ports libres recommandés :
+- <strong>8084-8099</strong> : Disponibles pour nouveaux services
+- <strong>9090-9099</strong> : Disponibles pour interfaces de debug/monitoring
+- <strong>3001-3010</strong> : Disponibles pour services web additionnels</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

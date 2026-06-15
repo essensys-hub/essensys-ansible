@@ -1,0 +1,6 @@
+# Portal SPA static assets only — all /api/* proxied to :8080 cloud backend (consolidated)
+
+location ^~ /portal/ {
+    alias /opt/essensys/portal-frontend/dist/;
+    try_files $uri $uri/ /portal/index.html;
+}

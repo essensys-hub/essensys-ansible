@@ -1,0 +1,19 @@
+---
+- name: Register gateway session on OVH hub (optional)
+  when: cloud_gateway_register | default(false) | bool
+  uri:
+    url: "{{ cloud_hub_public_url | default('https://mon.essensys.fr') }}/api/portal/admin/gateways/register"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ cloud_gateway_register_admin_jwt }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      gateway_id: "{{ cloud_gateway_id | default(omit) }}"
+      token: "{{ cloud_gateway_token }}"
+      machine_id: "{{ cloud_gateway_machine_id }}"
+      eth0_mac: "{{ cloud_gateway_eth0_mac }}"
+      eth1_mac: "{{ cloud_gateway_eth1_mac }}"
+    status_code: [201, 200]
+  delegate_to: localhost
+  become: false

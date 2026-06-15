@@ -1,0 +1,6 @@
+---
+- name: Apply consolidated nginx snippet only
+  hosts: essensys
+  become: yes
+  roles:
+    - cloud_nginx

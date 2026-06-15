@@ -30,23 +30,14 @@
     owner: essensys
     group: essensys
 
-- name: Ensure portal backend .env
-  copy:
+- name: Deploy portal backend environment
+  template:
+    src: portal-backend.env.j2
     dest: /opt/essensys/portal-backend/.env
     owner: essensys
     group: essensys
     mode: '0600'
-    force: no
-    content: |
-      DB_HOST=127.0.0.1
-      DB_PORT=5432
-      DB_USER=essensys
-      DB_PASSWORD={{ portal_db_password | default('essensys_secure_password') }}
-      DB_NAME=essensys_db
-      JWT_SECRET={{ portal_jwt_secret | default('changeme_random_secret') }}
-      PORT={{ portal_backend_port | default(8081) }}
-      CORS_ORIGIN={{ cloud_hub_public_url | default('https://mon.essensys.fr') }}
-      MIGRATIONS_DIR=/opt/essensys/portal-backend-src/migrations
+  notify: Restart portal backend
 
 - name: Install portal backend systemd unit
   copy:

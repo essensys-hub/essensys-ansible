@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Correction du problème de redirection HTTP vers HTTPS - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Correction du probl\u00e8me de redirection HTTP vers HTTPS";
+    var mkdocs_page_input_path = "fix-http-redirect.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Correction du problème de redirection HTTP vers HTTPS</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="correction-du-probleme-de-redirection-http-vers-https">Correction du problème de redirection HTTP vers HTTPS</h1>
+<h2 id="probleme">Problème</h2>
+<p>Lors de l'accès au port 80, vous êtes automatiquement redirigé vers HTTPS avec l'IP <code>192.168.1.101</code>.</p>
+<h2 id="cause">Cause</h2>
+<p>Traefik avait des routes configurées pour rediriger HTTP vers HTTPS sur l'entryPoint <code>web</code> (port 80), même si cet entryPoint était commenté dans la configuration principale.</p>
+<h2 id="solution-appliquee">Solution appliquée</h2>
+<p>Les routes de redirection HTTP-&gt;HTTPS ont été désactivées dans Traefik car :
+- Le port 80 est géré uniquement par Nginx pour l'accès local
+- Traefik ne doit écouter que sur le port 443 (HTTPS) pour l'accès WAN</p>
+<h2 id="actions-a-effectuer-sur-le-raspberry-pi">Actions à effectuer sur le Raspberry Pi</h2>
+<ol>
+<li><strong>Redémarrer Traefik</strong> pour appliquer la nouvelle configuration :</li>
+</ol>
+<pre><code class="language-bash">sudo systemctl restart traefik
+</code></pre>
+<ol>
+<li><strong>Vérifier que Traefik n'écoute pas sur le port 80</strong> :</li>
+</ol>
+<pre><code class="language-bash">sudo ss -tlnp | grep :80
+</code></pre>
+<p>Vous devriez voir uniquement Nginx sur le port 80, pas Traefik.</p>
+<ol>
+<li><strong>Vérifier que Nginx fonctionne correctement</strong> :</li>
+</ol>
+<pre><code class="language-bash">curl http://localhost/
+</code></pre>
+<p>Vous devriez obtenir le frontend sans redirection.</p>
+<ol>
+<li><strong>Vérifier les logs Traefik</strong> pour confirmer :</li>
+</ol>
+<pre><code class="language-bash">sudo tail -f /var/log/traefik/traefik.log
+</code></pre>
+<h2 id="si-le-probleme-persiste">Si le problème persiste</h2>
+<p>Si vous êtes toujours redirigé après le redémarrage de Traefik :</p>
+<ol>
+<li><strong>Vérifier que Traefik n'a pas d'entryPoint web actif</strong> :</li>
+</ol>
+<pre><code class="language-bash">sudo cat /etc/traefik/traefik.yml | grep -A 5 &quot;entryPoints:&quot;
+</code></pre>
+<p>L'entryPoint <code>web</code> doit être commenté.</p>
+<ol>
+<li><strong>Vérifier la configuration dynamique</strong> :</li>
+</ol>
+<pre><code class="language-bash">sudo cat /etc/traefik/dynamic/wan-routes.yml | grep -A 10 &quot;frontend-wan-redirect&quot;
+</code></pre>
+<p>Les routes de redirection doivent être commentées.</p>
+<ol>
+<li><strong>Vérifier si un autre service écoute sur le port 80</strong> :</li>
+</ol>
+<pre><code class="language-bash">sudo lsof -i :80
+</code></pre>
+<ol>
+<li><strong>Vérifier la configuration Nginx</strong> pour des redirections :</li>
+</ol>
+<pre><code class="language-bash">sudo grep -r &quot;return.*301\|return.*302\|redirect&quot; /etc/nginx/sites-enabled/
+</code></pre>
+<h2 id="configuration-attendue">Configuration attendue</h2>
+<ul>
+<li><strong>Port 80</strong> : Nginx uniquement (frontend local + API locales)</li>
+<li><strong>Port 443</strong> : Traefik uniquement (frontend WAN HTTPS avec authentification)</li>
+<li><strong>Pas de redirection automatique</strong> HTTP-&gt;HTTPS sur le port 80 local</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

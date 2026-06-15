@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Configuration OpenClaw pour se connecter au serveur MCP Essensys - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Configuration OpenClaw pour se connecter au serveur MCP Essensys";
+    var mkdocs_page_input_path = "mcp-openclaw-config.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Configuration OpenClaw pour se connecter au serveur MCP Essensys</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="configuration-openclaw-pour-se-connecter-au-serveur-mcp-essensys">Configuration OpenClaw pour se connecter au serveur MCP Essensys</h1>
+<p>Ce guide vous explique comment configurer OpenClaw sur votre workstation pour se connecter au serveur MCP SSE sur le Raspberry Pi.</p>
+<h2 id="prerequis">Prérequis</h2>
+<ul>
+<li>OpenClaw installé sur votre workstation</li>
+<li>Accès réseau au Raspberry Pi (même réseau local ou VPN)</li>
+<li>Token MCP du Raspberry Pi</li>
+</ul>
+<h2 id="1-recuperer-le-token-mcp-depuis-le-raspberry-pi">1. Récupérer le token MCP depuis le Raspberry Pi</h2>
+<p>Sur le Raspberry Pi, récupérez le token :</p>
+<pre><code class="language-bash"># Via SSH sur le Raspberry Pi
+ssh essensys@essensys-server
+sudo cat /etc/essensys/mcp.token
+</code></pre>
+<p>Copiez le token, vous en aurez besoin pour la configuration.</p>
+<h2 id="2-verifier-laccessibilite-du-serveur-mcp">2. Vérifier l'accessibilité du serveur MCP</h2>
+<p>Depuis votre workstation, testez la connexion au serveur MCP :</p>
+<pre><code class="language-bash"># Remplacez ESSENSYS_SERVER_IP par l'IP du Raspberry Pi
+# Remplacez MCP_TOKEN par le token récupéré
+
+curl -k \
+  -H &quot;Authorization: Bearer MCP_TOKEN&quot; \
+  -H &quot;Accept: text/event-stream&quot; \
+  --max-time 2 \
+  http://ESSENSYS_SERVER_IP:8083/sse
+</code></pre>
+<p>Si vous obtenez un code 200 ou un timeout (normal pour SSE), la connexion fonctionne.</p>
+<h2 id="3-configuration-openclaw">3. Configuration OpenClaw</h2>
+<h3 id="option-a-configuration-via-fichier-json-si-supporte">Option A : Configuration via fichier JSON (si supporté)</h3>
+<p>Créez un fichier de configuration <code>essensys-mcp.json</code> :</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;essensys&quot;: {
+      &quot;url&quot;: &quot;http://ESSENSYS_SERVER_IP:8083&quot;,
+      &quot;transport&quot;: &quot;sse&quot;,
+      &quot;headers&quot;: {
+        &quot;Authorization&quot;: &quot;Bearer MCP_TOKEN&quot;
+      },
+      &quot;endpoints&quot;: {
+        &quot;sse&quot;: &quot;/sse&quot;,
+        &quot;messages&quot;: &quot;/messages&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="option-b-configuration-via-interface-openclaw">Option B : Configuration via interface OpenClaw</h3>
+<ol>
+<li>Ouvrez OpenClaw</li>
+<li>Allez dans les paramètres/Settings</li>
+<li>Ajoutez un nouveau serveur MCP :</li>
+<li><strong>Nom</strong> : Essensys MCP</li>
+<li><strong>Type de transport</strong> : SSE (Server-Sent Events)</li>
+<li><strong>URL de base</strong> : <code>http://ESSENSYS_SERVER_IP:8083</code></li>
+<li><strong>Endpoint SSE</strong> : <code>/sse</code></li>
+<li><strong>Endpoint Messages</strong> : <code>/messages</code></li>
+<li><strong>Authentification</strong> : Bearer Token</li>
+<li><strong>Token</strong> : (collez le token MCP)</li>
+</ol>
+<h3 id="option-c-configuration-via-variables-denvironnement">Option C : Configuration via variables d'environnement</h3>
+<p>Si OpenClaw supporte les variables d'environnement :</p>
+<pre><code class="language-bash">export MCP_SERVER_URL=&quot;http://ESSENSYS_SERVER_IP:8083&quot;
+export MCP_SERVER_TOKEN=&quot;MCP_TOKEN&quot;
+export MCP_SERVER_TYPE=&quot;sse&quot;
+</code></pre>
+<h2 id="4-verifier-la-connexion">4. Vérifier la connexion</h2>
+<p>Une fois configuré, OpenClaw devrait :</p>
+<ol>
+<li>Établir une connexion SSE vers <code>/sse</code></li>
+<li>Recevoir les événements du serveur MCP</li>
+<li>Pouvoir envoyer des messages JSON-RPC vers <code>/messages</code></li>
+</ol>
+<h2 id="5-tester-les-outils-mcp">5. Tester les outils MCP</h2>
+<p>Une fois connecté, vous devriez pouvoir :</p>
+<ul>
+<li><strong>Lister les outils</strong> : <code>read_exchange_table</code>, <code>read_exchange_value</code>, <code>set_exchange_value</code>, <code>send_order</code></li>
+<li><strong>Appeler <code>send_order</code></strong> pour allumer la lumière "chevet chambre petit 3" :
+  <code>json
+  {
+    "name": "send_order",
+    "arguments": {
+      "params_json": "[{\"k\":621,\"v\":\"64\"}]"
+    }
+  }</code></li>
+</ul>
+<h2 id="6-resolution-de-problemes">6. Résolution de problèmes</h2>
+<h3 id="erreur-connection-refused">Erreur : "Connection refused"</h3>
+<ul>
+<li>Vérifiez que le serveur MCP est démarré sur le Raspberry Pi</li>
+<li>Vérifiez que le port 8083 est accessible depuis votre workstation</li>
+<li>Vérifiez le firewall du Raspberry Pi</li>
+</ul>
+<h3 id="erreur-unauthorized-ou-invalid-token">Erreur : "Unauthorized" ou "Invalid token"</h3>
+<ul>
+<li>Vérifiez que le token est correct</li>
+<li>Vérifiez le format : <code>Authorization: Bearer TOKEN</code> (avec un espace après "Bearer")</li>
+</ul>
+<h3 id="erreur-forbidden-access-restricted-to-private-subnets">Erreur : "Forbidden: Access restricted to private subnets"</h3>
+<ul>
+<li>Le serveur MCP vérifie que la connexion vient d'une IP privée</li>
+<li>Assurez-vous que votre workstation est sur le même réseau local que le Raspberry Pi</li>
+<li>Si vous êtes sur un VPN, vérifiez que l'IP VPN est dans une plage privée</li>
+</ul>
+<h3 id="le-serveur-ne-repond-pas">Le serveur ne répond pas</h3>
+<ul>
+<li>Vérifiez les logs du serveur MCP sur le Raspberry Pi :
+  <code>bash
+  ssh essensys@essensys-server
+  sudo journalctl -u essensys-mcp -f</code></li>
+</ul>
+<h2 id="7-informations-de-connexion">7. Informations de connexion</h2>
+<p><strong>Serveur MCP Essensys :</strong>
+- <strong>URL</strong> : <code>http://ESSENSYS_SERVER_IP:8083</code>
+- <strong>Transport</strong> : SSE (Server-Sent Events)
+- <strong>Endpoint SSE</strong> : <code>/sse</code> (GET)
+- <strong>Endpoint Messages</strong> : <code>/messages</code> (POST)
+- <strong>Authentification</strong> : Bearer Token
+- <strong>Token</strong> : Dans <code>/etc/essensys/mcp.token</code> sur le Raspberry Pi</p>
+<p><strong>Outils disponibles :</strong>
+- <code>read_exchange_table</code> : Lire la table d'échange complète
+- <code>read_exchange_value</code> : Lire une valeur spécifique
+- <code>set_exchange_value</code> : Définir une valeur
+- <code>send_order</code> : Envoyer une commande (action) au backend</p>
+<h2 id="8-exemple-de-commande-pour-allumer-la-lumiere">8. Exemple de commande pour allumer la lumière</h2>
+<p>Via OpenClaw, appelez l'outil <code>send_order</code> avec :</p>
+<pre><code class="language-json">{
+  &quot;params_json&quot;: &quot;[{\&quot;k\&quot;:621,\&quot;v\&quot;:\&quot;64\&quot;}]&quot;
+}
+</code></pre>
+<p>Cela allumera la lumière "chevet chambre petit 3".</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -1,4 +1,11 @@
 ---
+- name: Stop cloud backend when using legacy dual stack
+  systemd:
+    name: essensys-cloud-backend
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
 - name: Clone repository
   git:
     repo: 'https://github.com/essensys-hub/essensys-support-site.git'

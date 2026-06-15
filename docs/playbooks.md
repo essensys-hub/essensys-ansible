@@ -16,13 +16,14 @@ ansible-playbook -i inventory support-site.yml
 **What it does:**
 1.  **System**: Installs all required packages and creates users.
 2.  **Database**: Sets up PostgreSQL user and database.
-3.  **Backend**: Clones source, builds Go binary, configures Systemd.
-4.  **Frontend**: Builds React app, installs Nginx site config.
-5.  **Portal backend** (`portal_backend`): `essensys-user-portal-backend` on port 8081.
-6.  **Portal frontend** (`portal_frontend`): SPA `/portal/` static assets.
-7.  **Portal nginx** (`portal_nginx`): Routes `/api/portal/`, `/api/gateway/`.
+3.  **Backend (legacy)**: `essensys-support-site` Go binary on `:8080` — when `cloud_backend_consolidated=false` or `cloud_backend_legacy_mode=true`.
+4.  **Cloud backend (consolidated)**: `essensys-user-portal-backend` hub on `:8080` — when `cloud_backend_consolidated=true` and `cloud_backend_legacy_mode=false`. Voir [cloud-backend-migration.md](cloud-backend-migration.md).
+5.  **Frontend**: Builds React app, installs Nginx site config.
+6.  **Portal backend (legacy)**: `:8081` — dual-stack only.
+7.  **Portal frontend**: SPA `/portal/` static assets.
+8.  **Nginx portal snippet**: legacy split (`/api/portal/` → :8081) or consolidated (static `/portal/` only).
 
-Variables: `portal_backend_repo`, `portal_frontend_repo`, `portal_backend_port` (default 8081), `cloud_hub_public_url`.
+Variables: `cloud_backend_consolidated`, `cloud_backend_legacy_mode`, `portal_backend_port` (legacy, default 8081), `cloud_hub_public_url`.
 
 ---
 

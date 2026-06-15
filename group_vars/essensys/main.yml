@@ -1,0 +1,32 @@
+---
+# Variables New Relic (non secrètes) — secrets dans vault.yml
+newrelic_enabled: true
+newrelic_account_id: "8176900"
+newrelic_region: "EU"
+
+newrelic_backend_enabled: true
+newrelic_backend_app_name: "essensys-cloud-backend"
+
+newrelic_browser_enabled: true
+newrelic_browser_application_id: "538864961"
+newrelic_browser_agent_id: "538864961"
+newrelic_browser_trust_key: "8176900"
+newrelic_browser_app_name: "essensys-user-portal-frontend"
+
+newrelic_support_browser_enabled: true
+newrelic_support_browser_application_id: "538864962"
+newrelic_support_browser_agent_id: "538864962"
+newrelic_support_browser_trust_key: "8176900"
+newrelic_support_browser_app_name: "essensys-support-site"
+
+newrelic_infra_display_name: "ovh-mon-essensys"
+newrelic_infra_integrations:
+  nginx: false
+  postgresql: true
+
+# Cloud backend consolidation (Phase 6–7) — voir docs/cloud-backend-migration.md
+cloud_backend_consolidated: true
+cloud_backend_legacy_mode: false
+cloud_backend_port: 8080
+cloud_backend_skip_git_clone: true
+exchange_stale_ttl_seconds: 120

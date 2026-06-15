@@ -1,0 +1,20 @@
+---
+- name: Check machines.json exists for import
+  stat:
+    path: "{{ cloud_backend_machines_json }}"
+  register: machines_json_stat
+
+- name: Import machines from legacy JSON store
+  become: yes
+  become_user: essensys
+  command: /usr/local/go/bin/go run -buildvcs=false ./cmd/import-machines -input {{ cloud_backend_machines_json }}
+  args:
+    chdir: "{{ cloud_backend_src_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    DB_HOST: "{{ cloud_db_host | default('127.0.0.1') }}"
+    DB_PORT: "{{ cloud_db_port | default('5432') }}"
+    DB_USER: "{{ cloud_db_user | default(portal_db_user | default('essensys')) }}"
+    DB_PASSWORD: "{{ portal_db_password | default('essensys_secure_password') }}"
+    DB_NAME: "{{ cloud_db_name | default(portal_db_name | default('essensys_db')) }}"
+  when: machines_json_stat.stat.exists

@@ -1,3 +1,8 @@
 # Artefacts générés au déploiement
 # CA locale rapatriée par le rôle raspberry_traefik (regénérée à chaque deploy)
 files/local-ca/
+
+# Secrets locaux Ansible / New Relic
+config/.env
+.vault_pass
+group_vars/essensys/vault.yml

@@ -1,0 +1,8 @@
+# Copier les valeurs non secrètes vers group_vars/essensys/database.yml
+# Mot de passe → group_vars/essensys/vault.yml (portal_db_password)
+
+portal_db_host: 127.0.0.1
+portal_db_port: 5432
+portal_db_user: essensys
+portal_db_name: essensys_db
+newrelic_postgresql_instance_name: essensys-ovh-postgresql

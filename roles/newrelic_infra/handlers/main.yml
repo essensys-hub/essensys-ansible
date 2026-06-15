@@ -1,0 +1,6 @@
+---
+- name: Restart New Relic Infrastructure agent
+  systemd:
+    name: newrelic-infra
+    state: restarted
+    daemon_reload: yes

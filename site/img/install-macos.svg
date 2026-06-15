@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <rect width="960" height="540" fill="#f5f6f8"/>
+  <text x="30" y="44" font-size="26" font-weight="700" fill="#1d1d1f">Installer la CA sur macOS</text>
+  <text x="30" y="72" font-size="15" fill="#6b7077">Double-clic sur le .crt → Trousseau d'accès → régler la confiance sur « Toujours approuver ».</text>
+
+  <!-- STEP 1: Keychain trust window -->
+  <g transform="translate(30,96)">
+    <circle cx="18" cy="18" r="16" fill="#0a84ff"/><text x="18" y="24" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+    <text x="48" y="24" font-size="17" font-weight="600" fill="#1d1d1f">Trousseau d'accès → « Se fier »</text>
+
+    <g transform="translate(0,42)">
+      <rect x="0" y="0" width="520" height="360" rx="12" fill="#ffffff" stroke="#cdd0d4" stroke-width="1.5"/>
+      <!-- title bar -->
+      <path d="M0 12 a12 12 0 0 1 12 -12 h496 a12 12 0 0 1 12 12 v22 h-520 z" fill="#ececec"/>
+      <circle cx="18" cy="17" r="6" fill="#ff5f57"/><circle cx="38" cy="17" r="6" fill="#febc2e"/><circle cx="58" cy="17" r="6" fill="#28c840"/>
+      <text x="260" y="22" font-size="12.5" font-weight="600" fill="#3c3c43" text-anchor="middle">Essensys Local CA</text>
+
+      <!-- cert badge -->
+      <rect x="22" y="48" width="44" height="44" rx="6" fill="#fdeccd" stroke="#e3b765"/>
+      <text x="44" y="78" font-size="24" text-anchor="middle">🏛️</text>
+      <text x="78" y="64" font-size="14" font-weight="700" fill="#1d1d1f">Essensys Local CA</text>
+      <text x="78" y="82" font-size="11.5" fill="#6b7077">Autorité de certification racine</text>
+      <text x="78" y="98" font-size="11.5" fill="#248a3d">⬤ Ce certificat racine est approuvé</text>
+
+      <line x1="22" y1="112" x2="498" y2="112" stroke="#eceef1"/>
+
+      <!-- Trust disclosure expanded -->
+      <text x="22" y="134" font-size="12.5" font-weight="700" fill="#1d1d1f">▾ Se fier</text>
+      <text x="40" y="160" font-size="12" fill="#3c3c43">Lors de l'utilisation de ce certificat :</text>
+      <rect x="300" y="146" width="180" height="24" rx="5" fill="#eef3fb" stroke="#0a84ff"/>
+      <text x="312" y="163" font-size="12" font-weight="700" fill="#0a84ff">Toujours approuver  ▾</text>
+
+      <text x="40" y="190" font-size="12" fill="#6b7077">Couche SSL (Secure Sockets Layer)</text>
+      <text x="300" y="190" font-size="12" fill="#248a3d">Toujours approuver</text>
+      <text x="40" y="212" font-size="12" fill="#6b7077">X.509 de base</text>
+      <text x="300" y="212" font-size="12" fill="#248a3d">Toujours approuver</text>
+
+      <rect x="22" y="240" width="476" height="44" rx="8" fill="#f6f7f9" stroke="#e1e4e8"/>
+      <text x="38" y="267" font-size="11.5" fill="#6b7077">Fermer la fenêtre → mot de passe du Mac demandé pour enregistrer la confiance.</text>
+
+      <rect x="388" y="306" width="110" height="34" rx="8" fill="#0a84ff"/>
+      <text x="443" y="328" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">Enregistrer</text>
+    </g>
+  </g>
+
+  <!-- STEP 2: browser secure bar -->
+  <g transform="translate(590,96)">
+    <circle cx="18" cy="18" r="16" fill="#34c759"/><text x="18" y="24" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+    <text x="48" y="24" font-size="17" font-weight="600" fill="#1d1d1f">Ouvrir le site</text>
+
+    <g transform="translate(0,42)">
+      <rect x="0" y="0" width="340" height="360" rx="12" fill="#ffffff" stroke="#cdd0d4" stroke-width="1.5"/>
+      <path d="M0 12 a12 12 0 0 1 12 -12 h316 a12 12 0 0 1 12 12 v26 h-340 z" fill="#2b2b2f"/>
+      <circle cx="18" cy="19" r="5.5" fill="#ff5f57"/><circle cx="36" cy="19" r="5.5" fill="#febc2e"/><circle cx="54" cy="19" r="5.5" fill="#28c840"/>
+      <!-- address bar -->
+      <rect x="16" y="48" width="308" height="32" rx="16" fill="#3a3a3e"/>
+      <text x="34" y="68" font-size="13" fill="#fff">🔒  mon.essensys.local</text>
+      <text x="34" y="100" font-size="11.5" fill="#248a3d">✓ Connexion sécurisée — certificat valide</text>
+
+      <!-- mini app -->
+      <rect x="16" y="116" width="100" height="228" rx="8" fill="#f0f8ff"/>
+      <text x="30" y="140" font-size="11" font-weight="700" fill="#1f7ae0">mon Essensys</text>
+      <rect x="24" y="150" width="84" height="16" rx="4" fill="#1f7ae0"/>
+      <rect x="24" y="172" width="84" height="12" rx="4" fill="#dbe7f3"/>
+      <rect x="24" y="190" width="84" height="12" rx="4" fill="#dbe7f3"/>
+      <rect x="24" y="208" width="84" height="12" rx="4" fill="#dbe7f3"/>
+      <rect x="128" y="124" width="196" height="30" rx="6" fill="#f6f7f9"/>
+      <text x="138" y="144" font-size="12" font-weight="700" fill="#1d1d1f">Tableau de bord</text>
+      <rect x="128" y="164" width="92" height="80" rx="8" fill="#f6f7f9" stroke="#e6e8eb"/>
+      <rect x="232" y="164" width="92" height="80" rx="8" fill="#f6f7f9" stroke="#e6e8eb"/>
+      <rect x="128" y="252" width="92" height="80" rx="8" fill="#f6f7f9" stroke="#e6e8eb"/>
+      <rect x="232" y="252" width="92" height="80" rx="8" fill="#f6f7f9" stroke="#e6e8eb"/>
+    </g>
+  </g>
+</svg>

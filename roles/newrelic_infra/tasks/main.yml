@@ -1,0 +1,95 @@
+---
+- name: New Relic Infrastructure agent
+  when: newrelic_enabled | default(false) | bool
+  block:
+    - name: Require vaulted license key
+      assert:
+        that:
+          - vault_newrelic_license_key is defined
+          - vault_newrelic_license_key | length > 0
+        fail_msg: "Set vault_newrelic_license_key in Ansible Vault when newrelic_enabled=true"
+
+    - name: Ensure keyrings directory exists
+      file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download New Relic Infrastructure GPG key
+      shell: |
+        curl -fsSL https://download.newrelic.com/infrastructure_agent/gpg/newrelic-infra.gpg \
+          | gpg --dearmor -o /usr/share/keyrings/newrelic-infra.gpg
+        chmod 644 /usr/share/keyrings/newrelic-infra.gpg
+      args:
+        creates: /usr/share/keyrings/newrelic-infra.gpg
+
+    - name: Add New Relic Infrastructure APT repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/newrelic-infra.gpg] https://download.newrelic.com/infrastructure_agent/linux/apt {{ newrelic_apt_release | default('noble') }} main"
+        state: present
+        filename: newrelic-infra
+
+    - name: Install New Relic Infrastructure agent
+      apt:
+        name: newrelic-infra
+        state: present
+        update_cache: yes
+
+    - name: Deploy New Relic Infrastructure configuration
+      template:
+        src: newrelic-infra.yml.j2
+        dest: /etc/newrelic-infra.yml
+        mode: '0640'
+      notify: Restart New Relic Infrastructure agent
+
+    - name: Ensure integrations directory exists
+      file:
+        path: /etc/newrelic-infra/integrations.d
+        state: directory
+        mode: '0755'
+
+    - name: Install Nginx on-host integration package
+      apt:
+        name: nri-nginx
+        state: present
+      when: newrelic_infra_integrations.nginx | default(false) | bool
+
+    - name: Deploy Nginx integration config
+      template:
+        src: nri-nginx.yml.j2
+        dest: /etc/newrelic-infra/integrations.d/nginx-config.yml
+        mode: '0640'
+      when: newrelic_infra_integrations.nginx | default(false) | bool
+      notify: Restart New Relic Infrastructure agent
+
+    - name: Install PostgreSQL on-host integration package
+      apt:
+        name: nri-postgresql
+        state: present
+      when: newrelic_infra_integrations.postgresql | default(true) | bool
+
+    - name: Deploy PostgreSQL integration config
+      template:
+        src: nri-postgresql.yml.j2
+        dest: /etc/newrelic-infra/integrations.d/postgresql-config.yml
+        mode: '0640'
+      when: newrelic_infra_integrations.postgresql | default(true) | bool
+      notify: Restart New Relic Infrastructure agent
+
+    - name: Grant pg_monitor to app user for New Relic PostgreSQL integration
+      postgresql_query:
+        db: postgres
+        query: "GRANT pg_monitor TO \"{{ portal_db_user | default('essensys') }}\""
+      become: yes
+      become_user: postgres
+      when: newrelic_infra_integrations.postgresql | default(true) | bool
+      register: nr_pg_monitor_grant
+      failed_when: false
+      changed_when: nr_pg_monitor_grant.rowcount is defined and nr_pg_monitor_grant.rowcount > 0
+
+    - name: Enable and start New Relic Infrastructure agent
+      systemd:
+        name: newrelic-infra
+        enabled: yes
+        state: started
+        daemon_reload: yes

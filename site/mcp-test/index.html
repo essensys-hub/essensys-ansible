@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Guide de test du serveur MCP Essensys - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Guide de test du serveur MCP Essensys";
+    var mkdocs_page_input_path = "mcp-test.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Guide de test du serveur MCP Essensys</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="guide-de-test-du-serveur-mcp-essensys">Guide de test du serveur MCP Essensys</h1>
+<p>Ce guide vous montre comment tester le serveur MCP après installation.</p>
+<h2 id="prerequis">Prérequis</h2>
+<ul>
+<li>Le serveur MCP doit être installé et démarré</li>
+<li>Redis doit être actif</li>
+<li>Le token d'authentification doit être configuré</li>
+</ul>
+<h2 id="1-verifications-de-base">1. Vérifications de base</h2>
+<h3 id="verifier-que-le-service-est-actif">Vérifier que le service est actif</h3>
+<pre><code class="language-bash">sudo systemctl status essensys-mcp
+</code></pre>
+<p>Vous devriez voir <code>active (running)</code>.</p>
+<h3 id="verifier-que-redis-fonctionne">Vérifier que Redis fonctionne</h3>
+<pre><code class="language-bash">redis-cli ping
+</code></pre>
+<p>Réponse attendue : <code>PONG</code></p>
+<h3 id="verifier-que-le-port-est-en-ecoute">Vérifier que le port est en écoute</h3>
+<pre><code class="language-bash">sudo ss -tlnp | grep 8080
+</code></pre>
+<p>Vous devriez voir quelque chose comme :</p>
+<pre><code>LISTEN 0 4096 *:8083 *:* users:((&quot;essensys-mcp&quot;,pid=1234,fd=3))
+</code></pre>
+<h2 id="2-test-de-connexion-sse-basique">2. Test de connexion SSE basique</h2>
+<h3 id="recuperer-le-token">Récupérer le token</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+echo &quot;Token: $MCP_TOKEN&quot;
+</code></pre>
+<h3 id="test-de-connexion-sse-simple">Test de connexion SSE simple</h3>
+<pre><code class="language-bash">curl -k -N \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Accept: text/event-stream&quot; \
+  http://localhost:8083/sse
+</code></pre>
+<p>Vous devriez voir des événements SSE qui arrivent. Appuyez sur <code>Ctrl+C</code> pour arrêter.</p>
+<h2 id="3-test-avec-requete-json-rpc">3. Test avec requête JSON-RPC</h2>
+<h3 id="test-dinitialisation">Test d'initialisation</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+curl -k \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 1,
+    &quot;method&quot;: &quot;initialize&quot;,
+    &quot;params&quot;: {
+      &quot;protocolVersion&quot;: &quot;2024-11-05&quot;,
+      &quot;capabilities&quot;: {},
+      &quot;clientInfo&quot;: {
+        &quot;name&quot;: &quot;test-client&quot;,
+        &quot;version&quot;: &quot;1.0.0&quot;
+      }
+    }
+  }' \
+  http://localhost:8083/messages
+</code></pre>
+<p>Réponse attendue : Un JSON avec les informations du serveur MCP.</p>
+<h3 id="lister-les-outils-disponibles">Lister les outils disponibles</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+curl -k \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 2,
+    &quot;method&quot;: &quot;tools/list&quot;
+  }' \
+  http://localhost:8083/messages
+</code></pre>
+<p>Réponse attendue : Liste des outils MCP disponibles (read_exchange_table, read_exchange_value, set_exchange_value, send_order).</p>
+<h2 id="4-test-des-outils-mcp">4. Test des outils MCP</h2>
+<h3 id="test-1-lire-la-table-dechange-complete">Test 1 : Lire la table d'échange complète</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+curl -k \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 3,
+    &quot;method&quot;: &quot;tools/call&quot;,
+    &quot;params&quot;: {
+      &quot;name&quot;: &quot;read_exchange_table&quot;,
+      &quot;arguments&quot;: {
+        &quot;client_id&quot;: &quot;default&quot;
+      }
+    }
+  }' \
+  http://localhost:8083/messages
+</code></pre>
+<h3 id="test-2-lire-une-valeur-specifique-de-la-table-dechange">Test 2 : Lire une valeur spécifique de la table d'échange</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+curl -k \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 4,
+    &quot;method&quot;: &quot;tools/call&quot;,
+    &quot;params&quot;: {
+      &quot;name&quot;: &quot;read_exchange_value&quot;,
+      &quot;arguments&quot;: {
+        &quot;client_id&quot;: &quot;default&quot;,
+        &quot;index&quot;: 1
+      }
+    }
+  }' \
+  http://localhost:8083/messages
+</code></pre>
+<h3 id="test-3-ecrire-une-valeur-dans-la-table-dechange">Test 3 : Écrire une valeur dans la table d'échange</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+curl -k \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 5,
+    &quot;method&quot;: &quot;tools/call&quot;,
+    &quot;params&quot;: {
+      &quot;name&quot;: &quot;set_exchange_value&quot;,
+      &quot;arguments&quot;: {
+        &quot;client_id&quot;: &quot;default&quot;,
+        &quot;index&quot;: 1,
+        &quot;value&quot;: &quot;test-value&quot;
+      }
+    }
+  }' \
+  http://localhost:8083/messages
+</code></pre>
+<h3 id="test-4-envoyer-une-commande-order">Test 4 : Envoyer une commande (order)</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+curl -k \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 6,
+    &quot;method&quot;: &quot;tools/call&quot;,
+    &quot;params&quot;: {
+      &quot;name&quot;: &quot;send_order&quot;,
+      &quot;arguments&quot;: {
+        &quot;params_json&quot;: &quot;[{\&quot;k\&quot;:1,\&quot;v\&quot;:\&quot;test\&quot;}]&quot;
+      }
+    }
+  }' \
+  http://localhost:8083/messages
+</code></pre>
+<h2 id="5-test-avec-script-python-optionnel">5. Test avec script Python (optionnel)</h2>
+<p>Créez un fichier <code>test_mcp.py</code> :</p>
+<pre><code class="language-python">#!/usr/bin/env python3
+import requests
+import json
+import sys
+
+# Configuration
+MCP_URL = &quot;http://localhost:8083/messages&quot;
+TOKEN_FILE = &quot;/etc/essensys/mcp.token&quot;
+
+# Lire le token
+try:
+    with open(TOKEN_FILE, 'r') as f:
+        token = f.read().strip()
+except FileNotFoundError:
+    print(f&quot;Erreur: {TOKEN_FILE} non trouvé&quot;)
+    sys.exit(1)
+
+headers = {
+    &quot;Authorization&quot;: f&quot;Bearer {token}&quot;,
+    &quot;Content-Type&quot;: &quot;application/json&quot;
+}
+
+# Test 1: Initialize
+print(&quot;Test 1: Initialize...&quot;)
+response = requests.post(
+    MCP_URL,
+    headers=headers,
+    json={
+        &quot;jsonrpc&quot;: &quot;2.0&quot;,
+        &quot;id&quot;: 1,
+        &quot;method&quot;: &quot;initialize&quot;,
+        &quot;params&quot;: {
+            &quot;protocolVersion&quot;: &quot;2024-11-05&quot;,
+            &quot;capabilities&quot;: {},
+            &quot;clientInfo&quot;: {&quot;name&quot;: &quot;test-client&quot;, &quot;version&quot;: &quot;1.0.0&quot;}
+        }
+    },
+    verify=False
+)
+print(f&quot;Status: {response.status_code}&quot;)
+print(f&quot;Response: {json.dumps(response.json(), indent=2)}&quot;)
+print()
+
+# Test 2: List tools
+print(&quot;Test 2: List tools...&quot;)
+response = requests.post(
+    MCP_URL,
+    headers=headers,
+    json={
+        &quot;jsonrpc&quot;: &quot;2.0&quot;,
+        &quot;id&quot;: 2,
+        &quot;method&quot;: &quot;tools/list&quot;
+    },
+    verify=False
+)
+print(f&quot;Status: {response.status_code}&quot;)
+print(f&quot;Response: {json.dumps(response.json(), indent=2)}&quot;)
+print()
+
+# Test 3: Read exchange table
+print(&quot;Test 3: Read exchange table...&quot;)
+response = requests.post(
+    MCP_URL,
+    headers=headers,
+    json={
+        &quot;jsonrpc&quot;: &quot;2.0&quot;,
+        &quot;id&quot;: 3,
+        &quot;method&quot;: &quot;tools/call&quot;,
+        &quot;params&quot;: {
+            &quot;name&quot;: &quot;read_exchange_table&quot;,
+            &quot;arguments&quot;: {&quot;client_id&quot;: &quot;default&quot;}
+        }
+    },
+    verify=False
+)
+print(f&quot;Status: {response.status_code}&quot;)
+print(f&quot;Response: {json.dumps(response.json(), indent=2)}&quot;)
+print()
+
+print(&quot;Tests terminés!&quot;)
+</code></pre>
+<p>Exécutez-le avec :</p>
+<pre><code class="language-bash">sudo python3 test_mcp.py
+</code></pre>
+<h2 id="6-test-avec-mcp-inspector-recommande">6. Test avec MCP Inspector (recommandé)</h2>
+<h3 id="installation-de-mcp-inspector">Installation de MCP Inspector</h3>
+<pre><code class="language-bash">npm install -g @modelcontextprotocol/inspector
+</code></pre>
+<h3 id="test-avec-sse">Test avec SSE</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+mcp-inspect sse http://localhost:8083/sse \
+  --header &quot;Authorization: Bearer $MCP_TOKEN&quot;
+</code></pre>
+<p>Cela ouvre une interface web interactive pour tester les outils MCP.</p>
+<h2 id="7-verification-des-donnees-redis">7. Vérification des données Redis</h2>
+<h3 id="verifier-que-les-donnees-sont-bien-stockees-dans-redis">Vérifier que les données sont bien stockées dans Redis</h3>
+<pre><code class="language-bash"># Voir toutes les clés Essensys
+redis-cli KEYS &quot;essensys:*&quot;
+
+# Voir le contenu de la table d'échange
+redis-cli HGETALL &quot;essensys:client:default:exchange&quot;
+
+# Voir la queue d'actions globales
+redis-cli LRANGE &quot;essensys:global:actions&quot; 0 -1
+</code></pre>
+<h2 id="8-test-de-bout-en-bout">8. Test de bout en bout</h2>
+<h3 id="scenario-complet-ecrire-puis-lire">Scénario complet : Écrire puis lire</h3>
+<pre><code class="language-bash">MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+# 1. Écrire une valeur
+echo &quot;Écriture d'une valeur...&quot;
+curl -k -s \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 10,
+    &quot;method&quot;: &quot;tools/call&quot;,
+    &quot;params&quot;: {
+      &quot;name&quot;: &quot;set_exchange_value&quot;,
+      &quot;arguments&quot;: {
+        &quot;client_id&quot;: &quot;default&quot;,
+        &quot;index&quot;: 5,
+        &quot;value&quot;: &quot;hello-world&quot;
+      }
+    }
+  }' \
+  http://localhost:8083/messages | jq .
+
+# 2. Lire la valeur
+echo &quot;Lecture de la valeur...&quot;
+curl -k -s \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;id&quot;: 11,
+    &quot;method&quot;: &quot;tools/call&quot;,
+    &quot;params&quot;: {
+      &quot;name&quot;: &quot;read_exchange_value&quot;,
+      &quot;arguments&quot;: {
+        &quot;client_id&quot;: &quot;default&quot;,
+        &quot;index&quot;: 5
+      }
+    }
+  }' \
+  http://localhost:8083/messages | jq .
+
+# 3. Vérifier dans Redis directement
+echo &quot;Vérification dans Redis...&quot;
+redis-cli HGET &quot;essensys:client:default:exchange&quot; &quot;5&quot;
+</code></pre>
+<h2 id="9-test-derreurs-et-securite">9. Test d'erreurs et sécurité</h2>
+<h3 id="test-sans-token-devrait-echouer">Test sans token (devrait échouer)</h3>
+<pre><code class="language-bash">curl -k \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{}}' \
+  http://localhost:8083/messages
+</code></pre>
+<p>Réponse attendue : <code>401 Unauthorized</code></p>
+<h3 id="test-avec-token-invalide-devrait-echouer">Test avec token invalide (devrait échouer)</h3>
+<pre><code class="language-bash">curl -k \
+  -H &quot;Authorization: Bearer invalid-token&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{}}' \
+  http://localhost:8083/messages
+</code></pre>
+<p>Réponse attendue : <code>401 Unauthorized</code></p>
+<h3 id="test-depuis-une-ip-publique-devrait-etre-bloque">Test depuis une IP publique (devrait être bloqué)</h3>
+<p>Si vous testez depuis une IP publique, l'accès devrait être refusé avec <code>403 Forbidden</code>.</p>
+<h2 id="10-script-de-test-automatise">10. Script de test automatisé</h2>
+<p>Créez un fichier <code>test_mcp.sh</code> :</p>
+<pre><code class="language-bash">#!/bin/bash
+
+set -e
+
+MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+MCP_URL=&quot;http://localhost:8083/messages&quot;
+
+echo &quot;=== Test du serveur MCP Essensys ===&quot;
+echo &quot;&quot;
+
+# Test 1: Service actif
+echo &quot;1. Vérification du service...&quot;
+if systemctl is-active --quiet essensys-mcp; then
+    echo &quot;✓ Service actif&quot;
+else
+    echo &quot;✗ Service inactif&quot;
+    exit 1
+fi
+
+# Test 2: Redis
+echo &quot;2. Vérification Redis...&quot;
+if redis-cli ping &gt; /dev/null 2&gt;&amp;1; then
+    echo &quot;✓ Redis accessible&quot;
+else
+    echo &quot;✗ Redis inaccessible&quot;
+    exit 1
+fi
+
+# Test 3: Port en écoute
+echo &quot;3. Vérification du port...&quot;
+if ss -tlnp | grep -q &quot;:8083&quot;; then
+    echo &quot;✓ Port 8080 en écoute&quot;
+else
+    echo &quot;✗ Port 8080 non en écoute&quot;
+    exit 1
+fi
+
+# Test 4: Initialize
+echo &quot;4. Test d'initialisation...&quot;
+RESPONSE=$(curl -k -s \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{&quot;protocolVersion&quot;:&quot;2024-11-05&quot;,&quot;capabilities&quot;:{},&quot;clientInfo&quot;:{&quot;name&quot;:&quot;test&quot;,&quot;version&quot;:&quot;1.0.0&quot;}}}' \
+  $MCP_URL)
+
+if echo &quot;$RESPONSE&quot; | grep -q &quot;result&quot;; then
+    echo &quot;✓ Initialisation réussie&quot;
+else
+    echo &quot;✗ Échec d'initialisation: $RESPONSE&quot;
+    exit 1
+fi
+
+# Test 5: List tools
+echo &quot;5. Test de liste des outils...&quot;
+RESPONSE=$(curl -k -s \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:2,&quot;method&quot;:&quot;tools/list&quot;}' \
+  $MCP_URL)
+
+if echo &quot;$RESPONSE&quot; | grep -q &quot;read_exchange_table&quot;; then
+    echo &quot;✓ Outils disponibles&quot;
+else
+    echo &quot;✗ Aucun outil trouvé: $RESPONSE&quot;
+    exit 1
+fi
+
+echo &quot;&quot;
+echo &quot;=== Tous les tests sont passés! ===&quot;
+</code></pre>
+<p>Rendez-le exécutable et lancez-le :</p>
+<pre><code class="language-bash">chmod +x test_mcp.sh
+sudo ./test_mcp.sh
+</code></pre>
+<h2 id="11-surveillance-en-temps-reel">11. Surveillance en temps réel</h2>
+<h3 id="surveiller-les-logs-pendant-les-tests">Surveiller les logs pendant les tests</h3>
+<p>Dans un terminal :</p>
+<pre><code class="language-bash">sudo journalctl -u essensys-mcp -f
+</code></pre>
+<p>Dans un autre terminal, lancez vos tests. Vous verrez les requêtes et réponses en temps réel.</p>
+<h2 id="resultats-attendus">Résultats attendus</h2>
+<ul>
+<li>✅ Service actif et en écoute sur le port 8080</li>
+<li>✅ Réponses JSON-RPC valides avec <code>"jsonrpc": "2.0"</code></li>
+<li>✅ Liste des outils disponible (4 outils)</li>
+<li>✅ Les outils peuvent lire/écrire dans Redis</li>
+<li>✅ Les erreurs d'authentification sont correctement gérées</li>
+<li>✅ L'accès depuis IP publique est bloqué</li>
+</ul>
+<h2 id="depannage">Dépannage</h2>
+<p>Si les tests échouent, consultez le guide de débogage : <code>docs/mcp-debug.md</code></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

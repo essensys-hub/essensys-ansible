@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Nginx vs Caddy - Configuration actuelle - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Nginx vs Caddy - Configuration actuelle";
+    var mkdocs_page_input_path = "nginx-vs-caddy.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Nginx vs Caddy - Configuration actuelle</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="nginx-vs-caddy-configuration-actuelle">Nginx vs Caddy - Configuration actuelle</h1>
+<h2 id="configuration-en-production">Configuration en production</h2>
+<p><strong>Nginx est utilisé</strong>, Caddy est <strong>désactivé</strong>.</p>
+<h3 id="configuration-actuelle-installraspberrypiyml">Configuration actuelle (<code>install.raspberrypi.yml</code>)</h3>
+<pre><code class="language-yaml">roles:
+  # Nginx pour port 80 (client legacy - tolérant aux requêtes HTTP non-standard)
+  - raspberry_nginx
+  # Traefik pour port 443 avec authentification
+  - raspberry_traefik
+  # Caddy désactivé (rejette les requêtes HTTP non-standard du client legacy)
+  # - raspberry_caddy
+</code></pre>
+<h2 id="pourquoi-nginx-et-pas-caddy">Pourquoi Nginx et pas Caddy ?</h2>
+<h3 id="probleme-avec-caddy">Problème avec Caddy</h3>
+<p>Caddy <strong>rejette les requêtes HTTP non-standard</strong> envoyées par le client legacy BP_MQX_ETH (armoires Essensys). Ces requêtes ont des caractéristiques non-standard :
+- Headers HTTP non conformes
+- Format de requête spécifique
+- Nécessité de réponses en un seul paquet TCP</p>
+<h3 id="avantage-de-nginx">Avantage de Nginx</h3>
+<p>Nginx est <strong>plus tolérant</strong> avec les requêtes HTTP non-standard et peut être configuré pour :
+- Accepter les requêtes du client legacy BP_MQX_ETH
+- Bufferiser les réponses complètes avant envoi (single-packet TCP)
+- Gérer les headers non-standard
+- Proxy vers le backend sur le port 7070</p>
+<h2 id="architecture-actuelle">Architecture actuelle</h2>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                    RÉSEAU LOCAL                         │
+│                                                          │
+│  Armoires Essensys → Port 80 (Nginx) → Backend 7070    │
+│  Navigateurs locaux → Port 80 (Nginx) → Frontend        │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                    INTERNET (WAN)                        │
+│                                                          │
+│  Navigateurs → Port 443 (Traefik HTTPS) → Frontend     │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="services-utilises">Services utilisés</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Port</th>
+<th>Usage</th>
+<th>Raison</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nginx</strong></td>
+<td>80</td>
+<td>Local (LAN)</td>
+<td>Tolérant aux requêtes HTTP non-standard du client legacy</td>
+</tr>
+<tr>
+<td><strong>Traefik</strong></td>
+<td>443</td>
+<td>WAN (HTTPS)</td>
+<td>Gestion HTTPS avec Let's Encrypt et authentification</td>
+</tr>
+<tr>
+<td><strong>Caddy</strong></td>
+<td>-</td>
+<td>Désactivé</td>
+<td>Rejette les requêtes non-standard du client legacy</td>
+</tr>
+</tbody>
+</table>
+<h2 id="configuration-nginx-pour-client-legacy">Configuration Nginx pour client legacy</h2>
+<p>La configuration Nginx (<code>essensys.template.j2</code>) inclut des optimisations spécifiques pour le client legacy :</p>
+<pre><code class="language-nginx">location /api/ {
+    # Bufferiser la réponse complète pour single-packet TCP
+    proxy_buffering on;
+    proxy_buffer_size 4k;
+    proxy_buffers 8 4k;
+    proxy_busy_buffers_size 8k;
+    proxy_max_temp_file_size 0;
+
+    # Désactiver gzip pour éviter la fragmentation
+    gzip off;
+
+    # Headers pour compatibilité client legacy
+    proxy_set_header Connection &quot;close&quot;;
+}
+</code></pre>
+<h2 id="si-vous-voulez-utiliser-caddy">Si vous voulez utiliser Caddy</h2>
+<p>Si vous souhaitez utiliser Caddy à la place de Nginx, vous devez :</p>
+<ol>
+<li><strong>Activer le rôle Caddy</strong> dans <code>install.raspberrypi.yml</code> :</li>
+</ol>
+<pre><code class="language-yaml">roles:
+  # - raspberry_nginx  # Désactiver Nginx
+  - raspberry_caddy    # Activer Caddy
+</code></pre>
+<ol>
+<li><strong>Vérifier la compatibilité</strong> avec le client legacy BP_MQX_ETH :</li>
+<li>Les requêtes HTTP non-standard doivent être acceptées</li>
+<li>Les réponses doivent être bufferisées (single-packet TCP)</li>
+<li>
+<p>Les headers non-standard doivent être préservés</p>
+</li>
+<li>
+<p><strong>Tester</strong> avec une armoire Essensys réelle pour confirmer que tout fonctionne</p>
+</li>
+</ol>
+<p>⚠️ <strong>Attention</strong> : D'après les commentaires dans le code, Caddy rejette les requêtes HTTP non-standard du client legacy, donc il n'est probablement pas compatible sans modifications.</p>
+<h2 id="resume">Résumé</h2>
+<ul>
+<li>✅ <strong>Nginx</strong> : Utilisé en production pour le port 80 (compatible client legacy)</li>
+<li>✅ <strong>Traefik</strong> : Utilisé en production pour le port 443 (HTTPS WAN)</li>
+<li>❌ <strong>Caddy</strong> : Désactivé (non compatible avec client legacy)</li>
+</ul>
+<p>La configuration actuelle est optimale pour la compatibilité avec les armoires Essensys (BP_MQX_ETH).</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

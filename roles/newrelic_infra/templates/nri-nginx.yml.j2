@@ -1,0 +1,11 @@
+---
+integration_name: com.newrelic.nginx
+instance:
+  - name: nginx
+    command: metrics
+    arguments:
+      status_url: http://127.0.0.1/status
+      status_module: ngx_http_stub_status_module
+    labels:
+      env: production
+      role: portal-nginx

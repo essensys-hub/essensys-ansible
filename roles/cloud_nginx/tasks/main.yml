@@ -1,0 +1,23 @@
+---
+- name: Deploy consolidated portal nginx snippet
+  template:
+    src: essensys-portal.conf.j2
+    dest: /etc/nginx/snippets/essensys-portal.conf
+    mode: '0644'
+
+- name: Ensure portal snippet in test server block
+  replace:
+    path: /etc/nginx/sites-available/essensys
+    regexp: '(server_name vps-22806d02\.vps\.ovh\.net test\.essensys\.fr;\n)(?!    include /etc/nginx/snippets/essensys-portal\.conf;)'
+    replace: '\1    include /etc/nginx/snippets/essensys-portal.conf;\n'
+
+- name: Ensure portal snippet in production HTTPS server block
+  replace:
+    path: /etc/nginx/sites-available/essensys
+    regexp: '(listen \[::\]:443 ssl;\n    server_name mon\.essensys\.fr www\.essensys\.fr gateway\.essensys\.fr essensys\.fr;\n)(?!    include /etc/nginx/snippets/essensys-portal\.conf;)'
+    replace: '\1    include /etc/nginx/snippets/essensys-portal.conf;\n'
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded

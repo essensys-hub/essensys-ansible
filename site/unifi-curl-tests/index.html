@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Commandes curl pour tester UniFi Protect - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Commandes curl pour tester UniFi Protect";
+    var mkdocs_page_input_path = "unifi-curl-tests.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Commandes curl pour tester UniFi Protect</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="commandes-curl-pour-tester-unifi-protect">Commandes curl pour tester UniFi Protect</h1>
+<h2 id="1-test-direct-de-lapi-unifi-protect-depuis-le-raspberry-pi">1. Test direct de l'API UniFi Protect (depuis le Raspberry Pi)</h2>
+<h3 id="test-de-lendpoint-bootstrap-liste-des-cameras">Test de l'endpoint bootstrap (liste des caméras)</h3>
+<pre><code class="language-bash"># Remplacez YOUR_API_KEY par votre clé API
+# IMPORTANT: L'endpoint correct est /unifi-api/protect/api/bootstrap
+curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
+  -H &quot;X-API-KEY: YOUR_API_KEY&quot; \
+  -H &quot;Accept: application/json&quot; \
+  -v
+</code></pre>
+<h3 id="test-avec-votre-cle-api-actuelle">Test avec votre clé API actuelle</h3>
+<pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
+  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;Accept: application/json&quot; \
+  -v
+</code></pre>
+<h3 id="test-dun-snapshot-de-camera-remplacez-camera_id">Test d'un snapshot de caméra (remplacez CAMERA_ID)</h3>
+<pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/cameras/CAMERA_ID/snapshot&quot; \
+  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;Accept: application/json&quot; \
+  -o /tmp/snapshot.jpg \
+  -v
+</code></pre>
+<h2 id="2-test-via-le-backend-proxy-depuis-le-raspberry-pi">2. Test via le backend proxy (depuis le Raspberry Pi)</h2>
+<h3 id="test-de-lendpoint-apiunificameras">Test de l'endpoint /api/unifi/cameras</h3>
+<pre><code class="language-bash"># Test depuis localhost
+curl -X GET &quot;http://localhost:7070/api/unifi/cameras&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -v
+
+# Test depuis l'extérieur (si accessible)
+curl -X GET &quot;http://mon.essensys.fr/api/unifi/cameras&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -v
+</code></pre>
+<h3 id="test-dun-snapshot-via-le-backend">Test d'un snapshot via le backend</h3>
+<pre><code class="language-bash"># Remplacez CAMERA_ID par l'ID d'une caméra réelle
+curl -X GET &quot;http://localhost:7070/api/unifi/cameras/CAMERA_ID/snapshot&quot; \
+  -o /tmp/snapshot.jpg \
+  -v
+</code></pre>
+<h2 id="3-tests-de-diagnostic">3. Tests de diagnostic</h2>
+<h3 id="verifier-si-le-backend-repond">Vérifier si le backend répond</h3>
+<pre><code class="language-bash">curl -X GET &quot;http://localhost:7070/health&quot; -v
+</code></pre>
+<h3 id="verifier-si-unifi-est-configure-devrait-retourner-503-si-non-configure">Vérifier si UniFi est configuré (devrait retourner 503 si non configuré)</h3>
+<pre><code class="language-bash">curl -X GET &quot;http://localhost:7070/api/unifi/cameras&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -w &quot;\nHTTP Status: %{http_code}\n&quot; \
+  -v
+</code></pre>
+<h3 id="test-avec-affichage-des-headers-seulement">Test avec affichage des headers seulement</h3>
+<pre><code class="language-bash">curl -I -X GET &quot;http://localhost:7070/api/unifi/cameras&quot; -v
+</code></pre>
+<h3 id="test-avec-timeout">Test avec timeout</h3>
+<pre><code class="language-bash">curl --max-time 10 -X GET &quot;http://localhost:7070/api/unifi/cameras&quot; -v
+</code></pre>
+<h2 id="4-script-de-test-complet">4. Script de test complet</h2>
+<p>Créez un fichier <code>test-unifi.sh</code> :</p>
+<pre><code class="language-bash">#!/bin/bash
+
+API_KEY=&quot;tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot;
+UNIFI_BASE=&quot;https://192.168.0.1&quot;
+BACKEND_URL=&quot;http://localhost:7070&quot;
+
+echo &quot;=== Test 1: API UniFi Protect directe (bootstrap) ===&quot;
+curl -k -X GET &quot;${UNIFI_BASE}/unifi-api/protect/api/bootstrap&quot; \
+  -H &quot;X-API-KEY: ${API_KEY}&quot; \
+  -H &quot;Accept: application/json&quot; \
+  -w &quot;\nHTTP Status: %{http_code}\n&quot; \
+  -s | head -20
+
+echo -e &quot;\n=== Test 2: Backend proxy (/api/unifi/cameras) ===&quot;
+curl -X GET &quot;${BACKEND_URL}/api/unifi/cameras&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -w &quot;\nHTTP Status: %{http_code}\n&quot; \
+  -s | head -20
+
+echo -e &quot;\n=== Test 3: Health check backend ===&quot;
+curl -X GET &quot;${BACKEND_URL}/health&quot; -s
+
+echo -e &quot;\n&quot;
+</code></pre>
+<p>Rendez-le exécutable et lancez-le :</p>
+<pre><code class="language-bash">chmod +x test-unifi.sh
+./test-unifi.sh
+</code></pre>
+<h2 id="5-interpretation-des-resultats">5. Interprétation des résultats</h2>
+<h3 id="code-200-ok">Code 200 OK</h3>
+<ul>
+<li>✅ L'API fonctionne correctement</li>
+<li>Vous devriez voir un JSON avec la liste des caméras</li>
+</ul>
+<h3 id="code-401-unauthorized">Code 401 Unauthorized</h3>
+<ul>
+<li>❌ La clé API est invalide ou expirée</li>
+<li>Vérifiez votre clé API dans l'interface UniFi Protect</li>
+</ul>
+<h3 id="code-503-service-unavailable">Code 503 Service Unavailable</h3>
+<ul>
+<li>❌ UniFi Protect n'est pas configuré dans le backend</li>
+<li>Vérifiez <code>/opt/essensys/backend/config.yaml</code></li>
+</ul>
+<h3 id="code-500-internal-server-error">Code 500 Internal Server Error</h3>
+<ul>
+<li>❌ Erreur de connexion à UniFi Protect</li>
+<li>Vérifiez les logs : <code>sudo journalctl -u essensys-backend -n 50</code></li>
+</ul>
+<h3 id="code-000-ou-timeout">Code 000 ou timeout</h3>
+<ul>
+<li>❌ Le backend n'est pas démarré ou inaccessible</li>
+<li>Vérifiez : <code>sudo systemctl status essensys-backend</code></li>
+</ul>
+<h2 id="6-extraction-de-lid-dune-camera">6. Extraction de l'ID d'une caméra</h2>
+<p>Si le bootstrap fonctionne, extrayez les IDs des caméras :</p>
+<pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
+  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;Accept: application/json&quot; \
+  -s | jq '.cameras[] | {id: .id, name: .name}'
+</code></pre>
+<p>Ou sans jq :</p>
+<pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
+  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;Accept: application/json&quot; \
+  -s | grep -o '&quot;id&quot;:&quot;[^&quot;]*&quot;' | head -5
+</code></pre>
+<h2 id="7-test-dun-snapshot-specifique">7. Test d'un snapshot spécifique</h2>
+<p>Une fois que vous avez un ID de caméra (ex: <code>60f1234567890abcdef12345</code>) :</p>
+<pre><code class="language-bash">CAMERA_ID=&quot;60f1234567890abcdef12345&quot;
+
+# Via API directe
+curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/cameras/${CAMERA_ID}/snapshot&quot; \
+  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;Accept: application/json&quot; \
+  -o /tmp/snapshot-direct.jpg
+
+# Via backend proxy
+curl -X GET &quot;http://localhost:7070/api/unifi/cameras/${CAMERA_ID}/snapshot&quot; \
+  -o /tmp/snapshot-proxy.jpg
+
+# Vérifier les images
+ls -lh /tmp/snapshot-*.jpg
+file /tmp/snapshot-*.jpg
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

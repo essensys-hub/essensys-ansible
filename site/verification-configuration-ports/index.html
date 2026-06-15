@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Vérification de la configuration des ports Essensys - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "V\u00e9rification de la configuration des ports Essensys";
+    var mkdocs_page_input_path = "verification-configuration-ports.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Vérification de la configuration des ports Essensys</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="verification-de-la-configuration-des-ports-essensys">Vérification de la configuration des ports Essensys</h1>
+<p>Ce document vérifie que la configuration des ports est correcte pour :
+- ✅ Port 80 local : Obligatoire pour les armoires Essensys
+- ✅ Port 443 WAN : Obligatoire pour l'accès HTTPS depuis Internet</p>
+<h2 id="architecture-des-ports">Architecture des ports</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    RÉSEAU LOCAL (LAN)                        │
+│                                                               │
+│  Armoires Essensys → Port 80 (Nginx) → Backend Port 7070    │
+│  Navigateurs locaux → Port 80 (Nginx) → Frontend            │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    INTERNET (WAN)                            │
+│                                                               │
+│  Navigateurs → Port 443 (Traefik HTTPS) → Frontend Port 9090│
+│  Admin → Port 443 (Traefik HTTPS) → /api/admin/inject       │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h2 id="configuration-actuelle">Configuration actuelle</h2>
+<h3 id="1-port-80-local-nginx-correct">1. Port 80 Local (Nginx) - ✅ CORRECT</h3>
+<p><strong>Fichier</strong>: <code>roles/raspberry_nginx/templates/essensys.template.j2</code></p>
+<ul>
+<li>✅ Écoute sur port 80 avec <code>default_server</code></li>
+<li>✅ Autorise les réseaux locaux (127.0.0.1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)</li>
+<li>✅ Bloque l'accès depuis Internet (<code>deny all</code>)</li>
+<li>✅ Proxy <code>/api/</code> vers backend sur port 7070</li>
+<li>✅ Sert le frontend sur <code>/</code> depuis <code>{{ frontend_dir }}/dist</code></li>
+<li>✅ Pas de redirection automatique (<code>port_in_redirect off</code>)</li>
+</ul>
+<p><strong>Vérification</strong>:</p>
+<pre><code class="language-bash"># Vérifier que Nginx écoute sur le port 80
+sudo ss -tlnp | grep :80
+
+# Tester l'accès local
+curl http://localhost/api/serverinfos
+curl http://localhost/
+</code></pre>
+<h3 id="2-port-443-wan-traefik-correct">2. Port 443 WAN (Traefik) - ✅ CORRECT</h3>
+<p><strong>Fichier</strong>: <code>roles/raspberry_traefik/templates/traefik.yml.j2</code></p>
+<ul>
+<li>✅ Écoute sur port 443 (<code>websecure</code> entryPoint)</li>
+<li>✅ Certificats SSL via Let's Encrypt (TLS-ALPN challenge)</li>
+<li>✅ Pas d'entryPoint <code>web</code> (port 80) - Nginx gère le port 80</li>
+</ul>
+<p><strong>Fichier</strong>: <code>roles/raspberry_traefik/templates/wan-routes.yml.j2</code></p>
+<ul>
+<li>✅ Frontend WAN accessible en HTTPS avec authentification basique</li>
+<li>✅ <code>/api/admin/inject</code> accessible en HTTPS avec authentification</li>
+<li>✅ Autres API bloquées en WAN (403 Forbidden)</li>
+<li>✅ Routes de redirection HTTP→HTTPS désactivées (Traefik n'écoute pas sur port 80)</li>
+</ul>
+<p><strong>Vérification</strong>:</p>
+<pre><code class="language-bash"># Vérifier que Traefik écoute sur le port 443
+sudo ss -tlnp | grep :443
+
+# Vérifier que Traefik n'écoute PAS sur le port 80
+sudo ss -tlnp | grep :80 | grep traefik
+# Ne doit rien retourner
+</code></pre>
+<h3 id="3-backend-port-7070-correct">3. Backend (Port 7070) - ✅ CORRECT</h3>
+<p><strong>Fichier</strong>: <code>roles/raspberry_backend/tasks/main.yml</code></p>
+<ul>
+<li>✅ Backend configuré pour écouter sur port 7070</li>
+<li>✅ Nginx proxy <code>/api/</code> vers <code>http://127.0.0.1:7070/api/</code></li>
+<li>✅ Configuration compatible client legacy BP_MQX_ETH (single-packet TCP)</li>
+</ul>
+<p><strong>Vérification</strong>:</p>
+<pre><code class="language-bash"># Vérifier que le backend écoute sur le port 7070
+sudo ss -tlnp | grep :7070
+
+# Tester directement le backend
+curl http://localhost:7070/health
+</code></pre>
+<h3 id="4-frontend-interne-port-9090-correct">4. Frontend Interne (Port 9090) - ✅ CORRECT</h3>
+<p><strong>Fichier</strong>: <code>roles/raspberry_nginx/templates/nginx-frontend-internal.conf.j2</code></p>
+<ul>
+<li>✅ Nginx écoute sur port 9090 pour servir le frontend en interne</li>
+<li>✅ Traefik proxy vers <code>http://127.0.0.1:9090</code> pour le frontend WAN</li>
+<li>✅ Frontend servi depuis <code>{{ frontend_dir }}/dist</code></li>
+</ul>
+<p><strong>Vérification</strong>:</p>
+<pre><code class="language-bash"># Vérifier que Nginx écoute sur le port 9090
+sudo ss -tlnp | grep :9090
+
+# Tester le frontend interne
+curl http://localhost:9090/
+</code></pre>
+<h2 id="points-critiques-a-verifier">Points critiques à vérifier</h2>
+<h3 id="port-80-local-obligatoire-pour-armoires-essensys">✅ Port 80 local obligatoire pour armoires Essensys</h3>
+<p>Les armoires Essensys (BP_MQX_ETH) ont le port 80 hardcodé dans leur firmware. Elles doivent pouvoir accéder aux API sur le port 80.</p>
+<p><strong>Configuration actuelle</strong>:
+- ✅ Nginx écoute sur port 80
+- ✅ Nginx proxy <code>/api/*</code> vers backend port 7070
+- ✅ Pas de redirection HTTP→HTTPS sur le port 80 local
+- ✅ Accès autorisé depuis réseaux locaux (192.168.0.0/16, etc.)</p>
+<h3 id="port-443-wan-obligatoire-pour-acces-https">✅ Port 443 WAN obligatoire pour accès HTTPS</h3>
+<p>L'accès depuis Internet doit se faire uniquement en HTTPS avec authentification.</p>
+<p><strong>Configuration actuelle</strong>:
+- ✅ Traefik écoute sur port 443
+- ✅ Frontend WAN accessible en HTTPS avec auth basique
+- ✅ <code>/api/admin/inject</code> accessible en HTTPS avec auth
+- ✅ Autres API bloquées en WAN
+- ✅ Traefik n'écoute pas sur port 80 (pas de conflit avec Nginx)</p>
+<h2 id="checklist-de-verification">Checklist de vérification</h2>
+<p>Avant de déployer, vérifier :</p>
+<ul>
+<li>[ ] Nginx écoute sur le port 80 (<code>sudo ss -tlnp | grep :80</code>)</li>
+<li>[ ] Traefik écoute sur le port 443 (<code>sudo ss -tlnp | grep :443</code>)</li>
+<li>[ ] Traefik n'écoute PAS sur le port 80</li>
+<li>[ ] Backend écoute sur le port 7070 (<code>sudo ss -tlnp | grep :7070</code>)</li>
+<li>[ ] Frontend interne écoute sur le port 9090 (<code>sudo ss -tlnp | grep :9090</code>)</li>
+<li>[ ] Les armoires Essensys peuvent accéder aux API sur port 80</li>
+<li>[ ] L'accès WAN fonctionne en HTTPS avec authentification</li>
+<li>[ ] Pas de redirection HTTP→HTTPS sur le port 80 local</li>
+</ul>
+<h2 id="commandes-de-diagnostic">Commandes de diagnostic</h2>
+<pre><code class="language-bash"># Voir tous les ports en écoute
+sudo ss -tlnp
+
+# Vérifier les services actifs
+sudo systemctl status nginx
+sudo systemctl status traefik
+sudo systemctl status essensys-backend
+
+# Tester l'accès local (port 80)
+curl -v http://localhost/api/serverinfos
+curl -v http://localhost/
+
+# Tester l'accès WAN (port 443) - nécessite authentification
+curl -v -u username:password https://votre-domaine.com/
+curl -v -u username:password https://votre-domaine.com/api/admin/inject
+
+# Vérifier les logs
+sudo tail -f /var/log/nginx/essensys-access.log
+sudo tail -f /var/log/traefik/traefik.log
+</code></pre>
+<h2 id="resume">Résumé</h2>
+<p>✅ <strong>Configuration correcte</strong> :
+- Port 80 local : Nginx gère le frontend et les API pour les armoires Essensys
+- Port 443 WAN : Traefik gère l'accès HTTPS sécurisé depuis Internet
+- Pas de conflit entre les deux
+- Les armoires Essensys peuvent accéder aux API sur le port 80
+- L'accès WAN est sécurisé en HTTPS avec authentification</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

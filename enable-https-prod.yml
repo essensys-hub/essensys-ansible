@@ -23,6 +23,12 @@
         -m support@essensys.fr 
         --redirect
 
-    - name: Re-apply portal nginx routes after certbot
+    - name: Re-apply consolidated portal nginx after certbot
+      import_role:
+        name: cloud_nginx
+      when: cloud_backend_consolidated | default(false) | bool and not cloud_backend_legacy_mode | default(false) | bool
+
+    - name: Re-apply legacy portal nginx after certbot
       import_role:
         name: portal_nginx
+      when: not (cloud_backend_consolidated | default(false) | bool and not cloud_backend_legacy_mode | default(false) | bool)

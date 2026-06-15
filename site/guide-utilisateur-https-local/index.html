@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Guide utilisateur HTTPS local - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Guide utilisateur HTTPS local";
+    var mkdocs_page_input_path = "guide-utilisateur-https-local.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Guide utilisateur HTTPS local</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#en-resume-les-3-idees">En résumé (les 3 idées)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#ou-recuperer-le-fichier-essensys-local-cacrt">Où récupérer le fichier essensys-local-ca.crt ?</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#macos">🍎 macOS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#iphone-ipad-ios-ipados">📱 iPhone / iPad (iOS · iPadOS)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#windows">🪟 Windows</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#android">🤖 Android</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#firefox-tous-os">🦊 Firefox (tous OS)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#depannage">❓ Dépannage</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Guide utilisateur HTTPS local</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="guide-utilisateur-acceder-a-httpsmonessensyslocal-en-securite">Guide utilisateur — Accéder à <code>https://mon.essensys.local</code> en sécurité</h1>
+<p>Ce guide explique comment configurer <strong>un appareil</strong> (Mac, iPhone/iPad, PC Windows,
+téléphone Android) pour accéder à l'interface Essensys locale en HTTPS <strong>sans
+avertissement de sécurité</strong>.</p>
+<blockquote>
+<p><strong>Pourquoi cette étape ?</strong> L'interface locale est servie en HTTPS par un
+certificat signé par l'autorité interne <strong>« Essensys Local CA »</strong>. Comme cette
+autorité n'est pas une autorité publique (impossible pour un domaine <code>.local</code>),
+chaque appareil doit l'installer <strong>une seule fois</strong>. Ensuite, le cadenas est vert
+et tout fonctionne normalement.</p>
+</blockquote>
+<p>C'est une opération <strong>sûre</strong> : vous installez uniquement l'autorité de votre propre
+passerelle Essensys, sur votre réseau local.</p>
+<hr />
+<h2 id="en-resume-les-3-idees">En résumé (les 3 idées)</h2>
+<ol>
+<li><strong>Récupérer</strong> le fichier d'autorité <code>essensys-local-ca.crt</code>.</li>
+<li><strong>L'installer</strong> comme autorité de <strong>confiance</strong> sur l'appareil.</li>
+<li><strong>Ouvrir</strong> <code>https://mon.essensys.local</code> → cadenas vert. ✅</li>
+</ol>
+<h3 id="ou-recuperer-le-fichier-essensys-local-cacrt">Où récupérer le fichier <code>essensys-local-ca.crt</code> ?</h3>
+<ul>
+<li><strong>Téléchargement direct</strong> (sur le réseau Essensys) :
+  <code>https://mon.essensys.local/essensys-local-ca.crt</code><blockquote>
+<p>Au tout premier accès, le navigateur affichera un avertissement : c'est normal,
+vous téléchargez justement l'autorité qui le fera disparaître. Continuez.</p>
+</blockquote>
+</li>
+<li><strong>Ou</strong> demandez le fichier à votre administrateur (envoi par AirDrop / e-mail).</li>
+</ul>
+<hr />
+<h2 id="macos">🍎 macOS</h2>
+<p><img alt="Étapes d'installation sur macOS" src="../img/install-macos.svg" /></p>
+<ol>
+<li>Récupérez <code>essensys-local-ca.crt</code> et <strong>double-cliquez</strong> dessus : il s'ouvre dans
+   <strong>Trousseau d'accès</strong>, dans le trousseau <strong>Système</strong> (ou « Connexion »).</li>
+<li>Double-cliquez sur <strong>« Essensys Local CA »</strong>, dépliez <strong>« Se fier »</strong>, et réglez
+   <strong>« Lors de l'utilisation de ce certificat »</strong> sur <strong>« Toujours approuver »</strong>.
+   Fermez la fenêtre (mot de passe Mac demandé).</li>
+<li>Ouvrez <code>https://mon.essensys.local</code> — <strong>redémarrez le navigateur</strong> si besoin.
+   La barre d'adresse indique alors <strong>« Connexion sécurisée »</strong>, sans avertissement.</li>
+</ol>
+<blockquote>
+<p>✅ Vérifié en conditions réelles : après installation de la CA, <code>https://mon.essensys.local/dashboard</code>
+se charge dans le navigateur <strong>sans aucune alerte de sécurité</strong>.</p>
+<p><strong>Astuce admin</strong> (en une commande, mot de passe demandé) :
+<code>bash
+sudo security add-trusted-cert -d -r trustRoot \
+  -k /Library/Keychains/System.keychain essensys-local-ca.crt</code></p>
+</blockquote>
+<hr />
+<h2 id="iphone-ipad-ios-ipados">📱 iPhone / iPad (iOS · iPadOS)</h2>
+<p><img alt="Étapes d'installation sur iOS" src="../img/install-ios.svg" /></p>
+<ol>
+<li>Dans <strong>Safari</strong>, ouvrez <code>https://mon.essensys.local/essensys-local-ca.crt</code> et
+   acceptez le téléchargement du <strong>profil</strong>.</li>
+<li><strong>Réglages › Général › VPN et gestion de l'appareil</strong> → ouvrez le profil
+   <strong>« Essensys Local CA »</strong> → <strong>Installer</strong> (code de l'appareil demandé).</li>
+<li>⚠️ <strong>Étape indispensable</strong> : <strong>Réglages › Général › Infos › Réglages des
+   certificats de confiance</strong> → <strong>activez</strong> l'interrupteur en face de
+   <strong>« Essensys Local CA »</strong>.</li>
+<li>Ouvrez <code>https://mon.essensys.local</code>. ✅</li>
+</ol>
+<hr />
+<h2 id="windows">🪟 Windows</h2>
+<p><img alt="Étapes d'installation sur Windows" src="../img/install-windows.svg" /></p>
+<ol>
+<li><strong>Double-cliquez</strong> sur <code>essensys-local-ca.crt</code> → <strong>Installer le certificat…</strong></li>
+<li>Choisissez <strong>« Ordinateur local »</strong>, puis <strong>« Placer tous les certificats dans
+   le magasin suivant »</strong> → <strong>« Autorités de certification racines de confiance »</strong>.</li>
+<li>Terminez l'assistant, <strong>redémarrez le navigateur</strong>, puis ouvrez
+   <code>https://mon.essensys.local</code>. ✅</li>
+</ol>
+<blockquote>
+<p><strong>Astuce admin</strong> (PowerShell en administrateur) :
+<code>powershell
+certutil -addstore -f Root essensys-local-ca.crt</code>
+<em>Note : Firefox utilise son propre magasin — voir la section dédiée.</em></p>
+</blockquote>
+<hr />
+<h2 id="android">🤖 Android</h2>
+<p><img alt="Étapes d'installation sur Android" src="../img/install-android.svg" /></p>
+<ol>
+<li>Téléchargez <code>essensys-local-ca.crt</code>.</li>
+<li><strong>Paramètres › Sécurité › Chiffrement et identifiants › Installer un certificat
+   › Certificat CA</strong> (les libellés varient selon la marque — cherchez
+   « certificat CA »). Validez l'avertissement.</li>
+<li>Sélectionnez le fichier téléchargé. Ouvrez <code>https://mon.essensys.local</code>. ✅</li>
+</ol>
+<hr />
+<h2 id="firefox-tous-os">🦊 Firefox (tous OS)</h2>
+<p>Firefox <strong>n'utilise pas</strong> le magasin du système : il faut l'importer dans Firefox.</p>
+<ol>
+<li><strong>Paramètres › Vie privée et sécurité › Certificats › Afficher les certificats</strong></li>
+<li>Onglet <strong>« Autorités »</strong> → <strong>Importer…</strong> → choisir <code>essensys-local-ca.crt</code></li>
+<li>Cocher <strong>« Confirmer cette AC pour identifier des sites web »</strong> → <strong>OK</strong>.</li>
+</ol>
+<hr />
+<h2 id="depannage">❓ Dépannage</h2>
+<table>
+<thead>
+<tr>
+<th>Symptôme</th>
+<th>Cause / Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Toujours « non sécurisé » après install</td>
+<td>Redémarrer <strong>complètement</strong> le navigateur (sur Chrome/Mac : Cmd+Q puis rouvrir).</td>
+</tr>
+<tr>
+<td><code>mon.essensys.local</code> introuvable</td>
+<td>Être connecté au réseau Essensys ; la résolution se fait en mDNS/Bonjour sur le LAN.</td>
+</tr>
+<tr>
+<td>Avertissement au téléchargement du <code>.crt</code></td>
+<td>Normal au 1ᵉʳ accès (HTTPS pas encore de confiance) — continuer.</td>
+</tr>
+<tr>
+<td>Firefox affiche encore l'erreur</td>
+<td>Firefox a son propre magasin → faire la section Firefox ci-dessus.</td>
+</tr>
+<tr>
+<td>Cadenas OK sur <code>mon.essensys.fr</code> mais pas <code>.local</code></td>
+<td><code>mon.essensys.fr</code> utilise un certificat public (rien à installer) ; <code>.local</code> nécessite la CA.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Public : utilisateurs finaux. Détails techniques (architecture, rôle Ansible,
+rotation/révocation) : voir <a href="../tls-local-domain/">tls-local-domain.md</a>.</em></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tls-local-domain/" class="btn btn-neutral float-right" title="HTTPS domaine local (admin)">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../roles/" class="btn btn-neutral" title="Roles"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../roles/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../tls-local-domain/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Liste des outils MCP disponibles - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Liste des outils MCP disponibles";
+    var mkdocs_page_input_path = "mcp-tools-list.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Liste des outils MCP disponibles</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="liste-des-outils-mcp-disponibles">Liste des outils MCP disponibles</h1>
+<p>Le serveur MCP Essensys expose <strong>5 outils</strong> pour interagir avec le système d'automatisation.</p>
+<h2 id="1-read_exchange_table">1. <code>read_exchange_table</code></h2>
+<p><strong>Description</strong> : Lit toutes les valeurs de la table d'échange.</p>
+<p><strong>Paramètres</strong> :
+- <code>client_id</code> (string, optionnel) : ID du client à lire (défaut: <code>"default"</code>)</p>
+<p><strong>Retour</strong> : JSON avec toutes les valeurs de la table d'échange (map index → valeur)</p>
+<p><strong>Exemple d'utilisation</strong> :</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;read_exchange_table&quot;,
+  &quot;arguments&quot;: {
+    &quot;client_id&quot;: &quot;default&quot;
+  }
+}
+</code></pre>
+<p><strong>Exemple de réponse</strong> :</p>
+<pre><code class="language-json">{
+  &quot;1&quot;: &quot;0&quot;,
+  &quot;2&quot;: &quot;1&quot;,
+  &quot;621&quot;: &quot;64&quot;,
+  ...
+}
+</code></pre>
+<hr />
+<h2 id="2-read_exchange_value">2. <code>read_exchange_value</code></h2>
+<p><strong>Description</strong> : Lit une valeur spécifique de la table d'échange par index.</p>
+<p><strong>Paramètres</strong> :
+- <code>index</code> (number, requis) : Index à lire
+- <code>client_id</code> (string, optionnel) : ID du client (défaut: <code>"default"</code>)</p>
+<p><strong>Retour</strong> : La valeur de l'index (string), ou chaîne vide si l'index n'existe pas</p>
+<p><strong>Exemple d'utilisation</strong> :</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;read_exchange_value&quot;,
+  &quot;arguments&quot;: {
+    &quot;index&quot;: 621,
+    &quot;client_id&quot;: &quot;default&quot;
+  }
+}
+</code></pre>
+<p><strong>Exemple de réponse</strong> :</p>
+<pre><code>64
+</code></pre>
+<hr />
+<h2 id="3-set_exchange_value">3. <code>set_exchange_value</code></h2>
+<p><strong>Description</strong> : Définit directement une valeur dans la table d'échange.</p>
+<p><strong>⚠️ Attention</strong> : Cet outil contourne la logique de queue d'ordres. Utilisez <code>send_order</code> pour les commandes normales.</p>
+<p><strong>Paramètres</strong> :
+- <code>index</code> (number, requis) : Index à définir
+- <code>value</code> (string, requis) : Valeur à définir
+- <code>client_id</code> (string, optionnel) : ID du client (défaut: <code>"default"</code>)</p>
+<p><strong>Retour</strong> : Message de confirmation</p>
+<p><strong>Exemple d'utilisation</strong> :</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;set_exchange_value&quot;,
+  &quot;arguments&quot;: {
+    &quot;index&quot;: 621,
+    &quot;value&quot;: &quot;64&quot;,
+    &quot;client_id&quot;: &quot;default&quot;
+  }
+}
+</code></pre>
+<p><strong>Exemple de réponse</strong> :</p>
+<pre><code>Set index 621 to '64' for client default
+</code></pre>
+<hr />
+<h2 id="4-find_device_index">4. <code>find_device_index</code></h2>
+<p><strong>Description</strong> : Recherche un équipement par nom et retourne l'index et la valeur correspondants dans la table d'échange. Supporte la recherche partielle et le filtrage par catégorie.</p>
+<p><strong>Paramètres</strong> :
+- <code>device_name</code> (string, requis) : Nom de l'équipement à rechercher (recherche partielle supportée)
+- <code>category</code> (string, optionnel) : Filtrer par catégorie : <code>"light"</code>, <code>"shutter"</code>, <code>"scenario"</code>, <code>"security"</code>, <code>"heating"</code>, <code>"irrigation"</code></p>
+<p><strong>Retour</strong> : Liste des équipements trouvés avec leurs indices, valeurs, actions et commandes MCP</p>
+<p><strong>Exemple d'utilisation</strong> :</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;find_device_index&quot;,
+  &quot;arguments&quot;: {
+    &quot;device_name&quot;: &quot;chevet chambre petit 3&quot;,
+    &quot;category&quot;: &quot;light&quot;
+  }
+}
+</code></pre>
+<p><strong>Exemple de réponse</strong> :</p>
+<pre><code>Équipements trouvés pour 'chevet chambre petit 3':
+(Filtré par catégorie: light)
+
+1. Chevet Petite Chambre 3
+   Index: 613
+   Valeur: 64
+   Action: allumer
+   Catégorie: light
+   Commande MCP: send_order avec params_json='[{&quot;k&quot;:613,&quot;v&quot;:&quot;64&quot;}]'
+</code></pre>
+<p><strong>Catégories disponibles</strong> :
+- <code>light</code> : Éclairage (lampes, variateurs)
+- <code>shutter</code> : Volets et stores
+- <code>scenario</code> : Scénarios (1-8)
+- <code>security</code> : Sécurité (alarme, prises, machines)
+- <code>heating</code> : Chauffage
+- <code>irrigation</code> : Arrosage</p>
+<p><strong>Note</strong> : Pour la documentation complète de tous les équipements, consultez <code>essensys-server-backend/docs/MCP_DEVICE_INDEX_REFERENCE.md</code></p>
+<hr />
+<h2 id="5-send_order">5. <code>send_order</code></h2>
+<p><strong>Description</strong> : Envoie une commande (action) au backend via la queue globale d'actions. C'est l'outil recommandé pour envoyer des commandes au système.</p>
+<p><strong>Paramètres</strong> :
+- <code>params_json</code> (string, requis) : JSON string représentant les paramètres (liste ExchangeKV)
+  - Format : <code>[{"k": index, "v": "valeur"}]</code>
+  - Exemple : <code>[{"k":621,"v":"64"}]</code>
+- <code>guid</code> (string, optionnel) : ID unique pour l'action (auto-généré si vide)</p>
+<p><strong>Retour</strong> : Message de confirmation avec le GUID généré</p>
+<p><strong>Exemple d'utilisation</strong> :</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;send_order&quot;,
+  &quot;arguments&quot;: {
+    &quot;params_json&quot;: &quot;[{\&quot;k\&quot;:621,\&quot;v\&quot;:\&quot;64\&quot;}]&quot;
+  }
+}
+</code></pre>
+<p><strong>Exemple avec GUID personnalisé</strong> :</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;send_order&quot;,
+  &quot;arguments&quot;: {
+    &quot;guid&quot;: &quot;my-custom-guid-123&quot;,
+    &quot;params_json&quot;: &quot;[{\&quot;k\&quot;:621,\&quot;v\&quot;:\&quot;64\&quot;}]&quot;
+  }
+}
+</code></pre>
+<p><strong>Exemple de réponse</strong> :</p>
+<pre><code>Order sent with GUID mcp-1234567890123456789
+</code></pre>
+<p><strong>Comment ça fonctionne</strong> :
+1. L'outil ajoute la commande à la queue Redis <code>essensys:global:actions</code>
+2. Le backend Essensys lit automatiquement cette queue
+3. Le backend traite la commande et l'envoie aux robots</p>
+<hr />
+<h2 id="resume-des-outils">Résumé des outils</h2>
+<table>
+<thead>
+<tr>
+<th>Outil</th>
+<th>Description</th>
+<th>Usage principal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>read_exchange_table</code></td>
+<td>Lire toute la table</td>
+<td>Consultation complète</td>
+</tr>
+<tr>
+<td><code>read_exchange_value</code></td>
+<td>Lire une valeur</td>
+<td>Consultation d'un index</td>
+</tr>
+<tr>
+<td><code>set_exchange_value</code></td>
+<td>Définir une valeur</td>
+<td>Modification directe (rare)</td>
+</tr>
+<tr>
+<td><code>send_order</code></td>
+<td>Envoyer une commande</td>
+<td><strong>Action recommandée</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommandation">Recommandation</h2>
+<p>Pour envoyer des commandes au système (allumer/éteindre des lumières, etc.), utilisez <strong><code>send_order</code></strong>. C'est l'outil qui respecte le flux normal de traitement des commandes via la queue d'actions.</p>
+<h2 id="exemple-complet-allumer-la-lumiere-chevet-chambre-petit-3">Exemple complet : Allumer la lumière "chevet chambre petit 3"</h2>
+<pre><code class="language-json">{
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;id&quot;: 1,
+  &quot;method&quot;: &quot;tools/call&quot;,
+  &quot;params&quot;: {
+    &quot;name&quot;: &quot;send_order&quot;,
+    &quot;arguments&quot;: {
+      &quot;params_json&quot;: &quot;[{\&quot;k\&quot;:621,\&quot;v\&quot;:\&quot;64\&quot;}]&quot;
+    }
+  }
+}
+</code></pre>
+<p>Où :
+- <code>621</code> = Index pour "Scenario_Allumer_CHB_LSB" (Allumer lumières Chambres LSB)
+- <code>64</code> = Bit 6 activé (Lampe de la petite chambre 3)</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

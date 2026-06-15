@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>HTTPS domaine local (admin) - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "HTTPS domaine local (admin)";
+    var mkdocs_page_input_path = "tls-local-domain.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">HTTPS domaine local (admin)</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#le-probleme">Le problème</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#la-solution-role-raspberry_traefik">La solution (rôle raspberry_traefik)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#redeployer">(Re)déployer</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#installer-la-ca-sur-un-client">Installer la CA sur un client</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#variables-role-raspberry_traefik">Variables (rôle raspberry_traefik)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rotation-revocation">Rotation / révocation</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>HTTPS domaine local (admin)</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="https-de-confiance-pour-monessensyslocal">HTTPS de confiance pour <code>mon.essensys.local</code></h1>
+<h2 id="le-probleme">Le problème</h2>
+<p><code>mon.essensys.local</code> est résolu en LAN par <strong>mDNS (Avahi)</strong> et par une réécriture
+<strong>AdGuard</strong> vers l'IP de la gateway. Mais <strong>Let's Encrypt ne peut pas signer un
+<code>.local</code></strong> (domaine non public, challenge ACME impossible). Sans configuration,
+Traefik servait donc son <strong>certificat auto-signé par défaut</strong> sur ce domaine →
+avertissement navigateur.</p>
+<blockquote>
+<p>Note : <code>mon.essensys.fr</code> accédé sur le LAN a, lui, un vrai certificat
+Let's Encrypt (Traefik <code>certResolver: letsencrypt</code> + réécriture AdGuard). C'est
+une alternative sans rien installer côté client.</p>
+</blockquote>
+<h2 id="la-solution-role-raspberry_traefik">La solution (rôle <code>raspberry_traefik</code>)</h2>
+<ol>
+<li>Création d'une <strong>CA locale</strong> (<code>ca.key</code> / <code>ca.crt</code>, 10 ans) sur la gateway.</li>
+<li>Signature d'un <strong>certificat serveur</strong> pour <code>mon.essensys.local</code>
+   (SAN <code>DNS:mon.essensys.local</code> + IP de la gateway, validité &lt; 825 j pour rester
+   de confiance sur Apple). Régénéré automatiquement quand il expire dans &lt; 30 j.</li>
+<li>Dépôt de <code>dynamic/local-tls.yml</code> : Traefik le charge via le <strong>provider file
+   (<code>watch: true</code>)</strong> → reload à chaud, <strong>sans redémarrer le conteneur</strong>. Le router
+   <code>frontend-local</code> (<code>tls: {}</code>) sert alors ce certificat (match SNI).</li>
+<li><strong>Distribution de la CA</strong> :</li>
+<li>téléchargement LAN : <code>https://mon.essensys.local/essensys-local-ca.crt</code>
+     (déposée dans <code>{{ data_dir }}/frontend</code>, servie par le conteneur Nginx).
+     En profil gateway, eth0:80 fait <code>return 444</code> → pas de HTTP côté LAN, le
+     download passe donc par HTTPS, avec un <strong>avertissement au premier accès</strong>
+     (normal : on télécharge justement la CA qui le fera disparaître) ;</li>
+<li>installée dans le trust store de la gateway (<code>update-ca-certificates</code>) ;</li>
+<li>rapatriée sur le contrôleur Ansible dans <code>files/local-ca/&lt;host&gt;.crt</code>.</li>
+</ol>
+<p>Le seul geste <strong>manuel restant</strong> : installer cette CA une fois par appareil client.
+La copie sur le contrôleur (<code>files/local-ca/&lt;host&gt;.crt</code>) est souvent le plus
+pratique pour la diffuser (AirDrop, e-mail) sans passer par le téléchargement.</p>
+<h2 id="redeployer">(Re)déployer</h2>
+<pre><code class="language-bash">cd essensys-ansible
+ansible-playbook install.gateway.yml -i inventory.gateway --tags localtls
+</code></pre>
+<p>Le tag <code>localtls</code> ne lance que le bloc TLS local (idempotent, reload à chaud).
+N.B. : <code>--tags traefik</code> redéploierait aussi les routes WAN, qui dépendent de
+<code>wan_domain</code> (défini par un rôle antérieur) — à éviter en lancement isolé.</p>
+<h2 id="installer-la-ca-sur-un-client">Installer la CA sur un client</h2>
+<ul>
+<li><strong>macOS</strong> : double-clic sur <code>essensys-local-ca.crt</code> → Trousseau « système » →
+  ouvrir le certif → Se fier → « Toujours approuver ».</li>
+<li><strong>iOS / iPadOS</strong> : ouvrir l'URL dans Safari → installer le profil → Réglages →
+  Général → VPN et gestion d'appareils → installer → puis <strong>Réglages → Général →
+  Infos → Réglages des certificats de confiance</strong> → activer la confiance.</li>
+<li><strong>Linux</strong> : <code>sudo cp essensys-local-ca.crt /usr/local/share/ca-certificates/ &amp;&amp;
+  sudo update-ca-certificates</code>.</li>
+<li><strong>Windows</strong> : <code>certutil -addstore -f Root essensys-local-ca.crt</code> (admin).</li>
+<li><strong>Android</strong> : Paramètres → Sécurité → Chiffrement → Installer un certificat → CA.</li>
+<li><strong>Firefox</strong> : possède son propre magasin → Paramètres → Certificats → Importer,
+  cocher « confiance pour identifier des sites web ».</li>
+</ul>
+<h2 id="variables-role-raspberry_traefik">Variables (rôle <code>raspberry_traefik</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Défaut</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>traefik_local_tls_enabled</code></td>
+<td><code>true</code></td>
+<td>Active toute la mécanique</td>
+</tr>
+<tr>
+<td><code>traefik_local_domain</code></td>
+<td><code>mon.essensys.local</code></td>
+<td>Domaine à certifier</td>
+</tr>
+<tr>
+<td><code>traefik_ca_days</code></td>
+<td><code>3650</code></td>
+<td>Validité de la CA</td>
+</tr>
+<tr>
+<td><code>traefik_leaf_days</code></td>
+<td><code>820</code></td>
+<td>Validité du cert serveur</td>
+</tr>
+<tr>
+<td><code>traefik_leaf_renew_days</code></td>
+<td><code>30</code></td>
+<td>Seuil de régénération auto</td>
+</tr>
+<tr>
+<td><code>traefik_publish_ca</code></td>
+<td><code>true</code></td>
+<td>Publier la CA en téléchargement LAN</td>
+</tr>
+<tr>
+<td><code>traefik_install_ca_on_gateway</code></td>
+<td><code>true</code></td>
+<td>Installer la CA sur la gateway</td>
+</tr>
+<tr>
+<td><code>traefik_fetch_ca_to_controller</code></td>
+<td><code>true</code></td>
+<td>Copier la CA sur le contrôleur</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rotation-revocation">Rotation / révocation</h2>
+<p>Pour forcer une nouvelle CA : supprimer <code>…/traefik/certs/ca.*</code> sur la gateway et
+relancer le playbook (puis réinstaller la nouvelle CA sur les clients). Pour
+juste renouveler le cert serveur : supprimer <code>local.crt</code>, relancer.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../guide-utilisateur-https-local/" class="btn btn-neutral" title="Guide utilisateur HTTPS local"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../guide-utilisateur-https-local/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

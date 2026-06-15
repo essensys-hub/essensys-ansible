@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Installation Gateway CM5 - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Installation Gateway CM5";
+    var mkdocs_page_input_path = "install-gateway.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Installation Gateway CM5</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#vue-densemble">Vue d'ensemble</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#comparaison-profil-classique-vs-gateway">Comparaison profil classique vs Gateway</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#architecture-reseau">Architecture réseau</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#flux-des-ports-profil-gateway">Flux des ports (profil Gateway)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#prerequis">Prérequis</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#materiel">Matériel</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#firmware-os-sur-la-cm5-avant-ansible">Firmware / OS (sur la CM5, avant Ansible)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#poste-controleur-ansible">Poste contrôleur Ansible</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#preparation">Préparation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-relever-les-adresses-mac">1. Relever les adresses MAC</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-configurer-linventaire">2. Configurer l'inventaire</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-nvme">3. NVMe</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#variables-dinventaire-inventorygateway">Variables d'inventaire (inventory.gateway)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#variables-du-playbook-installgatewayyml">Variables du playbook (install.gateway.yml)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#installation-pas-a-pas">Installation pas à pas</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-verifier-la-connectivite">1. Vérifier la connectivité</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-optionnel-lister-les-taches">2. (Optionnel) Lister les tâches</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-lancer-linstallation">3. Lancer l'installation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-pre-taches-du-play">4. Pré-tâches du play</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#5-ordre-des-roles">5. Ordre des rôles</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#dhcp-dns-segment-armoire-eth1">DHCP / DNS segment armoire (eth1)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#resolution-des-noms">Résolution des noms</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#mdns-avahi">mDNS (Avahi)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#adguard-split-horizon-lan">AdGuard (split-horizon LAN)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#https">HTTPS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#verification-post-installation">Vérification post-installation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#services-docker">Services Docker</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#reseau-et-nvme">Réseau et NVMe</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#api-et-http">API et HTTP</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#http-eth0-comportement-attendu">HTTP eth0 (comportement attendu)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mdns-et-certificat">mDNS et certificat</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#mise-a-jour">Mise à jour</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#desinstallation-et-migration-nixos">Désinstallation et migration NixOS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#depannage">Dépannage</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#voir-aussi">Voir aussi</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Installation Gateway CM5</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="installation-gateway-essensys-cm5">Installation Gateway Essensys (CM5)</h1>
+<p>Guide d'installation <strong>complète</strong> du profil <strong>Gateway</strong> : Raspberry Pi <strong>Compute Module 5</strong>, double interface réseau (LAN + segment armoire), stockage <strong>NVMe</strong>, stack Essensys conteneurisée via Docker Compose.</p>
+<p>Ce guide <strong>complète</strong> l'<a href="../playbooks/#installation-raspberry-pi-classique">installation Raspberry classique</a> ; il ne la remplace pas.</p>
+<hr />
+<h2 id="vue-densemble">Vue d'ensemble</h2>
+<p>Le profil Gateway cible une <strong>passerelle domotique CM5</strong> montée sur la carte IO Essensys :</p>
+<ul>
+<li><strong>eth0</strong> : réseau maison (DHCP client, HTTPS utilisateurs, mDNS, AdGuard DNS LAN).</li>
+<li><strong>eth1</strong> : segment armoire isolé <code>10.0.1.0/24</code> (IP statique gateway, DHCP/DNS dnsmasq, HTTP legacy firmware).</li>
+<li><strong>NVMe</strong> : données persistantes (<code>/opt/data</code>, logs) via bind mounts depuis <code>/mnt/nvme</code>.</li>
+</ul>
+<p>Playbook principal : <code>install.gateway.yml</code><br />
+Inventaire dédié : <code>inventory.gateway</code></p>
+<h3 id="comparaison-profil-classique-vs-gateway">Comparaison profil classique vs Gateway</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Classique (<code>install.raspberrypi.yml</code>)</th>
+<th>Gateway (<code>install.gateway.yml</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Matériel</strong></td>
+<td>Raspberry Pi (mono-NIC)</td>
+<td>CM5 + carte IO dual Ethernet + NVMe</td>
+</tr>
+<tr>
+<td><strong>Inventaire</strong></td>
+<td><code>inventory</code></td>
+<td><code>inventory.gateway</code></td>
+</tr>
+<tr>
+<td><strong>Réseau</strong></td>
+<td>Une interface, pas de rôle réseau dédié</td>
+<td><code>raspberry_gateway_network</code> (systemd-networkd eth0/eth1)</td>
+</tr>
+<tr>
+<td><strong>Segment armoire</strong></td>
+<td>Non</td>
+<td><code>raspberry_gateway_dhcp</code> (dnsmasq sur eth1)</td>
+</tr>
+<tr>
+<td><strong>Stockage</strong></td>
+<td>eMMC (<code>/opt/data</code> local)</td>
+<td><code>raspberry_gateway_nvme</code> (label <code>essensys-data</code>, bind mounts)</td>
+</tr>
+<tr>
+<td><strong>mDNS LAN</strong></td>
+<td>Non</td>
+<td><code>raspberry_avahi</code> → <code>mon.essensys.local</code></td>
+</tr>
+<tr>
+<td><strong>HTTP port 80</strong></td>
+<td>Nginx sur toutes les interfaces</td>
+<td>Nginx conteneur : <strong>eth1 uniquement</strong> ; eth0:80 → <code>444</code></td>
+</tr>
+<tr>
+<td><strong>HTTPS port 443</strong></td>
+<td>Traefik (écoute globale)</td>
+<td>Traefik lié à <strong><code>gateway_eth0_ip:443</code></strong></td>
+</tr>
+<tr>
+<td><strong>TLS <code>.local</code></strong></td>
+<td>Certificat auto-signé Traefik par défaut</td>
+<td>CA locale Essensys (<code>raspberry_traefik</code>, tag <code>localtls</code>) — voir <a href="../tls-local-domain/">tls-local-domain.md</a></td>
+</tr>
+<tr>
+<td><strong>TLS WAN (domaine public)</strong></td>
+<td>Let's Encrypt (Traefik)</td>
+<td>Idem + rewrites AdGuard split-horizon</td>
+</tr>
+<tr>
+<td><strong>Rôles spécifiques</strong></td>
+<td>—</td>
+<td>NVMe, réseau, DHCP, Avahi (en tête de play)</td>
+</tr>
+<tr>
+<td><strong>Pré-tâches play</strong></td>
+<td>Non</td>
+<td>Détection IP eth0, install Go 1.23.4</td>
+</tr>
+<tr>
+<td><strong>Cycle de vie CM5</strong></td>
+<td><code>uninstall.raspberrypi.yml</code></td>
+<td><code>uninstall.cm5.yml</code>, <code>prepare.nixos-cm5.yml</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="architecture-reseau">Architecture réseau</h2>
+<pre><code class="language-mermaid">flowchart TB
+  subgraph lan [LAN maison - eth0 DHCP]
+    PC[Postes / téléphones]
+    RTR[Routeur amont]
+  end
+
+  subgraph gw [Gateway CM5]
+    ETH0[eth0 - gateway_eth0_ip]
+    ETH1[eth1 - 10.0.1.1/24]
+    TRAEFIK[Traefik :443 eth0]
+    ADG[AdGuard :53 / :3000]
+    AVAHI[Avahi mDNS]
+    NGINX[Nginx conteneur :80 eth1]
+    STACK[Backend :7070 Redis Mosquitto ...]
+  end
+
+  subgraph arm [Segment armoire 10.0.1.x]
+    BP[Armoires BP_MQX_ETH]
+  end
+
+  RTR --- ETH0
+  PC --- ETH0
+  AVAHI -.-&gt;|mon.essensys.local| PC
+  ADG -.-&gt;|rewrite .fr et .local| PC
+  TRAEFIK --&gt; NGINX
+  NGINX --&gt; STACK
+  ETH1 --- BP
+  NGINX --&gt; BP
+</code></pre>
+<h3 id="flux-des-ports-profil-gateway">Flux des ports (profil Gateway)</h3>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Port</th>
+<th>Service</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>eth0</strong> (<code>gateway_eth0_ip</code>)</td>
+<td>443</td>
+<td>Traefik (conteneur)</td>
+<td>HTTPS LAN (<code>mon.essensys.local</code>) + WAN (<code>wan_domain</code>)</td>
+</tr>
+<tr>
+<td><strong>eth0</strong></td>
+<td>80</td>
+<td>Nginx (conteneur)</td>
+<td><strong><code>return 444</code></strong> — HTTP LAN refusé volontairement</td>
+</tr>
+<tr>
+<td><strong>eth0</strong></td>
+<td>53</td>
+<td>AdGuard Home</td>
+<td>DNS filtrant LAN</td>
+</tr>
+<tr>
+<td><strong>eth0</strong></td>
+<td>3000</td>
+<td>AdGuard Home</td>
+<td>Interface web</td>
+</tr>
+<tr>
+<td><strong>eth1</strong> (<code>gateway_eth1_ip</code>)</td>
+<td>80</td>
+<td>Nginx (conteneur)</td>
+<td>HTTP armoire (<code>mon.essensys.fr</code> via dnsmasq)</td>
+</tr>
+<tr>
+<td><strong>eth1</strong></td>
+<td>53</td>
+<td>dnsmasq</td>
+<td>DHCP + DNS split segment armoire</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>7070</td>
+<td>Backend</td>
+<td>API Go</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>6379</td>
+<td>Redis</td>
+<td>Persistance</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>1883</td>
+<td>Mosquitto</td>
+<td>MQTT</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>8083</td>
+<td>MCP</td>
+<td>Serveur MCP (SSE)</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>9100</td>
+<td>Control Plane</td>
+<td>Supervision</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>9092 / 9093 / 9101</td>
+<td>Prometheus / Alertmanager / Node Exporter</td>
+<td>Monitoring</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>18789</td>
+<td>OpenClaw</td>
+<td>Assistant IA</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td>9091</td>
+<td>Monitor MQTT Debug</td>
+<td>Interface debug (systemd, hors compose)</td>
+</tr>
+</tbody>
+</table>
+<p>Liste détaillée et conflits connus : <a href="../ports-reference/">ports-reference.md</a>.</p>
+<p>Choix Nginx vs Caddy (client legacy BP_MQX_ETH) : <a href="../nginx-vs-caddy/">nginx-vs-caddy.md</a>.</p>
+<hr />
+<h2 id="prerequis">Prérequis</h2>
+<h3 id="materiel">Matériel</h3>
+<ul>
+<li>Raspberry Pi <strong>Compute Module 5</strong> sur carte IO Essensys (<strong>2× Ethernet</strong>, slot <strong>NVMe M.2</strong>).</li>
+<li>SSD NVMe présent sur <code>gateway_nvme_device</code> (défaut <code>/dev/nvme0n1</code>).</li>
+<li>eMMC ou support de boot avec <strong>Debian/Raspberry Pi OS</strong> accessible en SSH.</li>
+<li>Câblage :</li>
+<li><strong>eth0</strong> → switch/routeur LAN maison ;</li>
+<li><strong>eth1</strong> → switch segment armoire (armoires Essensys).</li>
+</ul>
+<h3 id="firmware-os-sur-la-cm5-avant-ansible">Firmware / OS (sur la CM5, avant Ansible)</h3>
+<ul>
+<li><strong>PCIe / NVMe</strong> activé (EEPROM / <code>config.txt</code> selon votre image).</li>
+<li>Vérifier :
+  <code>bash
+  lsblk                    # mmcblk0 (eMMC), nvme0n1 (SSD)
+  ip link show eth0 eth1   # noter les MAC</code></li>
+</ul>
+<h3 id="poste-controleur-ansible">Poste contrôleur Ansible</h3>
+<ul>
+<li><strong>Ansible</strong> installé (<code>brew install ansible</code> sur macOS).</li>
+<li>Accès SSH vers l'utilisateur cible (<code>ansible_user</code>, défaut <code>essensys</code>).</li>
+<li>Clone du dépôt <code>essensys-ansible</code>.</li>
+<li>Dépendances collections : <code>ansible-galaxy install -r requirements.yml</code> si nécessaire.</li>
+</ul>
+<hr />
+<h2 id="preparation">Préparation</h2>
+<h3 id="1-relever-les-adresses-mac">1. Relever les adresses MAC</h3>
+<p>Sur la CM5 :</p>
+<pre><code class="language-bash">ip link show eth0 | awk '/ether/{print $2}'
+ip link show eth1 | awk '/ether/{print $2}'
+</code></pre>
+<p>Ces valeurs alimentent <strong><code>gateway_eth0_mac</code></strong> et <strong><code>gateway_eth1_mac</code></strong> (obligatoires).</p>
+<h3 id="2-configurer-linventaire">2. Configurer l'inventaire</h3>
+<p>Copier ou éditer <code>inventory.gateway</code> :</p>
+<pre><code class="language-ini">[raspberrypi]
+gateway-essensys ansible_host=192.168.0.14 ansible_user=essensys
+
+[raspberrypi:vars]
+gateway_dual_nic=true
+gateway_eth0_mac=&quot;88:a2:9e:34:27:61&quot;
+gateway_eth1_mac=&quot;00:e0:4c:68:01:be&quot;
+# ... voir tableau ci-dessous
+</code></pre>
+<p>Surcharge par machine : <code>host_vars/gateway-essensys.yml</code> (ex. réservations DHCP).</p>
+<h3 id="3-nvme">3. NVMe</h3>
+<p>Le rôle <code>raspberry_gateway_nvme</code> :</p>
+<ul>
+<li>partitionne <code>gateway_nvme_device</code> si nécessaire ;</li>
+<li>formate en <strong>ext4</strong> avec le label <strong><code>essensys-data</code></strong> ;</li>
+<li>monte sur <strong><code>essensys_nvme_mount</code></strong> (défaut <code>/mnt/nvme</code>) ;</li>
+<li>crée les bind mounts vers <strong><code>/opt/data</code></strong> et <strong><code>/var/log/essensys</code></strong> si <code>gateway_nvme_bind_mounts_enabled=true</code>.</li>
+</ul>
+<hr />
+<h2 id="variables-dinventaire-inventorygateway">Variables d'inventaire (<code>inventory.gateway</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Obligatoire</th>
+<th>Défaut (repo)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ansible_host</code></td>
+<td>Oui (hôte)</td>
+<td><code>192.168.0.14</code></td>
+<td>IP SSH de la CM5 sur le LAN</td>
+</tr>
+<tr>
+<td><code>ansible_user</code></td>
+<td>Oui (hôte)</td>
+<td><code>essensys</code></td>
+<td>Utilisateur SSH / propriétaire des données</td>
+</tr>
+<tr>
+<td><code>gateway_dual_nic</code></td>
+<td>Oui</td>
+<td><code>true</code></td>
+<td>Active le profil double NIC</td>
+</tr>
+<tr>
+<td><code>gateway_eth0_mac</code></td>
+<td><strong>Oui</strong></td>
+<td><em>(exemple dans le repo)</em></td>
+<td>MAC eth0 (LAN) — matching systemd-networkd</td>
+</tr>
+<tr>
+<td><code>gateway_eth1_mac</code></td>
+<td><strong>Oui</strong></td>
+<td><em>(exemple dans le repo)</em></td>
+<td>MAC eth1 (armoire)</td>
+</tr>
+<tr>
+<td><code>gateway_eth0_ip</code></td>
+<td>Non</td>
+<td><code>""</code></td>
+<td>IP LAN pour binding HTTPS/AdGuard ; <strong>auto-détectée</strong> sur eth0 si vide (pre_task)</td>
+</tr>
+<tr>
+<td><code>gateway_eth1_ip</code></td>
+<td>Non</td>
+<td><code>10.0.1.1</code></td>
+<td>IP statique eth1 (segment armoire)</td>
+</tr>
+<tr>
+<td><code>gateway_eth1_prefix</code></td>
+<td>Non</td>
+<td><code>24</code></td>
+<td>Préfixe CIDR eth1</td>
+</tr>
+<tr>
+<td><code>gateway_armoire_hostname</code></td>
+<td>Non</td>
+<td><code>mon.essensys.fr</code></td>
+<td>Nom DNS split-DNS dnsmasq → <code>gateway_eth1_ip</code></td>
+</tr>
+<tr>
+<td><code>gateway_dhcp_range_start</code></td>
+<td>Non</td>
+<td><code>10.0.1.100</code></td>
+<td>Début plage DHCP armoire</td>
+</tr>
+<tr>
+<td><code>gateway_dhcp_range_end</code></td>
+<td>Non</td>
+<td><code>10.0.1.200</code></td>
+<td>Fin plage DHCP armoire</td>
+</tr>
+<tr>
+<td><code>gateway_dhcp_lease_time</code></td>
+<td>Non</td>
+<td><code>12h</code></td>
+<td>Durée des baux DHCP</td>
+</tr>
+<tr>
+<td><code>gateway_upstream_dns</code></td>
+<td>Non</td>
+<td><code>9.9.9.9</code></td>
+<td>DNS amont pour requêtes hors armoire (dnsmasq)</td>
+</tr>
+<tr>
+<td><code>gateway_dhcp_reservations</code></td>
+<td>Non</td>
+<td><code>[]</code></td>
+<td>Liste <code>{mac, ip, name}</code> — voir exemple commenté dans l'inventaire</td>
+</tr>
+<tr>
+<td><code>gateway_nvme_device</code></td>
+<td>Non</td>
+<td><code>/dev/nvme0n1</code></td>
+<td>Disque NVMe CM5</td>
+</tr>
+<tr>
+<td><code>essensys_nvme_mount</code></td>
+<td>Non</td>
+<td><code>/mnt/nvme</code></td>
+<td>Point de montage NVMe</td>
+</tr>
+<tr>
+<td><code>gateway_nvme_bind_mounts_enabled</code></td>
+<td>Non</td>
+<td><code>true</code></td>
+<td>Bind mounts NVMe → <code>/opt/data</code>, <code>/var/log/essensys</code></td>
+</tr>
+<tr>
+<td><code>wan_domain_default</code></td>
+<td>Non</td>
+<td><code>essensys.acme.com</code></td>
+<td>Domaine WAN si <code>/home/essensys/domain.txt</code> absent/vide</td>
+</tr>
+<tr>
+<td><code>acme_email</code></td>
+<td>Non</td>
+<td><code>admin@acme.com</code></td>
+<td>E-mail ACME Let's Encrypt</td>
+</tr>
+<tr>
+<td><code>use_staging</code></td>
+<td>Non</td>
+<td><code>false</code></td>
+<td><code>true</code> → CA Let's Encrypt staging</td>
+</tr>
+</tbody>
+</table>
+<p>Exemple <strong><code>gateway_dhcp_reservations</code></strong> (dans <code>host_vars</code>) :</p>
+<pre><code class="language-yaml">gateway_dhcp_reservations:
+  - mac: &quot;aa:bb:cc:dd:ee:01&quot;
+    ip: &quot;10.0.1.10&quot;
+    name: &quot;armoire-principale&quot;
+</code></pre>
+<h3 id="variables-du-playbook-installgatewayyml">Variables du playbook (<code>install.gateway.yml</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Valeur dans le play</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>essensys_version</code></td>
+<td><code>V.1.3.0</code></td>
+<td>Version images Docker front/back et Traefik</td>
+</tr>
+<tr>
+<td><code>control_plane_version</code></td>
+<td><code>V.1.3.7</code></td>
+<td>Image Control Plane</td>
+</tr>
+<tr>
+<td><code>service_user</code></td>
+<td><code>essensys</code></td>
+<td>Utilisateur système</td>
+</tr>
+<tr>
+<td><code>data_dir</code></td>
+<td><code>/opt/data</code></td>
+<td>Données applicatives (souvent bind NVMe)</td>
+</tr>
+<tr>
+<td><code>config_dir</code></td>
+<td><code>/opt/data/config</code></td>
+<td>Configurations services</td>
+</tr>
+<tr>
+<td><code>domain_file</code></td>
+<td><code>/home/essensys/domain.txt</code></td>
+<td>Domaine WAN effectif (prioritaire sur <code>wan_domain_default</code>)</td>
+</tr>
+<tr>
+<td><code>go_version</code></td>
+<td><code>1.23.4</code></td>
+<td>Go installé si absent (pre_task)</td>
+</tr>
+<tr>
+<td><code>traefik_version</code></td>
+<td><code>v2.11.3</code></td>
+<td>Référence binaire Traefik</td>
+</tr>
+<tr>
+<td><code>install_dir</code></td>
+<td><code>/opt/essensys</code></td>
+<td>Sources backend (rôle backend)</td>
+</tr>
+<tr>
+<td><code>backend_repo</code> / <code>frontend_repo</code></td>
+<td>GitHub essensys-hub</td>
+<td>Dépôts clonés</td>
+</tr>
+<tr>
+<td><code>backend_version</code> / <code>frontend_version</code></td>
+<td><code>{{ essensys_version }}</code></td>
+<td>Tags images</td>
+</tr>
+<tr>
+<td><code>unifi_enabled</code></td>
+<td><code>false</code></td>
+<td>Intégration UniFi Protect</td>
+</tr>
+<tr>
+<td><code>unifi_base_url</code></td>
+<td><code>https://192.168.0.1</code></td>
+<td>URL UniFi si activé</td>
+</tr>
+<tr>
+<td><code>unifi_api_key</code></td>
+<td><code>""</code></td>
+<td>Clé API UniFi</td>
+</tr>
+</tbody>
+</table>
+<p>Le domaine WAN effectif <strong><code>wan_domain</code></strong> est calculé par <code>raspberry_common</code> à partir de <code>domain_file</code> ou <code>wan_domain_default</code>.</p>
+<hr />
+<h2 id="installation-pas-a-pas">Installation pas à pas</h2>
+<h3 id="1-verifier-la-connectivite">1. Vérifier la connectivité</h3>
+<pre><code class="language-bash">cd essensys-ansible
+ansible -i inventory.gateway raspberrypi -m ping
+</code></pre>
+<p>Réponse attendue : <code>pong</code>.</p>
+<h3 id="2-optionnel-lister-les-taches">2. (Optionnel) Lister les tâches</h3>
+<pre><code class="language-bash">ansible-playbook install.gateway.yml -i inventory.gateway --list-tasks
+</code></pre>
+<blockquote>
+<p>Un <code>ansible-playbook --check</code> complet est <strong>limité</strong> (Docker, partitionnement NVMe) ; privilégier <code>--list-tasks</code> avant la première installation.</p>
+</blockquote>
+<h3 id="3-lancer-linstallation">3. Lancer l'installation</h3>
+<pre><code class="language-bash">ansible-playbook install.gateway.yml -i inventory.gateway
+</code></pre>
+<p>Relance TLS local uniquement :</p>
+<pre><code class="language-bash">ansible-playbook install.gateway.yml -i inventory.gateway --tags localtls
+</code></pre>
+<p>Voir <a href="../tls-local-domain/">tls-local-domain.md</a> — éviter <code>--tags traefik</code> seul sans <code>wan_domain</code> défini.</p>
+<h3 id="4-pre-taches-du-play">4. Pré-tâches du play</h3>
+<ol>
+<li><strong>Détecte <code>gateway_eth0_ip</code></strong> via <code>ip -4 addr show eth0</code> si la variable est vide.</li>
+<li><strong>Crée</strong> <code>/opt/essensys</code>, <code>/opt/essensys/backend</code>, <code>/opt/essensys/frontend</code>.</li>
+<li><strong>Installe</strong> <code>python3-pip</code>, <code>python3-docker</code>, et <strong>Go 1.23.4</strong> dans <code>/usr/local/go</code> si absent.</li>
+</ol>
+<h3 id="5-ordre-des-roles">5. Ordre des rôles</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Rôle</th>
+<th>Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>raspberry_gateway_nvme</code></td>
+<td>Partition, fstab, bind mounts NVMe</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>raspberry_gateway_network</code></td>
+<td>systemd-networkd eth0 (DHCP) / eth1 (statique)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>raspberry_gateway_dhcp</code></td>
+<td>dnsmasq DHCP + DNS split sur eth1</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>raspberry_common</code></td>
+<td>Paquets, utilisateur <code>essensys</code>, <code>/opt/data</code>, <code>wan_domain</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>raspberry_avahi</code></td>
+<td>mDNS <code>mon.essensys.local</code> → IP eth0</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>raspberry_docker</code></td>
+<td>Moteur Docker</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>raspberry_mosquitto</code></td>
+<td>Config MQTT</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>raspberry_redis</code></td>
+<td>Config Redis</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>raspberry_backend</code></td>
+<td>Build / config backend</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>raspberry_mcp</code></td>
+<td>Config MCP</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>raspberry_frontend</code></td>
+<td>Pull image + extraction fichiers statiques</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>raspberry_nginx</code></td>
+<td>Config conteneur Nginx (eth0:444, eth1:80)</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>raspberry_traefik</code></td>
+<td>Traefik, routes WAN/LAN, CA locale <code>.local</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>raspberry_control_plane</code></td>
+<td>Config Control Plane</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>raspberry_adguard</code></td>
+<td>AdGuard + rewrites DNS</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>raspberry_prometheus</code></td>
+<td>Prometheus, Alertmanager, règles</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>raspberry_openclaw</code></td>
+<td>OpenClaw</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>raspberry_compose</code></td>
+<td><code>docker compose pull</code> + <code>up -d</code></td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>raspberry_monitor</code></td>
+<td>MQTT Debug (port 9091, systemd)</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>raspberry_logrotate</code></td>
+<td>Rotation logs</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>raspberry_push_status</code></td>
+<td>Timer push statut</td>
+</tr>
+</tbody>
+</table>
+<p>Conteneurs (<code>network_mode: host</code>) : <code>essensys-mosquitto</code>, <code>essensys-redis</code>, <code>essensys-backend</code>, <code>essensys-mcp</code>, <code>essensys-nginx</code>, <code>essensys-traefik</code>, <code>essensys-control-plane</code>, <code>essensys-adguard</code>, <code>essensys-prometheus</code>, <code>essensys-alertmanager</code>, <code>essensys-node-exporter</code>, <code>essensys-openclaw</code>.</p>
+<p>Fichier compose : <strong><code>/opt/data/docker-compose.yml</code></strong>.</p>
+<hr />
+<h2 id="dhcp-dns-segment-armoire-eth1">DHCP / DNS segment armoire (eth1)</h2>
+<p>Service <strong>dnsmasq</strong> (<code>raspberry_gateway_dhcp</code>) :</p>
+<ul>
+<li>Écoute <strong>eth1</strong> / <code>gateway_eth1_ip</code> uniquement.</li>
+<li>Plage <strong><code>gateway_dhcp_range_start</code>–<code>gateway_dhcp_range_end</code></strong> (défaut <code>10.0.1.100</code>–<code>10.0.1.200</code>).</li>
+<li>Baux <strong><code>gateway_dhcp_lease_time</code></strong> (défaut <code>12h</code>).</li>
+<li><strong>Option 3</strong> : pas de route par défaut (segment isolé).</li>
+<li><strong>Option 6</strong> : DNS = <code>gateway_eth1_ip</code>.</li>
+<li><strong>Split-DNS</strong> : <code>gateway_armoire_hostname</code> (défaut <code>mon.essensys.fr</code>) → <code>gateway_eth1_ip</code>.</li>
+<li><strong>Réservations</strong> : <code>gateway_dhcp_reservations</code>.</li>
+<li><strong>Amont</strong> : <code>gateway_upstream_dns</code> (défaut <code>9.9.9.9</code>).</li>
+</ul>
+<hr />
+<h2 id="resolution-des-noms">Résolution des noms</h2>
+<h3 id="mdns-avahi">mDNS (Avahi)</h3>
+<ul>
+<li>Annonce <strong><code>mon.essensys.local</code></strong> (<code>avahi_hostname</code> + <code>avahi_domain</code>) → <strong><code>gateway_eth0_ip</code></strong>.</li>
+<li>Service : <code>avahi-publish-essensys.service</code>.</li>
+</ul>
+<h3 id="adguard-split-horizon-lan">AdGuard (split-horizon LAN)</h3>
+<p>Rewrites dans <code>AdGuardHome.yaml.j2</code> :</p>
+<ul>
+<li><strong><code>mon.essensys.fr</code></strong> → IP LAN gateway ;</li>
+<li><strong><code>mon.essensys.local</code></strong> → IP LAN gateway.</li>
+</ul>
+<hr />
+<h2 id="https">HTTPS</h2>
+<table>
+<thead>
+<tr>
+<th>Nom</th>
+<th>Mécanisme</th>
+<th>Documentation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>mon.essensys.local</code></strong></td>
+<td>CA locale + certificat Traefik</td>
+<td><a href="../tls-local-domain/">tls-local-domain.md</a>, <a href="../guide-utilisateur-https-local/">guide-utilisateur-https-local.md</a></td>
+</tr>
+<tr>
+<td><strong><code>wan_domain</code></strong></td>
+<td>Let's Encrypt (<code>certResolver: letsencrypt</code>)</td>
+<td><code>use_staging</code>, <code>acme_email</code> dans l'inventaire</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ne pas recopier</strong> la procédure CA ici. Résumé : <strong><code>.fr</code> (LAN via AdGuard)</strong> = Let's Encrypt ; <strong><code>.local</code></strong> = CA Essensys Local (installation une fois par client).</p>
+<hr />
+<h2 id="verification-post-installation">Vérification post-installation</h2>
+<h3 id="services-docker">Services Docker</h3>
+<pre><code class="language-bash">docker ps --format 'table {{.Names}}\t{{.Status}}'
+</code></pre>
+<p>Attendu : conteneurs <code>essensys-*</code> <strong>Up</strong>.</p>
+<h3 id="reseau-et-nvme">Réseau et NVMe</h3>
+<pre><code class="language-bash">ip -4 addr show eth0 eth1
+findmnt /mnt/nvme /opt/data
+systemctl is-active systemd-networkd dnsmasq avahi-daemon avahi-publish-essensys
+</code></pre>
+<p>Attendu : eth1 = <code>10.0.1.1/24</code> (si défaut inventaire) ; label NVMe <strong><code>essensys-data</code></strong>.</p>
+<h3 id="api-et-http">API et HTTP</h3>
+<pre><code class="language-bash">curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:7070/health
+curl -s -o /dev/null -w '%{http_code}\n' http://10.0.1.1/
+curl -sk -o /dev/null -w '%{http_code}\n' -H 'Host: mon.essensys.local' https://192.168.0.14/
+</code></pre>
+<p>Attendu : <strong><code>200</code></strong>, <strong><code>200</code></strong>, <strong><code>200</code></strong> (adapter l'IP LAN).</p>
+<h3 id="http-eth0-comportement-attendu">HTTP eth0 (comportement attendu)</h3>
+<pre><code class="language-bash">curl -s -o /dev/null -w '%{http_code}\n' --connect-timeout 2 http://192.168.0.14/
+</code></pre>
+<p>Attendu : <strong><code>000</code></strong> / connexion fermée — <strong>eth0:80 = <code>444</code> par design</strong>.</p>
+<h3 id="mdns-et-certificat">mDNS et certificat</h3>
+<pre><code class="language-bash">ping -c 1 mon.essensys.local
+echo | openssl s_client -connect 192.168.0.14:443 -servername mon.essensys.local 2&gt;/dev/null | openssl x509 -noout -subject -issuer
+</code></pre>
+<p>Attendu : ping vers IP LAN ; certificat pour <strong><code>mon.essensys.local</code></strong>, émetteur <strong>Essensys Local CA</strong> (après tag <code>localtls</code>).</p>
+<hr />
+<h2 id="mise-a-jour">Mise à jour</h2>
+<p>Relancer le play gateway, éventuellement à partir d'une tâche :</p>
+<pre><code class="language-bash">ansible-playbook install.gateway.yml -i inventory.gateway \
+  -e gateway_eth0_ip=192.168.0.14 \
+  --start-at-task &quot;Pull de l'image frontend&quot;
+</code></pre>
+<p><strong><code>update.raspberrypi.yml</code></strong> : inventaire <strong><code>inventory</code></strong>, version <strong><code>V.1.2.2</code></strong>, sans rôles NVMe/réseau gateway — <strong>non adapté</strong> tel quel à la CM5.</p>
+<hr />
+<h2 id="desinstallation-et-migration-nixos">Désinstallation et migration NixOS</h2>
+<pre><code class="language-bash">ansible-playbook uninstall.cm5.yml -i inventory.gateway \
+  -e confirm_cm5_uninstall=true
+
+ansible-playbook prepare.nixos-cm5.yml -i inventory.gateway \
+  -e confirm_cm5_nixos_prep=true
+</code></pre>
+<p>Détails : <code>roles/raspberry_cm5_uninstall/README.md</code>, <code>roles/raspberry_cm5_nixos/README.md</code>.</p>
+<hr />
+<h2 id="depannage">Dépannage</h2>
+<table>
+<thead>
+<tr>
+<th>Symptôme</th>
+<th>Cause probable</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Échec MAC obligatoires</td>
+<td>MAC vides dans l'inventaire</td>
+<td>Relever <code>ip link</code>, mettre à jour <code>inventory.gateway</code></td>
+</tr>
+<tr>
+<td>NVMe introuvable</td>
+<td>PCIe off ou mauvais device</td>
+<td><code>lsblk</code>, <code>gateway_nvme_device</code></td>
+</tr>
+<tr>
+<td>eth1 sans IP</td>
+<td>MAC incorrecte</td>
+<td><code>networkctl status</code>, <code>20-eth1.network</code></td>
+</tr>
+<tr>
+<td>Armoires hors service</td>
+<td>DHCP/DNS eth1</td>
+<td><code>journalctl -u dnsmasq</code></td>
+</tr>
+<tr>
+<td>HTTP sur IP LAN ne répond pas</td>
+<td><strong>Normal</strong> — eth0:80 = 444</td>
+<td>HTTPS <code>mon.essensys.local</code> ou HTTP <code>10.0.1.1</code></td>
+</tr>
+<tr>
+<td>Alert certificat <code>.local</code></td>
+<td>CA non installée</td>
+<td><a href="../guide-utilisateur-https-local/">guide-utilisateur-https-local.md</a></td>
+</tr>
+<tr>
+<td>Routes WAN Traefik en erreur</td>
+<td>Play partiel sans <code>wan_domain</code></td>
+<td>Relancer depuis <code>raspberry_common</code></td>
+</tr>
+<tr>
+<td>Conflit port 53 eth1</td>
+<td>Autre DNS sur eth1</td>
+<td><code>ss -tlnup sport = :53</code></td>
+</tr>
+<tr>
+<td>Conteneurs down</td>
+<td>Compose ou NVMe</td>
+<td><code>docker compose -f /opt/data/docker-compose.yml ps</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="voir-aussi">Voir aussi</h2>
+<ul>
+<li><a href="../playbooks/">Playbooks</a></li>
+<li><a href="../roles/">Rôles</a></li>
+<li><a href="../tls-local-domain/">tls-local-domain.md</a></li>
+<li><a href="../guide-utilisateur-https-local/">guide-utilisateur-https-local.md</a></li>
+<li><a href="../ports-reference/">ports-reference.md</a></li>
+<li><a href="../nginx-vs-caddy/">nginx-vs-caddy.md</a></li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../playbooks/" class="btn btn-neutral float-right" title="Installation Raspberry (classique)">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../playbooks/" class="btn btn-neutral" title="Playbooks"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../playbooks/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../playbooks/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

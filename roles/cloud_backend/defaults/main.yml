@@ -1,0 +1,17 @@
+---
+cloud_backend_repo: "https://github.com/essensys-hub/essensys-user-portal-backend.git"
+cloud_backend_version: "main"
+cloud_backend_port: 8080
+cloud_backend_src_dir: /opt/essensys/cloud-backend-src
+cloud_backend_install_dir: /opt/essensys/cloud-backend
+cloud_backend_service: essensys-cloud-backend
+cloud_backend_import_machines: true
+cloud_backend_machines_json: /opt/essensys/backend/data/machines.json
+cloud_backend_skip_git_clone: false
+cloud_hub_public_url: "https://mon.essensys.fr"
+
+# Cutover flags (group_vars override)
+cloud_backend_consolidated: false
+cloud_backend_legacy_mode: false
+
+newrelic_backend_app_name: "essensys-cloud-backend"

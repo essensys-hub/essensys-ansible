@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Guide de débogage MCP (Model Context Protocol) - Essensys Ansible Documentation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Guide de d\u00e9bogage MCP (Model Context Protocol)";
+    var mkdocs_page_input_path = "mcp-debug.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Essensys Ansible Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Playbooks</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install-gateway/">Installation Gateway CM5</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../playbooks/">Installation Raspberry (classique)</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../roles/">Roles</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../guide-utilisateur-https-local/">Guide utilisateur HTTPS local</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../tls-local-domain/">HTTPS domaine local (admin)</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Essensys Ansible Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Guide de débogage MCP (Model Context Protocol)</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="guide-de-debogage-mcp-model-context-protocol">Guide de débogage MCP (Model Context Protocol)</h1>
+<p>Ce guide vous aide à diagnostiquer et résoudre les problèmes avec le serveur MCP Essensys.</p>
+<h2 id="1-verifier-le-statut-du-service">1. Vérifier le statut du service</h2>
+<pre><code class="language-bash"># Vérifier si le service est actif
+sudo systemctl status essensys-mcp
+
+# Voir les logs en temps réel
+sudo journalctl -u essensys-mcp -f
+
+# Voir les dernières lignes de logs
+sudo journalctl -u essensys-mcp -n 50
+</code></pre>
+<h2 id="2-verifier-que-le-binaire-existe-et-fonctionne">2. Vérifier que le binaire existe et fonctionne</h2>
+<pre><code class="language-bash"># Vérifier que le binaire est installé
+ls -lh /usr/local/bin/essensys-mcp
+
+# Tester le binaire manuellement (en mode stdio pour test)
+sudo -u essensys /usr/local/bin/essensys-mcp -mode stdio
+
+# Vérifier la version et les options
+sudo -u essensys /usr/local/bin/essensys-mcp -h
+</code></pre>
+<h2 id="3-verifier-la-configuration">3. Vérifier la configuration</h2>
+<pre><code class="language-bash"># Vérifier que le token existe
+sudo cat /etc/essensys/mcp.token
+
+# Vérifier les permissions du token
+ls -l /etc/essensys/mcp.token
+
+# Vérifier le fichier de service systemd
+cat /etc/systemd/system/essensys-mcp.service
+</code></pre>
+<h2 id="4-verifier-redis-dependance-requise">4. Vérifier Redis (dépendance requise)</h2>
+<pre><code class="language-bash"># Vérifier que Redis est actif
+sudo systemctl status redis-server
+
+# Tester la connexion Redis
+redis-cli ping
+
+# Vérifier les clés Essensys dans Redis
+redis-cli KEYS &quot;essensys:*&quot;
+</code></pre>
+<h2 id="5-tester-la-connexion-sse-server-sent-events">5. Tester la connexion SSE (Server-Sent Events)</h2>
+<pre><code class="language-bash"># Récupérer le token
+MCP_TOKEN=$(sudo cat /etc/essensys/mcp.token)
+
+# Tester la connexion SSE avec curl
+curl -k -N \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Accept: text/event-stream&quot; \
+  http://localhost:8083/sse
+
+# Tester l'endpoint /messages
+curl -k \
+  -H &quot;Authorization: Bearer $MCP_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -X POST \
+  -d '{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{&quot;protocolVersion&quot;:&quot;2024-11-05&quot;,&quot;capabilities&quot;:{},&quot;clientInfo&quot;:{&quot;name&quot;:&quot;test-client&quot;,&quot;version&quot;:&quot;1.0.0&quot;}}}' \
+  http://localhost:8083/messages
+</code></pre>
+<h2 id="6-verifier-les-ports-et-la-connectivite">6. Vérifier les ports et la connectivité</h2>
+<pre><code class="language-bash"># Vérifier que le port 8080 est en écoute
+sudo netstat -tlnp | grep 8080
+# ou
+sudo ss -tlnp | grep 8080
+
+# Vérifier depuis l'extérieur (si accessible)
+curl -k -I http://localhost:8083/sse
+</code></pre>
+<h2 id="7-verifier-les-logs-detailles">7. Vérifier les logs détaillés</h2>
+<pre><code class="language-bash"># Logs avec plus de détails
+sudo journalctl -u essensys-mcp -n 100 --no-pager
+
+# Logs depuis une heure spécifique
+sudo journalctl -u essensys-mcp --since &quot;1 hour ago&quot;
+
+# Logs avec timestamps
+sudo journalctl -u essensys-mcp -o short-precise
+</code></pre>
+<h2 id="8-redemarrer-le-service">8. Redémarrer le service</h2>
+<pre><code class="language-bash"># Redémarrer le service
+sudo systemctl restart essensys-mcp
+
+# Vérifier immédiatement après redémarrage
+sudo systemctl status essensys-mcp
+sudo journalctl -u essensys-mcp -n 20
+</code></pre>
+<h2 id="9-verifier-les-permissions-et-lutilisateur">9. Vérifier les permissions et l'utilisateur</h2>
+<pre><code class="language-bash"># Vérifier que l'utilisateur essensys existe
+id essensys
+
+# Vérifier les permissions du répertoire de travail
+ls -ld /home/essensys/essensys-server-backend/cmd/mcp-server
+
+# Vérifier les permissions du binaire
+ls -l /usr/local/bin/essensys-mcp
+</code></pre>
+<h2 id="10-test-de-compilation-manuelle">10. Test de compilation manuelle</h2>
+<p>Si le service ne démarre pas, tester la compilation manuelle :</p>
+<pre><code class="language-bash"># Se connecter en tant qu'utilisateur essensys
+sudo -u essensys bash
+
+# Aller dans le répertoire source
+cd /home/essensys/essensys-server-backend/cmd/mcp-server
+
+# Vérifier que le code est à jour
+git status
+git log --oneline -5
+
+# Vérifier la ligne 283 du fichier main.go
+sed -n '280,285p' main.go
+
+# Compiler manuellement
+/usr/local/go/bin/go build -o essensys-mcp
+
+# Tester le binaire compilé
+./essensys-mcp -mode sse -port 8080 -token $(cat /etc/essensys/mcp.token)
+</code></pre>
+<h2 id="11-verifier-les-erreurs-de-compilation">11. Vérifier les erreurs de compilation</h2>
+<p>Si la compilation échoue dans Ansible :</p>
+<pre><code class="language-bash"># Vérifier les logs Ansible
+tail -f /var/log/ansible.log
+
+# Vérifier le code source sur le Raspberry Pi
+cd /home/essensys/essensys-server-backend
+git log --oneline -5
+git show HEAD:cmd/mcp-server/main.go | sed -n '280,285p'
+</code></pre>
+<h2 id="12-test-avec-mcp-inspector-optionnel">12. Test avec MCP Inspector (optionnel)</h2>
+<p>Si vous avez installé MCP Inspector :</p>
+<pre><code class="language-bash"># Installer MCP Inspector
+npm install -g @modelcontextprotocol/inspector
+
+# Tester avec le serveur SSE
+mcp-inspect sse http://localhost:8083/sse \
+  --header &quot;Authorization: Bearer $MCP_TOKEN&quot;
+</code></pre>
+<h2 id="13-verifier-la-configuration-du-firewall">13. Vérifier la configuration du firewall</h2>
+<pre><code class="language-bash"># Vérifier les règles iptables
+sudo iptables -L -n | grep 8080
+
+# Vérifier ufw si activé
+sudo ufw status | grep 8080
+</code></pre>
+<h2 id="14-problemes-courants-et-solutions">14. Problèmes courants et solutions</h2>
+<h3 id="le-service-ne-demarre-pas">Le service ne démarre pas</h3>
+<pre><code class="language-bash"># Vérifier les erreurs de démarrage
+sudo systemctl status essensys-mcp
+sudo journalctl -u essensys-mcp -n 50
+
+# Vérifier que Redis est accessible
+redis-cli ping
+
+# Vérifier que le port n'est pas déjà utilisé
+sudo lsof -i :8083
+</code></pre>
+<h3 id="erreur-de-compilation">Erreur de compilation</h3>
+<pre><code class="language-bash"># Vérifier la version de Go
+/usr/local/go/bin/go version
+
+# Vérifier que le code est à jour
+cd /home/essensys/essensys-server-backend
+git fetch origin
+git log --oneline origin/V.1.2.2 -5
+</code></pre>
+<h3 id="erreur-dauthentification">Erreur d'authentification</h3>
+<pre><code class="language-bash"># Vérifier le token
+sudo cat /etc/essensys/mcp.token
+
+# Régénérer le token si nécessaire
+sudo openssl rand -hex 32 &gt; /etc/essensys/mcp.token
+sudo chmod 600 /etc/essensys/mcp.token
+sudo systemctl restart essensys-mcp
+</code></pre>
+<h3 id="redis-non-accessible">Redis non accessible</h3>
+<pre><code class="language-bash"># Démarrer Redis si arrêté
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+
+# Vérifier la configuration Redis
+sudo cat /etc/redis/redis.conf | grep -E &quot;^bind|^port&quot;
+</code></pre>
+<h2 id="15-commandes-de-diagnostic-rapide">15. Commandes de diagnostic rapide</h2>
+<p>Script de diagnostic complet :</p>
+<pre><code class="language-bash">#!/bin/bash
+echo &quot;=== Diagnostic MCP ===&quot;
+echo &quot;&quot;
+echo &quot;1. Statut du service:&quot;
+sudo systemctl status essensys-mcp --no-pager -l | head -10
+echo &quot;&quot;
+echo &quot;2. Binaire installé:&quot;
+ls -lh /usr/local/bin/essensys-mcp 2&gt;/dev/null || echo &quot;Binaire non trouvé&quot;
+echo &quot;&quot;
+echo &quot;3. Token configuré:&quot;
+[ -f /etc/essensys/mcp.token ] &amp;&amp; echo &quot;Token existe&quot; || echo &quot;Token manquant&quot;
+echo &quot;&quot;
+echo &quot;4. Redis actif:&quot;
+sudo systemctl is-active redis-server &amp;&amp; echo &quot;Redis actif&quot; || echo &quot;Redis inactif&quot;
+echo &quot;&quot;
+echo &quot;5. Port en écoute:&quot;
+sudo ss -tlnp | grep 8080 || echo &quot;Port 8080 non en écoute&quot;
+echo &quot;&quot;
+echo &quot;6. Dernières erreurs:&quot;
+sudo journalctl -u essensys-mcp -n 10 --no-pager | grep -i error || echo &quot;Aucune erreur récente&quot;
+</code></pre>
+<h2 id="16-logs-a-surveiller">16. Logs à surveiller</h2>
+<p>Surveillez ces messages dans les logs :</p>
+<ul>
+<li><code>Starting MCP SSE server</code> : Le serveur démarre correctement</li>
+<li><code>Blocked access from non-private IP</code> : Tentative d'accès depuis une IP publique (normal)</li>
+<li><code>Unauthorized: Missing Authorization header</code> : Token manquant ou invalide</li>
+<li><code>Redis error</code> : Problème de connexion à Redis</li>
+<li><code>too many arguments in call to mcp.Required</code> : Erreur de compilation (code non à jour)</li>
+</ul>
+<h2 id="17-contact-et-support">17. Contact et support</h2>
+<p>Si le problème persiste après avoir suivi ce guide :</p>
+<ol>
+<li>Collecter les logs complets : <code>sudo journalctl -u essensys-mcp &gt; mcp-logs.txt</code></li>
+<li>Vérifier la version du code : <code>cd /home/essensys/essensys-server-backend &amp;&amp; git log -1</code></li>
+<li>Vérifier la version de Go : <code>/usr/local/go/bin/go version</code></li>
+<li>Vérifier la version d'Ansible utilisée pour l'installation</li>
+</ol>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

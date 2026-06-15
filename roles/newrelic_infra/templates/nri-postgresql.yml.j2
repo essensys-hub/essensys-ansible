@@ -1,0 +1,19 @@
+---
+integrations:
+  - name: nri-postgresql
+    env:
+      HOSTNAME: {{ portal_db_host | default('127.0.0.1') }}
+      PORT: "{{ portal_db_port | default(5432) }}"
+      USERNAME: {{ portal_db_user | default('essensys') }}
+      PASSWORD: "{{ portal_db_password | default('essensys_secure_password') }}"
+      DATABASE: {{ portal_db_name | default('essensys_db') }}
+      COLLECTION_LIST: '["{{ portal_db_name | default('essensys_db') }}"]'
+    interval: 15s
+    labels:
+      env: production
+      service: essensys-db
+      deployment: ovh-vps
+      domain: mon.essensys.fr
+      database: {{ portal_db_name | default('essensys_db') }}
+      instance: {{ newrelic_postgresql_instance_name | default('essensys-ovh-postgresql') }}
+    inventory_source: config/postgresql

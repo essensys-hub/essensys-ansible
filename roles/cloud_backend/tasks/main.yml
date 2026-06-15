@@ -1,0 +1,86 @@
+---
+- name: Clone cloud backend repository
+  git:
+    repo: "{{ cloud_backend_repo }}"
+    dest: "{{ cloud_backend_src_dir }}"
+    version: "{{ cloud_backend_version }}"
+    force: yes
+  when: not (cloud_backend_skip_git_clone | default(false) | bool)
+
+- name: Build cloud backend binary
+  command: /usr/local/go/bin/go build -buildvcs=false -o cloud-server ./cmd/server
+  args:
+    chdir: "{{ cloud_backend_src_dir }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+
+- name: Ensure cloud backend install directory
+  file:
+    path: "{{ cloud_backend_install_dir }}"
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: '0755'
+
+- name: Stop legacy backends before port 8080 cutover
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  loop:
+    - essensys-backend
+    - essensys-portal-backend
+  ignore_errors: yes
+
+- name: Install cloud backend binary
+  copy:
+    src: "{{ cloud_backend_src_dir }}/cloud-server"
+    dest: "{{ cloud_backend_install_dir }}/cloud-server"
+    remote_src: yes
+    mode: '0755'
+    owner: essensys
+    group: essensys
+
+- name: Deploy cloud backend environment
+  template:
+    src: cloud-backend.env.j2
+    dest: "{{ cloud_backend_install_dir }}/.env"
+    owner: essensys
+    group: essensys
+    mode: '0600'
+  notify: Restart cloud backend
+
+- name: Install cloud backend systemd unit
+  copy:
+    dest: "/etc/systemd/system/{{ cloud_backend_service }}.service"
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Essensys Cloud Backend (consolidated hub)
+      After=network.target postgresql.service
+
+      [Service]
+      Type=simple
+      User=essensys
+      Group=essensys
+      WorkingDirectory={{ cloud_backend_install_dir }}
+      EnvironmentFile={{ cloud_backend_install_dir }}/.env
+      ExecStart={{ cloud_backend_install_dir }}/cloud-server
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start cloud backend
+  systemd:
+    name: "{{ cloud_backend_service }}"
+    daemon_reload: yes
+    enabled: yes
+    state: restarted
+
+- name: Import legacy machines.json into PostgreSQL
+  import_tasks: import_machines.yml
+  when: cloud_backend_import_machines | default(true) | bool
+
+- name: Optional gateway hub registration
+  import_tasks: register_gateway.yml

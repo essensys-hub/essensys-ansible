@@ -1,0 +1,9 @@
+---
+# PostgreSQL OVH — source unique pour backend, portail et New Relic (nri-postgresql)
+portal_db_host: 127.0.0.1
+portal_db_port: 5432
+portal_db_user: essensys
+portal_db_name: essensys_db
+
+# Instance affichée dans New Relic Infrastructure → PostgreSQL
+newrelic_postgresql_instance_name: "essensys-ovh-postgresql"

@@ -1,0 +1,6 @@
+---
+- name: Restart portal backend
+  systemd:
+    name: essensys-portal-backend
+    state: restarted
+    daemon_reload: yes

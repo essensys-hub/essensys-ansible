@@ -1,3 +1,5 @@
 portal_backend_repo: "https://github.com/essensys-hub/essensys-user-portal-backend.git"
 portal_backend_port: 8081
 cloud_hub_public_url: "https://mon.essensys.fr"
+newrelic_backend_enabled: false
+newrelic_backend_app_name: "essensys-user-portal-backend"

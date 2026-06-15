@@ -3,13 +3,24 @@
   hosts: essensys
   become: yes
 
+  vars:
+    use_cloud_backend: "{{ cloud_backend_consolidated | default(false) | bool and not cloud_backend_legacy_mode | default(false) | bool }}"
+
   roles:
     - common
+    - newrelic_infra
     - database
-    - backend
+    - role: cloud_backend
+      when: use_cloud_backend | bool
+    - role: backend
+      when: not (use_cloud_backend | bool)
     - frontend
-    - portal_backend
+    - role: portal_backend
+      when: not (use_cloud_backend | bool)
     - portal_frontend
-    - portal_nginx
+    - role: cloud_nginx
+      when: use_cloud_backend | bool
+    - role: portal_nginx
+      when: not (use_cloud_backend | bool)
 
 - import_playbook: enable-https-prod.yml
