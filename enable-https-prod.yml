@@ -14,14 +14,13 @@
 
     - name: Obtain SSL certificate for Production Domains
       command: >
-        certbot --nginx 
-        -d mon.essensys.fr 
-        -d www.essensys.fr 
-        -d gateway.essensys.fr 
-        --non-interactive 
-        --agree-tos 
-        -m support@essensys.fr 
-        --redirect
+        certbot certonly --webroot -w /var/www/certbot
+        -d mon.essensys.fr
+        -d www.essensys.fr
+        -d gateway.essensys.fr
+        --non-interactive
+        --agree-tos
+        -m support@essensys.fr
 
     - name: Re-apply consolidated portal nginx after certbot
       import_role:
