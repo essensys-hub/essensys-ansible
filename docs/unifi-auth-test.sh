@@ -31,7 +31,7 @@ curl -k -X GET "${BASE_URL}/api/bootstrap" \
   -s | head -20
 
 echo -e "\n=== Étape 3: Test avec API key après auth ==="
-API_KEY="tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_"
+API_KEY="${UNIFI_API_KEY:?Définir UNIFI_API_KEY}"
 curl -k -X GET "${BASE_URL}/unifi-api/protect/integration/v1/meta/info" \
   -b /tmp/unifi_cookies.txt \
   -H "X-API-KEY: ${API_KEY}" \

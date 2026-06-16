@@ -26,7 +26,7 @@ Chercher :
 ## 3. Tester l'API UniFi directement
 
 ```bash
-API_KEY="tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_"
+API_KEY="${UNIFI_API_KEY:?Définir UNIFI_API_KEY}"
 curl -k -X GET "https://192.168.0.1/proxy/protect/integration/v1/cameras" \
   -H "X-API-KEY: ${API_KEY}" \
   -H "Accept: application/json" \
@@ -44,7 +44,7 @@ Doit contenir :
 unifi:
   enabled: true
   base_url: "https://192.168.0.1"
-  api_key: "tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_"
+  api_key: "${UNIFI_API_KEY}"
 ```
 
 ## 5. Tester un snapshot

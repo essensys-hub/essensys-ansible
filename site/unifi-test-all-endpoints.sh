@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script pour tester tous les endpoints possibles UniFi Protect
 
-API_KEY="tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_"
+API_KEY="${UNIFI_API_KEY:?Définir UNIFI_API_KEY}"
 BASE_URL="https://192.168.0.1"
 
 echo "=== Test 1: /unifi-api/protect/api/bootstrap ==="

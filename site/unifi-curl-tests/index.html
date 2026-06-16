@@ -119,13 +119,13 @@ curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
 </code></pre>
 <h3 id="test-avec-votre-cle-api-actuelle">Test avec votre clé API actuelle</h3>
 <pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
-  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;X-API-KEY: YOUR_UNIFI_API_KEY&quot; \
   -H &quot;Accept: application/json&quot; \
   -v
 </code></pre>
 <h3 id="test-dun-snapshot-de-camera-remplacez-camera_id">Test d'un snapshot de caméra (remplacez CAMERA_ID)</h3>
 <pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/cameras/CAMERA_ID/snapshot&quot; \
-  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;X-API-KEY: YOUR_UNIFI_API_KEY&quot; \
   -H &quot;Accept: application/json&quot; \
   -o /tmp/snapshot.jpg \
   -v
@@ -168,7 +168,7 @@ curl -X GET &quot;http://localhost:7070/api/unifi/cameras/CAMERA_ID/snapshot&quo
 <p>Créez un fichier <code>test-unifi.sh</code> :</p>
 <pre><code class="language-bash">#!/bin/bash
 
-API_KEY=&quot;tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot;
+API_KEY=API_KEY=&quot;YOUR_UNIFI_API_KEY&quot;quot;${UNIFI_API_KEY:?Définir UNIFI_API_KEY}API_KEY=&quot;YOUR_UNIFI_API_KEY&quot;quot;
 UNIFI_BASE=&quot;https://192.168.0.1&quot;
 BACKEND_URL=&quot;http://localhost:7070&quot;
 
@@ -223,13 +223,13 @@ echo -e &quot;\n&quot;
 <h2 id="6-extraction-de-lid-dune-camera">6. Extraction de l'ID d'une caméra</h2>
 <p>Si le bootstrap fonctionne, extrayez les IDs des caméras :</p>
 <pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
-  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;X-API-KEY: YOUR_UNIFI_API_KEY&quot; \
   -H &quot;Accept: application/json&quot; \
   -s | jq '.cameras[] | {id: .id, name: .name}'
 </code></pre>
 <p>Ou sans jq :</p>
 <pre><code class="language-bash">curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/bootstrap&quot; \
-  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;X-API-KEY: YOUR_UNIFI_API_KEY&quot; \
   -H &quot;Accept: application/json&quot; \
   -s | grep -o '&quot;id&quot;:&quot;[^&quot;]*&quot;' | head -5
 </code></pre>
@@ -239,7 +239,7 @@ echo -e &quot;\n&quot;
 
 # Via API directe
 curl -k -X GET &quot;https://192.168.0.1/unifi-api/protect/api/cameras/${CAMERA_ID}/snapshot&quot; \
-  -H &quot;X-API-KEY: tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_&quot; \
+  -H &quot;X-API-KEY: YOUR_UNIFI_API_KEY&quot; \
   -H &quot;Accept: application/json&quot; \
   -o /tmp/snapshot-direct.jpg
 

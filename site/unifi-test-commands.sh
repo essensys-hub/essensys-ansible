@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script de test UniFi Protect API
 
-API_KEY="tUMJhGwzryEJ7KuWZU2FUQGIa5F5R60_"
+API_KEY="${UNIFI_API_KEY:?Définir UNIFI_API_KEY}"
 BASE_URL="https://192.168.0.1"
 
 echo "=== Test 1: Meta Info (exemple fourni) ==="
