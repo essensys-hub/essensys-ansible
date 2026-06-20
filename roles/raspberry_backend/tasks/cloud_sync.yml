@@ -1,0 +1,22 @@
+---
+- name: Configure cloud sync block in backend config
+  when: cloud_sync_enabled | default(false) | bool
+  blockinfile:
+    path: "{{ backend_config }}"
+    marker: "# {mark} ANSIBLE MANAGED CLOUD SYNC"
+    create: true
+    block: |
+      cloud:
+        enabled: true
+        hub_url: "{{ cloud_hub_url }}"
+        gateway_id: "{{ cloud_gateway_id | default('') }}"
+        gateway_token: "{{ cloud_gateway_token | default('') }}"
+        poll_interval_seconds: {{ cloud_poll_interval_seconds | default(5) }}
+        client_id: "{{ cloud_client_id | default('default') }}"
+        machine_id: {{ cloud_gateway_machine_id | default(0) }}
+        eth0_mac: "{{ gateway_eth0_mac | default('') }}"
+        eth1_mac: "{{ gateway_eth1_mac | default('') }}"
+        scheduled_sync_enabled: {{ cloud_scheduled_sync_enabled | default(true) | lower }}
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0640'

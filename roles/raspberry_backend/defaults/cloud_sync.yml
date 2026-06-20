@@ -1,0 +1,12 @@
+---
+# Cloud sync scheduler (OpenSpec essensys-cloud-sync-scheduler)
+cloud_sync_enabled: false
+cloud_scheduled_sync_enabled: true
+cloud_hub_url: "{{ cloud_hub_public_url | default('https://mon.essensys.fr') }}"
+cloud_poll_interval_seconds: 5
+cloud_client_id: "default"
+# cloud_gateway_id, cloud_gateway_token, cloud_gateway_machine_id — vault / host_vars
+# Seed sync_profiles: migration 007_sync_profiles.sql (OVH PostgreSQL, interval 3 h)
+# Migration 009: profil Scénarios (591–919, exclude 590)
+# scenarios_sync_enabled: défaut true (seed PG) ; désactiver via UI Réglages → Synchronisation
+scenarios_sync_enabled: true

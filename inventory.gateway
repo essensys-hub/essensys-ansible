@@ -10,7 +10,7 @@
 # Variables OPTIONNELLES avec valeurs par defaut commentees ci-dessous.
 
 [raspberrypi]
-gateway-essensys ansible_host=192.168.0.14 ansible_user=essensys
+gateway-essensys ansible_host=192.168.0.14 ansible_user=essensys ansible_ssh_private_key_file=~/.ssh/id_ed25519
 
 [raspberrypi:vars]
 # --- Profil double NIC ---
@@ -58,3 +58,9 @@ gateway_nvme_bind_mounts_enabled=true
 wan_domain_default="essensys.acme.com"
 acme_email="admin@acme.com"
 use_staging=false
+
+# --- Cloud sync scheduler (essensys-cloud-sync-scheduler) ---
+cloud_sync_enabled=true
+cloud_scheduled_sync_enabled=true
+cloud_poll_interval_seconds=5
+# cloud_gateway_id / cloud_gateway_token : host_vars ou vault

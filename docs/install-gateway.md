@@ -451,6 +451,7 @@ cloud:
   machine_id: 19
   eth0_mac: "88:a2:9e:34:27:61"   # CM5 WAN (eth0)
   eth1_mac: "00:e0:4c:68:01:be"   # bus armoire (eth1)
+  scheduled_sync_enabled: true
 ```
 
 Enregistrement admin (triplet obligatoire) :
@@ -468,9 +469,24 @@ curl -X POST https://mon.essensys.fr/api/portal/admin/gateways/register \
   }'
 ```
 
-Variables Ansible gateway : `cloud_gateway_id`, `cloud_gateway_token`, `cloud_gateway_machine_id`, `cloud_gateway_eth0_mac`, `cloud_gateway_eth1_mac` (vault).
+Variables Ansible gateway : `cloud_gateway_id`, `cloud_gateway_token`, `cloud_gateway_machine_id`, `cloud_gateway_eth0_mac`, `cloud_gateway_eth1_mac`, `cloud_scheduled_sync_enabled`, `scenarios_sync_enabled` (vault / défaut `true`).
 
 Poll gateway : headers `X-Gateway-ID`, `X-Gateway-Eth0-MAC`, `X-Gateway-Eth1-MAC` + Bearer token. Filtrage strict `cloud_actions.machine_id = gateway_sessions.machine_id`.
+
+### Scénarios domotique (V.1.4.0)
+
+1. Déployer OVH (`support-site.yml`) — migration PostgreSQL **009** seed profil **Scénarios** (591–919, `exclude_indices: [590]`).
+2. Déployer gateway (`install.gateway.yml`) — backend + frontend avec page `/scenarios`.
+3. Pilote CM5 :
+
+```bash
+cd essensys-server-backend/test && ./test_scenarios_e2e.sh
+EMAIL=... JWT_SECRET=... ./test_scenarios_cloud_parity.sh   # après sync
+```
+
+4. Toggle sync : UI **Réglages → Synchronisation** ou `PUT /api/admin/scenarios/sync`.
+
+Doc : `essensys-raspberry-gateway/docs/maintenance/scenarios.md`.
 
 ---
 

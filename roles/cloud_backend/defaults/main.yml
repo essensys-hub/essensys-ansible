@@ -9,6 +9,12 @@ cloud_backend_import_machines: true
 cloud_backend_machines_json: /opt/essensys/backend/data/machines.json
 cloud_backend_skip_git_clone: false
 cloud_hub_public_url: "https://mon.essensys.fr"
+# Sync profiles seed (migration 007_sync_profiles.sql) runs on cloud backend startup.
+# Migration 009 adds profil « Scénarios » (591–919, exclude 590).
+# Default profiles: ZJ 13–96, ZN 97–180, SDB1 181–264, SDB2 265–348, modes 349–352, volets 566–585, Scénarios 591–919 — interval 3 h.
+cloud_sync_profiles_seed: true
+# Scénarios sync enabled by default (PostgreSQL profile seed). Disable via LAN Settings toggle.
+scenarios_sync_enabled: true
 
 # Cutover flags (group_vars override)
 cloud_backend_consolidated: false
