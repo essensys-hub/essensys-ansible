@@ -32,7 +32,7 @@
   command: >
     python3 /opt/essensys/frontend-files/prepare_blog_from_memory.py
     /opt/essensys/blog-build/essensys-memory/content/blog
-    /opt/essensys/repo/site/public/blog
+    /opt/essensys/repo/site/public/blog-data
   when: prepare_blog_from_memory | default(false) | bool
 
 - name: Install npm dependencies
