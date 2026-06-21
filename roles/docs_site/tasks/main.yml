@@ -1,0 +1,107 @@
+---
+- name: Install Python packages for MkDocs build
+  apt:
+    name:
+      - python3-pip
+      - python3-venv
+      - rsync
+    state: present
+  when: docs_site_enabled | bool
+
+- name: Clone essensys-doc
+  git:
+    repo: "{{ docs_site_repo }}"
+    dest: /opt/essensys/docs-build/essensys-doc
+    version: "{{ docs_site_repo_version }}"
+    force: yes
+  when: docs_site_enabled | bool
+
+- name: Clone essensys-ansible for install excerpts
+  git:
+    repo: "{{ docs_site_ansible_repo }}"
+    dest: /opt/essensys/docs-build/essensys-doc/vendor/essensys-ansible
+    version: main
+    depth: 1
+    force: yes
+  when: docs_site_enabled | bool
+
+- name: Clone essensys-raspberry-install (vendor)
+  git:
+    repo: "{{ docs_site_raspberry_repo }}"
+    dest: /opt/essensys/docs-build/essensys-doc/vendor/essensys-raspberry-install
+    version: main
+    depth: 1
+    force: yes
+  when: docs_site_enabled | bool
+
+- name: Install MkDocs in venv
+  pip:
+    name:
+      - mkdocs-material
+      - pymdown-extensions
+    virtualenv: /opt/essensys/docs-build/venv
+    virtualenv_command: python3 -m venv
+  when: docs_site_enabled | bool
+
+- name: Prepare and build documentation site
+  shell: |
+    set -euo pipefail
+    cd /opt/essensys/docs-build/essensys-doc
+    bash scripts/prepare-docs.sh
+    /opt/essensys/docs-build/venv/bin/mkdocs build --strict
+  args:
+    executable: /bin/bash
+  when: docs_site_enabled | bool
+
+- name: Ensure docs site output directory
+  file:
+    path: "{{ docs_site_root }}"
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: '0755'
+  when: docs_site_enabled | bool
+
+- name: Deploy static site
+  copy:
+    src: /opt/essensys/docs-build/essensys-doc/site/
+    dest: "{{ docs_site_root }}/"
+    remote_src: yes
+    owner: essensys
+    group: essensys
+    mode: '0644'
+    directory_mode: '0755'
+  when: docs_site_enabled | bool
+
+- name: Ensure certbot webroot exists
+  file:
+    path: /var/www/certbot
+    state: directory
+    mode: '0755'
+  when: docs_site_enabled | bool
+
+- name: Obtain SSL certificate for documentation domain
+  command: >
+    certbot certonly --webroot -w /var/www/certbot
+    -d {{ docs_site_domain }}
+    --non-interactive --agree-tos -m support@essensys.fr
+    --keep-until-expiring
+  args:
+    creates: "/etc/letsencrypt/live/{{ docs_site_domain }}/fullchain.pem"
+  when: docs_site_enabled | bool
+
+- name: Install Nginx vhost for documentation
+  template:
+    src: essensys-docs.conf.j2
+    dest: /etc/nginx/sites-available/essensys-docs
+    mode: '0644'
+  notify: Reload nginx docs
+  when: docs_site_enabled | bool
+
+- name: Enable documentation Nginx site
+  file:
+    src: /etc/nginx/sites-available/essensys-docs
+    dest: /etc/nginx/sites-enabled/essensys-docs
+    state: link
+  notify: Reload nginx docs
+  when: docs_site_enabled | bool

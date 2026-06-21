@@ -19,9 +19,10 @@ ansible-playbook -i inventory support-site.yml
 3.  **Backend (legacy)**: `essensys-support-site` Go binary on `:8080` — when `cloud_backend_consolidated=false` or `cloud_backend_legacy_mode=true`.
 4.  **Cloud backend (consolidated)**: `essensys-user-portal-backend` hub on `:8080` — when `cloud_backend_consolidated=true` and `cloud_backend_legacy_mode=false`. Voir [cloud-backend-migration.md](cloud-backend-migration.md).
 5.  **Frontend**: Builds React app, installs Nginx site config.
-6.  **Portal backend (legacy)**: `:8081` — dual-stack only.
-7.  **Portal frontend**: SPA `/portal/` static assets.
-8.  **Nginx portal snippet**: legacy split (`/api/portal/` → :8081) or consolidated (static `/portal/` only).
+6.  **Docs site** (`docs_site`): Build MkDocs from `essensys-doc`, deploy to `/opt/essensys/docs-site`, Nginx `docs.essensys.fr`.
+7.  **Portal backend (legacy)**: `:8081` — dual-stack only.
+8.  **Portal frontend**: SPA `/portal/` static assets.
+9.  **Nginx portal snippet**: legacy split (`/api/portal/` → :8081) or consolidated (static `/portal/` only).
 
 Variables: `cloud_backend_consolidated`, `cloud_backend_legacy_mode`, `portal_backend_port` (legacy, default 8081), `cloud_hub_public_url`.
 

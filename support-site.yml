@@ -15,6 +15,7 @@
     - role: backend
       when: not (use_cloud_backend | bool)
     - frontend
+    - docs_site
     - role: portal_backend
       when: not (use_cloud_backend | bool)
     - portal_frontend

@@ -1,0 +1,47 @@
+# Documentation publique Essensys — {{ docs_site_domain }}
+# Deployed by Ansible role docs_site (OpenSpec essensys-doc-site)
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name {{ docs_site_domain }};
+
+    location ^~ /.well-known/ {
+        allow all;
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name {{ docs_site_domain }};
+
+    ssl_certificate /etc/letsencrypt/live/{{ docs_site_domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ docs_site_domain }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    root {{ docs_site_root }};
+    index index.html;
+
+    access_log /var/log/nginx/essensys-docs-access.log;
+    error_log /var/log/nginx/essensys-docs-error.log warn;
+
+    charset utf-8;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+}
