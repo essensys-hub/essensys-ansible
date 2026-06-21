@@ -73,6 +73,15 @@
     directory_mode: '0755'
   when: docs_site_enabled | bool
 
+- name: Ensure nginx can traverse docs paths
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+  loop:
+    - /opt/essensys
+    - "{{ docs_site_root }}"
+  when: docs_site_enabled | bool
+
 - name: Ensure certbot webroot exists
   file:
     path: /var/www/certbot

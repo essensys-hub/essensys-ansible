@@ -18,7 +18,6 @@
         -d mon.essensys.fr
         -d www.essensys.fr
         -d gateway.essensys.fr
-        -d docs.essensys.fr
         --non-interactive
         --agree-tos
         -m support@essensys.fr
