@@ -1,0 +1,34 @@
+---
+newrelic_alerts_enabled: "{{ newrelic_backend_enabled | default(false) | bool }}"
+newrelic_alerts_policy_name: "Essensys Cloud Backend (production)"
+newrelic_alerts_app_name: "{{ newrelic_backend_app_name | default('essensys-cloud-backend') }}"
+newrelic_api_base_url: >-
+  {{ 'https://api.eu.newrelic.com' if (newrelic_region | default('EU') | upper) == 'EU'
+     else 'https://api.newrelic.com' }}
+newrelic_graphql_url: "{{ newrelic_api_base_url }}/graphql"
+
+newrelic_alerts_conditions:
+  - name: "Cloud backend — error rate critical"
+    nrql: "SELECT percentage(count(*), WHERE error IS true) FROM Transaction WHERE appName = '{{ newrelic_alerts_app_name }}'"
+    operator: ABOVE
+    priority: CRITICAL
+    threshold: 5
+    threshold_duration: 300
+  - name: "Cloud backend — error rate warning"
+    nrql: "SELECT percentage(count(*), WHERE error IS true) FROM Transaction WHERE appName = '{{ newrelic_alerts_app_name }}'"
+    operator: ABOVE
+    priority: WARNING
+    threshold: 2
+    threshold_duration: 300
+  - name: "Cloud backend — Apdex warning"
+    nrql: "SELECT apdex(duration, t: 0.5) FROM Transaction WHERE appName = '{{ newrelic_alerts_app_name }}'"
+    operator: BELOW
+    priority: WARNING
+    threshold: 0.8
+    threshold_duration: 300
+  - name: "Cloud sync — 3 consecutive failures"
+    nrql: "SELECT count(*) FROM Log WHERE appName = '{{ newrelic_alerts_app_name }}' AND message LIKE '%[sync-alert] CRITICAL%'"
+    operator: ABOVE
+    priority: CRITICAL
+    threshold: 0
+    threshold_duration: 60

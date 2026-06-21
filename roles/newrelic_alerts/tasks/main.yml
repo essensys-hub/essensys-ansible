@@ -1,0 +1,105 @@
+---
+- name: Skip New Relic alerts setup when disabled
+  ansible.builtin.meta: end_host
+  when: not (newrelic_alerts_enabled | default(false) | bool)
+
+- name: Require New Relic User API key for alerts setup
+  ansible.builtin.assert:
+    that:
+      - vault_newrelic_api_key is defined
+      - vault_newrelic_api_key | length > 0
+    fail_msg: "Set vault_newrelic_api_key in Ansible Vault when newrelic_alerts_enabled=true"
+
+- name: Search existing alert policy
+  ansible.builtin.uri:
+    url: "{{ newrelic_graphql_url }}"
+    method: POST
+    headers:
+      Api-Key: "{{ vault_newrelic_api_key }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      query: >-
+        { actor { account(id: {{ newrelic_account_id }}) { alerts {
+        policiesSearch(searchCriteria: { name: "{{ newrelic_alerts_policy_name }}" }) {
+        policies { id name } } } } } }
+  register: nr_policy_search
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Create alert policy when missing
+  ansible.builtin.uri:
+    url: "{{ newrelic_graphql_url }}"
+    method: POST
+    headers:
+      Api-Key: "{{ vault_newrelic_api_key }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      query: >-
+        mutation { alertsPolicyCreate(accountId: {{ newrelic_account_id }},
+        policy: { name: "{{ newrelic_alerts_policy_name }}",
+        incidentPreference: PER_CONDITION_AND_TARGET }) { id name } }
+  register: nr_policy_create
+  delegate_to: localhost
+  become: false
+  run_once: true
+  when: (nr_policy_search.json.data.actor.account.alerts.policiesSearch.policies | default([])) | length == 0
+
+- name: Remember alert policy id
+  ansible.builtin.set_fact:
+    nr_alert_policy_id: >-
+      {{
+        (nr_policy_create.json.data.alertsPolicyCreate.id
+         if (nr_policy_create is defined and nr_policy_create is not skipped)
+         else nr_policy_search.json.data.actor.account.alerts.policiesSearch.policies[0].id)
+      }}
+  run_once: true
+
+- name: Search existing NRQL alert conditions
+  ansible.builtin.uri:
+    url: "{{ newrelic_graphql_url }}"
+    method: POST
+    headers:
+      Api-Key: "{{ vault_newrelic_api_key }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      query: >-
+        { actor { account(id: {{ newrelic_account_id }}) { alerts {
+        nrqlConditionsSearch(searchCriteria: { policyId: "{{ nr_alert_policy_id }}" }) {
+        nrqlConditions { id name } } } } } }
+  register: nr_conditions_search
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Create missing NRQL alert conditions
+  ansible.builtin.uri:
+    url: "{{ newrelic_graphql_url }}"
+    method: POST
+    headers:
+      Api-Key: "{{ vault_newrelic_api_key }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      query: >-
+        mutation { alertsNrqlConditionStaticCreate(accountId: {{ newrelic_account_id }},
+        policyId: "{{ nr_alert_policy_id }}", condition: {
+        name: "{{ item.name }}", enabled: true,
+        nrql: { query: "{{ item.nrql }}" },
+        signal: { aggregationWindow: 60, aggregationMethod: EVENT_FLOW, aggregationDelay: 120 },
+        terms: [{ threshold: {{ item.threshold }}, thresholdOccurrences: ALL,
+        thresholdDuration: {{ item.threshold_duration }}, operator: {{ item.operator }},
+        priority: {{ item.priority }} }], violationTimeLimitSeconds: 86400 }) { id name } }
+  loop: "{{ newrelic_alerts_conditions }}"
+  when: item.name not in (nr_conditions_search.json.data.actor.account.alerts.nrqlConditionsSearch.nrqlConditions | default([]) | map(attribute='name') | list)
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Alert policy ready
+  ansible.builtin.debug:
+    msg: "New Relic alert policy '{{ newrelic_alerts_policy_name }}' (id {{ nr_alert_policy_id }}) — Issues widget actif dans APM"
+  run_once: true

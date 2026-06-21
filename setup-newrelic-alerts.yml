@@ -1,0 +1,7 @@
+---
+- name: Configure New Relic deployments and alert issues
+  hosts: essensys
+  gather_facts: false
+  roles:
+    - newrelic_alerts
+    - newrelic_deployment

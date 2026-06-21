@@ -1,0 +1,7 @@
+---
+newrelic_deployment_enabled: "{{ newrelic_backend_enabled | default(false) | bool }}"
+newrelic_deployment_user: "ansible"
+newrelic_deployment_description: "essensys-cloud-backend deploy via Ansible"
+newrelic_api_base_url: >-
+  {{ 'https://api.eu.newrelic.com' if (newrelic_region | default('EU') | upper) == 'EU'
+     else 'https://api.newrelic.com' }}

@@ -1,0 +1,45 @@
+---
+- name: Skip deployment marker when disabled or API key missing
+  ansible.builtin.meta: end_host
+  when: >
+    not (newrelic_deployment_enabled | default(false) | bool)
+    or vault_newrelic_api_key is not defined
+    or (vault_newrelic_api_key | default('') | length) == 0
+
+- name: Require APM application id for deployment marker
+  ansible.builtin.assert:
+    that:
+      - newrelic_backend_application_id is defined
+      - newrelic_backend_application_id | string | length > 0
+    fail_msg: "Set newrelic_backend_application_id in group_vars when newrelic_deployment_enabled=true"
+
+- name: Resolve git revision for deployment marker
+  ansible.builtin.command: git -C "{{ cloud_backend_src_dir | default('/opt/essensys/cloud-backend-src') }}" rev-parse --short HEAD
+  register: nr_deploy_git_sha
+  changed_when: false
+  failed_when: false
+
+- name: Build deployment revision string
+  ansible.builtin.set_fact:
+    nr_deploy_revision: >-
+      {{ (cloud_backend_version | default('unknown')) ~ '-'
+         ~ (nr_deploy_git_sha.stdout | default('local') | trim) }}
+
+- name: Record New Relic deployment marker
+  ansible.builtin.uri:
+    url: "{{ newrelic_api_base_url }}/v2/applications/{{ newrelic_backend_application_id }}/deployments.json"
+    method: POST
+    headers:
+      Api-Key: "{{ vault_newrelic_api_key }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      deployment:
+        revision: "{{ nr_deploy_revision }}"
+        changelog: "Ansible support-site.yml — {{ cloud_backend_version | default('unknown') }}"
+        description: "{{ newrelic_deployment_description }}"
+        user: "{{ newrelic_deployment_user }}"
+    status_code: [200, 201]
+  delegate_to: localhost
+  become: false
+  run_once: true
