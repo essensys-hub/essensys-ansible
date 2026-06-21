@@ -5,4 +5,5 @@ docs_site_root: /opt/essensys/docs-site
 docs_site_repo: https://github.com/essensys-hub/essensys-doc.git
 docs_site_repo_version: main
 docs_site_ansible_repo: https://github.com/essensys-hub/essensys-ansible.git
+docs_site_ansible_repo_version: V.1.3.0
 docs_site_raspberry_repo: https://github.com/essensys-hub/essensys-raspberry-install.git

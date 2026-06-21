@@ -20,7 +20,7 @@
   git:
     repo: "{{ docs_site_ansible_repo }}"
     dest: /opt/essensys/docs-build/essensys-doc/vendor/essensys-ansible
-    version: main
+    version: "{{ docs_site_ansible_repo_version }}"
     depth: 1
     force: yes
   when: docs_site_enabled | bool
