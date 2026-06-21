@@ -86,8 +86,15 @@
     -d {{ docs_site_domain }}
     --non-interactive --agree-tos -m support@essensys.fr
     --keep-until-expiring
-  args:
-    creates: "/etc/letsencrypt/live/{{ docs_site_domain }}/fullchain.pem"
+  register: docs_site_certbot
+  failed_when: false
+  changed_when: docs_site_certbot.rc == 0
+  when: docs_site_enabled | bool
+
+- name: Check docs TLS certificate
+  stat:
+    path: "/etc/letsencrypt/live/{{ docs_site_domain }}/fullchain.pem"
+  register: docs_site_tls_cert
   when: docs_site_enabled | bool
 
 - name: Install Nginx vhost for documentation

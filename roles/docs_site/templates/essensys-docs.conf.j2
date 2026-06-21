@@ -6,16 +6,32 @@ server {
     listen [::]:80;
     server_name {{ docs_site_domain }};
 
+    root {{ docs_site_root }};
+    index index.html;
+
+    access_log /var/log/nginx/essensys-docs-access.log;
+    error_log /var/log/nginx/essensys-docs-error.log warn;
+
+    charset utf-8;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
     location ^~ /.well-known/ {
         allow all;
         root /var/www/certbot;
     }
 
     location / {
-        return 301 https://$host$request_uri;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public";
     }
 }
 
+{% if docs_site_tls_cert.stat.exists %}
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
@@ -45,3 +61,4 @@ server {
         add_header Cache-Control "public";
     }
 }
+{% endif %}
