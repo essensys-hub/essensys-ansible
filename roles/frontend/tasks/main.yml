@@ -14,6 +14,13 @@
     force: yes
   when: prepare_blog_from_memory | default(false) | bool
 
+- name: Ensure frontend helper directory
+  file:
+    path: /opt/essensys/frontend-files
+    state: directory
+    mode: '0755'
+  when: prepare_blog_from_memory | default(false) | bool
+
 - name: Copy blog prepare script
   copy:
     src: prepare_blog_from_memory.py
