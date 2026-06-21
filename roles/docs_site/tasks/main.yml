@@ -102,7 +102,7 @@
     src: essensys-docs.conf.j2
     dest: /etc/nginx/sites-available/essensys-docs
     mode: '0644'
-  notify: Reload nginx docs
+  notify: Reload nginx
   when: docs_site_enabled | bool
 
 - name: Enable documentation Nginx site
@@ -110,5 +110,5 @@
     src: /etc/nginx/sites-available/essensys-docs
     dest: /etc/nginx/sites-enabled/essensys-docs
     state: link
-  notify: Reload nginx docs
+  notify: Reload nginx
   when: docs_site_enabled | bool
