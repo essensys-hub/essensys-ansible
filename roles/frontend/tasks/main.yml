@@ -6,6 +6,48 @@
     version: V.1.0.0
     force: yes
 
+- name: Clone essensys-memory for blog content
+  git:
+    repo: "{{ roadmap_site_memory_repo | default('https://github.com/essensys-hub/essensys-memory.git') }}"
+    dest: /opt/essensys/blog-build/essensys-memory
+    version: "{{ roadmap_site_memory_version | default('main') }}"
+    force: yes
+  when: prepare_blog_from_memory | default(false) | bool
+
+- name: Prepare blog static files for Vite build
+  shell: |
+    set -euo pipefail
+    SRC=/opt/essensys/blog-build/essensys-memory/content/blog
+    DEST=/opt/essensys/repo/site/public/blog
+    mkdir -p "$DEST"
+    python3 << 'PY'
+import json, shutil
+from pathlib import Path
+src = Path("/opt/essensys/blog-build/essensys-memory/content/blog")
+dest = Path("/opt/essensys/repo/site/public/blog")
+dest.mkdir(parents=True, exist_ok=True)
+posts = []
+for fp in sorted(src.glob("*.md")):
+    if fp.name == "README.md":
+        continue
+    text = fp.read_text()
+    meta, body = {}, text
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) >= 3:
+            for line in parts[1].strip().splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    meta[k.strip()] = v.strip().strip('"')
+            body = parts[2].strip()
+    posts.append({"slug": fp.stem, "title": meta.get("title", fp.stem), "date": meta.get("date", ""), "roadmap_id": meta.get("roadmap_id", ""), "change": meta.get("change", ""), "body": body})
+    shutil.copy2(fp, dest / fp.name)
+(dest / "index.json").write_text(json.dumps({"posts": posts}, ensure_ascii=False, indent=2))
+PY
+  args:
+    executable: /bin/bash
+  when: prepare_blog_from_memory | default(false) | bool
+
 - name: Install npm dependencies
   command: npm install
   args:

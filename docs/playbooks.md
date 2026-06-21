@@ -20,11 +20,25 @@ ansible-playbook -i inventory support-site.yml
 4.  **Cloud backend (consolidated)**: `essensys-user-portal-backend` hub on `:8080` — when `cloud_backend_consolidated=true` and `cloud_backend_legacy_mode=false`. Voir [cloud-backend-migration.md](cloud-backend-migration.md).
 5.  **Frontend**: Builds React app, installs Nginx site config.
 6.  **Docs site** (`docs_site`): Build MkDocs from `essensys-doc`, deploy to `/opt/essensys/docs-site`, Nginx `docs.essensys.fr`.
-7.  **Portal backend (legacy)**: `:8081` — dual-stack only.
-8.  **Portal frontend**: SPA `/portal/` static assets.
-9.  **Nginx portal snippet**: legacy split (`/api/portal/` → :8081) or consolidated (static `/portal/` only).
+7.  **Roadmap site** (`roadmap_site`): Build static site from `essensys-memory`, deploy to `/opt/essensys/roadmap-site`, Nginx `roadmap.essensys.fr`. Playbook dédié : `deploy-roadmap-site.yml`.
+8.  **Portal backend (legacy)**: `:8081` — dual-stack only.
+9.  **Portal frontend**: SPA `/portal/` static assets.
+10. **Nginx portal snippet**: legacy split (`/api/portal/` → :8081) or consolidated (static `/portal/` only).
 
 Variables: `cloud_backend_consolidated`, `cloud_backend_legacy_mode`, `portal_backend_port` (legacy, default 8081), `cloud_hub_public_url`.
+
+### `deploy-roadmap-site.yml`
+
+Deploy **roadmap.essensys.fr** (OpenSpec queue publique) + rebuild frontend avec blog `/blog`.
+
+**Usage:**
+```bash
+ansible-playbook -i inventory deploy-roadmap-site.yml
+```
+
+**Roles:** `roadmap_site` (clone `essensys-memory`, build HTML statique, Nginx vhost) puis `frontend` (`prepare_blog_from_memory: true`).
+
+**DoD:** `curl -sI https://roadmap.essensys.fr` et `curl -sI https://mon.essensys.fr/blog` → 200 (HTTPS si DNS + certbot OK).
 
 ---
 

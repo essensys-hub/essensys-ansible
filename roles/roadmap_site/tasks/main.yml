@@ -1,0 +1,96 @@
+---
+- name: Install packages for roadmap site build
+  apt:
+    name:
+      - python3
+      - rsync
+      - git
+    state: present
+  when: roadmap_site_enabled | bool
+
+- name: Clone essensys-memory for roadmap build
+  git:
+    repo: "{{ roadmap_site_repo }}"
+    dest: "{{ roadmap_site_build_dir }}/essensys-memory"
+    version: "{{ roadmap_site_repo_version }}"
+    force: yes
+  when: roadmap_site_enabled | bool
+
+- name: Build static roadmap site
+  shell: |
+    set -euo pipefail
+    export ESSENSYS_ROOT="{{ roadmap_site_build_dir }}"
+    cd "{{ roadmap_site_build_dir }}/essensys-memory"
+    bash scripts/build-roadmap-site.sh
+  args:
+    executable: /bin/bash
+  when: roadmap_site_enabled | bool
+
+- name: Ensure roadmap site output directory
+  file:
+    path: "{{ roadmap_site_root }}"
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: '0755'
+  when: roadmap_site_enabled | bool
+
+- name: Deploy static roadmap site
+  copy:
+    src: "{{ roadmap_site_build_dir }}/essensys-memory/content/roadmap/site/"
+    dest: "{{ roadmap_site_root }}/"
+    remote_src: yes
+    owner: essensys
+    group: essensys
+    mode: '0644'
+    directory_mode: '0755'
+  when: roadmap_site_enabled | bool
+
+- name: Ensure nginx can traverse roadmap paths
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+  loop:
+    - /opt/essensys
+    - "{{ roadmap_site_root }}"
+  when: roadmap_site_enabled | bool
+
+- name: Ensure certbot webroot exists
+  file:
+    path: /var/www/certbot
+    state: directory
+    mode: '0755'
+  when: roadmap_site_enabled | bool
+
+- name: Obtain SSL certificate for roadmap domain
+  command: >
+    certbot certonly --webroot -w /var/www/certbot
+    -d {{ roadmap_site_domain }}
+    --non-interactive --agree-tos -m support@essensys.fr
+    --keep-until-expiring
+  register: roadmap_site_certbot
+  failed_when: false
+  changed_when: roadmap_site_certbot.rc == 0
+  when: roadmap_site_enabled | bool
+
+- name: Check roadmap TLS certificate
+  stat:
+    path: "/etc/letsencrypt/live/{{ roadmap_site_domain }}/fullchain.pem"
+  register: roadmap_site_tls_cert
+  when: roadmap_site_enabled | bool
+
+- name: Install Nginx vhost for roadmap
+  template:
+    src: essensys-roadmap.conf.j2
+    dest: /etc/nginx/sites-available/essensys-roadmap
+    mode: '0644'
+  notify: Reload nginx
+  when: roadmap_site_enabled | bool
+
+- name: Enable roadmap Nginx site
+  file:
+    src: /etc/nginx/sites-available/essensys-roadmap
+    dest: /etc/nginx/sites-enabled/essensys-roadmap
+    state: link
+  notify: Reload nginx
+  when: roadmap_site_enabled | bool

@@ -1,0 +1,13 @@
+---
+# Deploiement roadmap.essensys.fr + rebuild frontend (blog /blog)
+- name: Deploy roadmap site and support frontend
+  hosts: essensys
+  become: yes
+  vars:
+    prepare_blog_from_memory: true
+
+  roles:
+    - roadmap_site
+    - frontend
+
+- import_playbook: enable-https-prod.yml

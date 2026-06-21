@@ -1,0 +1,9 @@
+---
+roadmap_site_enabled: true
+roadmap_site_domain: roadmap.essensys.fr
+roadmap_site_root: /opt/essensys/roadmap-site
+roadmap_site_repo: https://github.com/essensys-hub/essensys-memory.git
+roadmap_site_repo_version: main
+roadmap_site_build_dir: /opt/essensys/roadmap-build
+roadmap_site_memory_repo: https://github.com/essensys-hub/essensys-memory.git
+roadmap_site_memory_version: main
