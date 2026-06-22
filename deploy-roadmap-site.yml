@@ -9,5 +9,6 @@
   roles:
     - roadmap_site
     - frontend
+    - demo_site
 
 - import_playbook: enable-https-prod.yml

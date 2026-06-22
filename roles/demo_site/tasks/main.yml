@@ -1,0 +1,40 @@
+---
+- name: Ensure certbot webroot exists
+  file:
+    path: /var/www/certbot
+    state: directory
+    mode: '0755'
+  when: demo_site_enabled | bool
+
+- name: Obtain SSL certificate for demo domain
+  command: >
+    certbot certonly --webroot -w /var/www/certbot
+    -d {{ demo_site_domain }}
+    --non-interactive --agree-tos -m support@essensys.fr
+    --keep-until-expiring
+  register: demo_site_certbot
+  failed_when: false
+  changed_when: demo_site_certbot.rc == 0
+  when: demo_site_enabled | bool
+
+- name: Check demo TLS certificate
+  stat:
+    path: "/etc/letsencrypt/live/{{ demo_site_domain }}/fullchain.pem"
+  register: demo_site_tls_cert
+  when: demo_site_enabled | bool
+
+- name: Install Nginx vhost for demo site
+  template:
+    src: essensys-demo.conf.j2
+    dest: /etc/nginx/sites-available/essensys-demo
+    mode: '0644'
+  notify: Reload nginx
+  when: demo_site_enabled | bool
+
+- name: Enable demo Nginx site
+  file:
+    src: /etc/nginx/sites-available/essensys-demo
+    dest: /etc/nginx/sites-enabled/essensys-demo
+    state: link
+  notify: Reload nginx
+  when: demo_site_enabled | bool

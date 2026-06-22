@@ -1,0 +1,64 @@
+# Démo domotique Essensys — {{ demo_site_domain }}
+# Build : essensys-support-site/site/public/demo/root (VITE_DEMO_ROOT)
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name {{ demo_site_domain }};
+
+    root {{ demo_site_root }};
+    index index.html;
+
+    access_log /var/log/nginx/essensys-demo-access.log;
+    error_log /var/log/nginx/essensys-demo-error.log warn;
+
+    charset utf-8;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
+    location ^~ /.well-known/ {
+        allow all;
+        root /var/www/certbot;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?|html)$ {
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+}
+
+{% if demo_site_tls_cert.stat.exists %}
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name {{ demo_site_domain }};
+
+    ssl_certificate /etc/letsencrypt/live/{{ demo_site_domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ demo_site_domain }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    root {{ demo_site_root }};
+    index index.html;
+
+    access_log /var/log/nginx/essensys-demo-access.log;
+    error_log /var/log/nginx/essensys-demo-error.log warn;
+
+    charset utf-8;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?|html)$ {
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+}
+{% endif %}

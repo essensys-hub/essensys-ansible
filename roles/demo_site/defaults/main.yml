@@ -1,0 +1,4 @@
+---
+demo_site_enabled: true
+demo_site_domain: demo.essensys.fr
+demo_site_root: /opt/essensys/frontend/dist/demo/root
