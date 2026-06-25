@@ -17,6 +17,13 @@ fi
 
 eval "$("$ROOT/scripts/lib/sops-load-env.sh" "$SOPS_FILE")"
 
+# Défauts si clés absentes du fichier SOPS (rétrocompat)
+export BACKUP_MONOREPO_ROOT="${BACKUP_MONOREPO_ROOT:-/Users/nrineau/ESSENSYS}"
+export BACKUP_RCLONE_EXCLUDE_FILE="${BACKUP_RCLONE_EXCLUDE_FILE:-$ROOT/config/backup-rclone-exclude.txt}"
+if [[ -n "$BACKUP_RCLONE_EXCLUDE_FILE" && "$BACKUP_RCLONE_EXCLUDE_FILE" != /* ]]; then
+  export BACKUP_RCLONE_EXCLUDE_FILE="$ROOT/$BACKUP_RCLONE_EXCLUDE_FILE"
+fi
+
 if [[ -z "${SYNO_PASS:-}" || "$SYNO_PASS" == "REPLACE_ME" ]]; then
   echo "Définissez syno_pass dans $SOPS_FILE :" >&2
   echo "  sops $SOPS_FILE" >&2

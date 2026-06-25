@@ -1,26 +1,29 @@
 # Backup Essensys → Synology (rclone)
 
-Backup quotidien des **secrets opérateur** (SOPS, clé age, vault legacy, `.env`) vers le NAS Synology.
+Backup quotidien du **monorepo complet** `/Users/nrineau/ESSENSYS` (~40 dépôts) vers le NAS Synology.
 
 | Paramètre | Valeur |
 |-----------|--------|
-| NAS | `192.168.1.61` (dans SOPS) |
+| NAS | `192.168.1.61` (SOPS) |
 | Partage | `BACKUP-ESSENSYS` |
 | Compte | `nrineau` |
-| Horaire | **02:00** chaque jour (launchd macOS) |
-| **Config Synology** | **`secrets/operator/backup.syno.sops.yaml`** (SOPS + age) |
+| Source | `backup_monorepo_root` → `/Users/nrineau/ESSENSYS` |
+| Horaire | **02:00** (launchd macOS) |
+| Config | `secrets/operator/backup.syno.sops.yaml` |
 
 ## Contenu sauvegardé
 
-| Source locale | Destination remote |
-|---------------|-------------------|
-| `secrets/` (SOPS cloud + operator) | `essensys/<hostname>/daily/YYYY-MM-DD/essensys-ansible/secrets/` |
-| `.age/` (clé privée age) | idem |
-| `group_vars/essensys/vault.yml` | idem (si présent) |
-| `config/.env` | idem (si présent) |
-| `backup_extra_paths` (SOPS) | `essensys/.../extra/` |
+| Source | Destination NAS |
+|--------|-----------------|
+| **`/Users/nrineau/ESSENSYS/**`** (monorepo) | `BACKUP-ESSENSYS/essensys/<hostname>/daily/YYYY-MM-DD/ESSENSYS/` |
+| Fichiers gitignored inclus | `.age/`, `vault.yml`, `config/.env`, `config/rclone.conf` |
+| `backup_extra_paths` (SOPS) | `.../daily/YYYY-MM-DD/extra/` |
 
-Rétention par défaut : **30 jours** de snapshots `daily/`.
+**Exclusions par défaut** (`config/backup-rclone-exclude.txt`) : `node_modules`, caches build, `.cursor/projects`, etc. — **pas** les `.git` (historique conservé).
+
+Premier run : ~10–14 Go, **plusieurs heures** en SMB. Runs suivants : incrémental (rclone copy).
+
+Rétention : **30 jours** de snapshots `daily/`.
 
 ## Installation (une fois)
 
@@ -48,6 +51,8 @@ sops secrets/operator/backup.syno.sops.yaml
 | `syno_user` | Compte SMB |
 | `syno_share` | Partage (ex. `BACKUP-ESSENSYS`) |
 | `syno_pass` | Mot de passe SMB |
+| `backup_monorepo_root` | Racine à copier (défaut `/Users/nrineau/ESSENSYS`) |
+| `backup_rclone_exclude_file` | Exclusions rclone (défaut `config/backup-rclone-exclude.txt`) |
 | `rclone_remote` | Nom remote rclone (défaut `syno-essensys`) |
 | `backup_remote_base` | Dossier racine sur le partage |
 | `backup_retention_days` | Rétention snapshots |

@@ -1,0 +1,30 @@
+# Exclusions rclone — monorepo ESSENSYS (~14 Go sans ces dossiers)
+# Réinstallables / régénérables. Retirer une ligne pour inclure ce type de fichier.
+
+**/node_modules/**
+**/.DS_Store
+**/__pycache__/**
+**/*.pyc
+**/.pytest_cache/**
+**/.mypy_cache/**
+**/.ruff_cache/**
+**/.turbo/**
+**/.next/**
+**/.nuxt/**
+**/dist/**
+**/build/**
+**/.gradle/**
+**/DerivedData/**
+**/.idea/**
+**/.vscode/**
+**/.cursor/projects/**
+**/.cursor/terminals/**
+**/coverage/**
+**/.angular/cache/**
+
+# Caches Go (regénérables ; commenter pour tout garder)
+**/.cache/go-build/**
+
+# Obsidian workspace local (regénérable)
+**/.obsidian/workspace.json
+**/.obsidian/graph.json
