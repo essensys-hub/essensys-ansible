@@ -1,0 +1,7 @@
+creation_rules:
+  - path_regex: secrets/cloud/.*\.sops\.yaml$
+    age: age15v9hg9cg8vf6pya4t9nnwz0xdfllsj26hyk4yuz6ud8r2pt2899sz7kv5q
+  - path_regex: secrets/operator/.*\.sops\.yaml$
+    age: age15v9hg9cg8vf6pya4t9nnwz0xdfllsj26hyk4yuz6ud8r2pt2899sz7kv5q
+  - path_regex: host_vars/.*/secrets\.sops\.yaml$
+    age: age15v9hg9cg8vf6pya4t9nnwz0xdfllsj26hyk4yuz6ud8r2pt2899sz7kv5q

@@ -42,7 +42,7 @@
       DB_HOST=127.0.0.1
       DB_PORT=5432
       DB_USER=essensys
-      DB_PASSWORD={{ portal_db_password | default('essensys_secure_password') }}
+      DB_PASSWORD={{ portal_db_password }}
       DB_NAME={{ portal_db_name | default('essensys_db') }}
       JWT_SECRET={{ portal_jwt_secret | mandatory('portal_jwt_secret must be set in vault — backend fails closed without a strong secret') }}
       ADMIN_TOKEN={{ vault_admin_token | mandatory('vault_admin_token must be set in vault — backend fails closed without a strong secret') }}

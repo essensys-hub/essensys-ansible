@@ -15,6 +15,6 @@
     DB_HOST: "{{ cloud_db_host | default('127.0.0.1') }}"
     DB_PORT: "{{ cloud_db_port | default('5432') }}"
     DB_USER: "{{ cloud_db_user | default(portal_db_user | default('essensys')) }}"
-    DB_PASSWORD: "{{ portal_db_password | default('essensys_secure_password') }}"
+    DB_PASSWORD: "{{ portal_db_password }}"
     DB_NAME: "{{ cloud_db_name | default(portal_db_name | default('essensys_db')) }}"
   when: machines_json_stat.stat.exists

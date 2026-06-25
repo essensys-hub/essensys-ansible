@@ -16,13 +16,14 @@ New Relic complète la stack existante sur le **VPS OVH** (`mon.essensys.fr`). L
 1. Créer les applications APM `essensys-user-portal-backend`, Browser `essensys-user-portal-frontend` et Browser `essensys-support-site`.
 2. Générer une **Ingest License key**.
 3. Restreindre le domaine Browser à `mon.essensys.fr`.
-4. Stocker les secrets dans Ansible Vault :
+4. Stocker les secrets dans SOPS (`secrets/cloud/essensys.sops.yaml`) — voir [secrets.md](secrets.md) :
 
 ```bash
-ansible-vault create group_vars/essensys/vault.yml
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+sops secrets/cloud/essensys.sops.yaml
 ```
 
-Contenu minimal :
+Contenu minimal (clés dans le fichier chiffré) :
 
 ```yaml
 vault_newrelic_license_key: "NRII-xxxxxxxx"
@@ -106,7 +107,7 @@ Variables partagées (`group_vars/essensys/database.yml`) :
 | `portal_db_port` | `5432` |
 | `portal_db_user` | `essensys` |
 | `portal_db_name` | `essensys_db` |
-| `portal_db_password` | vault (`vault.yml`) |
+| `portal_db_password` | SOPS (`secrets/cloud/essensys.sops.yaml`) |
 | `newrelic_postgresql_instance_name` | `essensys-ovh-postgresql` |
 
 Référence locale : `config/.env` (`PORTAL_DB_*`) et `config/database.example.yml`.

@@ -1,0 +1,26 @@
+---
+- name: Ensure Apple OAuth secrets directory
+  ansible.builtin.file:
+    path: "{{ cloud_apple_secrets_dir }}"
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: "0700"
+  when: vault_apple_key_content | default('') | length > 0
+
+- name: Deploy Apple Sign-In private key from SOPS
+  ansible.builtin.copy:
+    content: "{{ vault_apple_key_content }}"
+    dest: "{{ cloud_apple_secrets_dir }}/{{ cloud_apple_key_filename }}"
+    owner: essensys
+    group: essensys
+    mode: "0600"
+  when: vault_apple_key_content | default('') | length > 0
+  no_log: true
+
+- name: Resolve Apple key file path for cloud backend
+  ansible.builtin.set_fact:
+    cloud_apple_key_file_resolved: >-
+      {{ (cloud_apple_secrets_dir ~ '/' ~ cloud_apple_key_filename)
+         if (vault_apple_key_content | default('') | length > 0)
+         else (vault_apple_key_file | default('')) }}

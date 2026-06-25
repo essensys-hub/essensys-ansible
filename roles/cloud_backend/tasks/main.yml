@@ -56,6 +56,9 @@
     owner: essensys
     group: essensys
 
+- name: Prepare Apple OAuth key from SOPS
+  import_tasks: apple_oauth_key.yml
+
 - name: Deploy cloud backend environment
   template:
     src: cloud-backend.env.j2

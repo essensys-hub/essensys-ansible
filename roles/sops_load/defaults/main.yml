@@ -1,0 +1,15 @@
+---
+sops_load_cloud: true
+sops_load_gateway: false
+sops_cloud_secrets_file: "{{ playbook_dir }}/secrets/cloud/essensys.sops.yaml"
+sops_gateway_secrets_file: "{{ playbook_dir }}/host_vars/{{ inventory_hostname }}/secrets.sops.yaml"
+
+sops_required_cloud_keys:
+  - portal_db_password
+  - portal_db_name
+  - portal_jwt_secret
+  - vault_admin_token
+  - vault_newrelic_license_key
+
+sops_required_gateway_keys:
+  - cloud_gateway_token

@@ -1,0 +1,79 @@
+---
+- name: Load cloud secrets from SOPS
+  when: sops_load_cloud | bool
+  block:
+    - name: Stat cloud SOPS secrets file
+      ansible.builtin.stat:
+        path: "{{ sops_cloud_secrets_file }}"
+      register: sops_cloud_file
+      delegate_to: localhost
+      run_once: true
+
+    - name: Require cloud SOPS secrets file
+      ansible.builtin.assert:
+        that: sops_cloud_file.stat.exists
+        fail_msg: >-
+          Missing {{ sops_cloud_secrets_file }}.
+          See docs/secrets.md and export SOPS_AGE_KEY_FILE before deploy.
+      run_once: true
+
+    - name: Decrypt cloud SOPS secrets
+      ansible.builtin.set_fact:
+        sops_cloud: "{{ lookup('community.sops.sops', sops_cloud_secrets_file) | from_yaml }}"
+      no_log: true
+      delegate_to: localhost
+      run_once: true
+
+    - name: Merge cloud SOPS secrets into play variables
+      ansible.builtin.set_fact:
+        "{{ item.key }}": "{{ item.value }}"
+      loop: "{{ sops_cloud | dict2items }}"
+      no_log: true
+      run_once: true
+
+    - name: Assert required cloud secret keys
+      ansible.builtin.assert:
+        that:
+          - vars[item] is defined
+          - vars[item] | string | length > 0
+        fail_msg: "Missing required cloud secret '{{ item }}' in {{ sops_cloud_secrets_file }}"
+      loop: "{{ sops_required_cloud_keys }}"
+      no_log: true
+      run_once: true
+
+- name: Load gateway secrets from SOPS
+  when: sops_load_gateway | bool
+  block:
+    - name: Stat gateway SOPS secrets file
+      ansible.builtin.stat:
+        path: "{{ sops_gateway_secrets_file }}"
+      register: sops_gateway_file
+      delegate_to: localhost
+      run_once: true
+
+    - name: Decrypt gateway SOPS secrets when file exists
+      when: sops_gateway_file.stat.exists
+      block:
+        - name: Decrypt gateway SOPS secrets
+          ansible.builtin.set_fact:
+            sops_gateway: "{{ lookup('community.sops.sops', sops_gateway_secrets_file) | from_yaml }}"
+          no_log: true
+          delegate_to: localhost
+          run_once: true
+
+        - name: Merge gateway SOPS secrets into play variables
+          ansible.builtin.set_fact:
+            "{{ item.key }}": "{{ item.value }}"
+          loop: "{{ sops_gateway | dict2items }}"
+          no_log: true
+          run_once: true
+
+        - name: Assert required gateway secret keys
+          ansible.builtin.assert:
+            that:
+              - vars[item] is defined
+              - vars[item] | string | length > 0
+            fail_msg: "Missing required gateway secret '{{ item }}' in {{ sops_gateway_secrets_file }}"
+          loop: "{{ sops_required_gateway_keys }}"
+          no_log: true
+          run_once: true

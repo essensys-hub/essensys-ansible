@@ -8,7 +8,7 @@
 - name: Create essensys database user
   postgresql_user:
     name: "{{ portal_db_user | default('essensys') }}"
-    password: "{{ portal_db_password | default('essensys_secure_password') }}"
+    password: "{{ portal_db_password }}"
     role_attr_flags: NOSUPERUSER
   become: yes
   become_user: postgres

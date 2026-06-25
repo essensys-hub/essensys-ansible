@@ -109,6 +109,9 @@
       when: not go_binary.stat.exists
 
   roles:
+    - role: sops_load
+      sops_load_cloud: false
+      sops_load_gateway: true
     # --- Stockage NVMe (doit tourner en premier) ---
     - raspberry_gateway_nvme
 

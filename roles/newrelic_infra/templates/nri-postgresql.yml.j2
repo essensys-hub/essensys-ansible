@@ -5,7 +5,7 @@ integrations:
       HOSTNAME: {{ portal_db_host | default('127.0.0.1') }}
       PORT: "{{ portal_db_port | default(5432) }}"
       USERNAME: {{ portal_db_user | default('essensys') }}
-      PASSWORD: "{{ portal_db_password | default('essensys_secure_password') }}"
+      PASSWORD: "{{ portal_db_password }}"
       DATABASE: {{ portal_db_name | default('essensys_db') }}
       COLLECTION_LIST: '["{{ portal_db_name | default('essensys_db') }}"]'
     interval: 15s

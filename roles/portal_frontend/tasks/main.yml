@@ -1,10 +1,22 @@
 ---
+- name: Check portal frontend source git metadata
+  ansible.builtin.stat:
+    path: /opt/essensys/portal-frontend-src/.git
+  register: portal_frontend_git
+
+- name: Remove non-git portal frontend source tree
+  ansible.builtin.file:
+    path: /opt/essensys/portal-frontend-src
+    state: absent
+  when: not portal_frontend_git.stat.exists | default(false)
+
 - name: Clone user portal frontend repository
-  git:
+  ansible.builtin.git:
     repo: "{{ portal_frontend_repo }}"
     dest: /opt/essensys/portal-frontend-src
     version: "{{ portal_frontend_version | default('main') }}"
     force: yes
+    update: yes
 
 - name: Install npm dependencies
   command: npm install

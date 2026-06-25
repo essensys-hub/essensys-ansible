@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.essensys.syno-backup</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>@ESSENSYS_ANSIBLE_ROOT@/scripts/backup-to-syno.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>2</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>@HOME@/Library/Logs/essensys-backup/launchd.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>@HOME@/Library/Logs/essensys-backup/launchd.stderr.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>SOPS_AGE_KEY_FILE</key>
+    <string>@ESSENSYS_ANSIBLE_ROOT@/.age/keys.txt</string>
+    <key>RCLONE_CONFIG</key>
+    <string>@ESSENSYS_ANSIBLE_ROOT@/config/rclone.conf</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

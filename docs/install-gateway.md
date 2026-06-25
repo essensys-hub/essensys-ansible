@@ -469,7 +469,7 @@ curl -X POST https://mon.essensys.fr/api/portal/admin/gateways/register \
   }'
 ```
 
-Variables Ansible gateway : `cloud_gateway_id`, `cloud_gateway_token`, `cloud_gateway_machine_id`, `cloud_gateway_eth0_mac`, `cloud_gateway_eth1_mac`, `cloud_scheduled_sync_enabled`, `scenarios_sync_enabled` (vault / défaut `true`).
+Variables Ansible gateway : `cloud_gateway_id`, `cloud_gateway_token`, `cloud_gateway_machine_id`, `cloud_gateway_eth0_mac`, `cloud_gateway_eth1_mac`, `cloud_scheduled_sync_enabled`, `scenarios_sync_enabled` — voir [secrets.md](secrets.md) (SOPS `host_vars/<hostname>/secrets.sops.yaml`, phase 2).
 
 Poll gateway : headers `X-Gateway-ID`, `X-Gateway-Eth0-MAC`, `X-Gateway-Eth1-MAC` + Bearer token. Filtrage strict `cloud_actions.machine_id = gateway_sessions.machine_id`.
 

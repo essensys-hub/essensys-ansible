@@ -2,7 +2,18 @@
 # CA locale rapatriée par le rôle raspberry_traefik (regénérée à chaque deploy)
 files/local-ca/
 
-# Secrets locaux Ansible / New Relic
+# Secrets locaux opérateur (jamais committer)
 config/.env
+config/backup.syno.env
+config/rclone.conf
 .vault_pass
+.age/
+*.age-key
+**/age-keys.txt
+
+# Legacy Ansible Vault — remplacé par secrets/cloud/essensys.sops.yaml (SOPS + age)
 group_vars/essensys/vault.yml
+
+# SOPS versionnés (chiffrés) — OK dans Git :
+# secrets/cloud/essensys.sops.yaml
+# secrets/operator/backup.syno.sops.yaml
