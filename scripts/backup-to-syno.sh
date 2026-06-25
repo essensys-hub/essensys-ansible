@@ -36,7 +36,8 @@ fi
 
 HOST_TAG="$(hostname -s 2>/dev/null || echo mac)"
 DATE_TAG="$(date +%Y-%m-%d)"
-REMOTE_DEST="${RCLONE_REMOTE}:${BACKUP_REMOTE_BASE}/${HOST_TAG}/daily/${DATE_TAG}"
+# Remote SMB = racine serveur (tous les partages) : inclure SYNO_SHARE dans le chemin
+REMOTE_DEST="${RCLONE_REMOTE}:${SYNO_SHARE}/${BACKUP_REMOTE_BASE}/${HOST_TAG}/daily/${DATE_TAG}"
 
 log "=== Backup Essensys → smb://${SYNO_HOST}/${SYNO_SHARE}/${BACKUP_REMOTE_BASE}/${HOST_TAG}/daily/${DATE_TAG} ==="
 
@@ -77,19 +78,23 @@ EOF
 
 log "Staging: $(du -sh "$STAGING" | awk '{print $1}')"
 
-rclone copy "$STAGING/" "$REMOTE_DEST" \
+if ! rclone copy "$STAGING/" "$REMOTE_DEST" \
   --config "$RCLONE_CONFIG" \
   --create-empty-src-dirs \
   --transfers 4 \
   --checkers 8 \
   --log-file "$LOG_FILE" \
-  --log-level INFO
+  --log-level INFO; then
+  log "ERROR: rclone copy a échoué — dernières lignes du log:"
+  tail -5 "$LOG_FILE" | while read -r line; do log "  $line"; done
+  exit 1
+fi
 
 log "OK: copie terminée → $REMOTE_DEST"
 
 # Rétention : supprimer dossiers daily plus vieux que N jours
 CUTOFF="$(date -v-${RETENTION_DAYS}d +%Y-%m-%d 2>/dev/null || date -d "-${RETENTION_DAYS} days" +%Y-%m-%d)"
-REMOTE_PARENT="${RCLONE_REMOTE}:${BACKUP_REMOTE_BASE}/${HOST_TAG}/daily"
+REMOTE_PARENT="${RCLONE_REMOTE}:${SYNO_SHARE}/${BACKUP_REMOTE_BASE}/${HOST_TAG}/daily"
 
 log "Rétention: suppression des snapshots < $CUTOFF (${RETENTION_DAYS} jours)"
 
