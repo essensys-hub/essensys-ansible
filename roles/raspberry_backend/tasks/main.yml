@@ -106,6 +106,9 @@
 - name: Configure cloud sync scheduler (gateway)
   import_tasks: cloud_sync.yml
 
+- name: Configurer IAM LAN (017)
+  import_tasks: lan_iam.yml
+
 - name: Configurer UniFi Protect dans config.yaml
   blockinfile:
     path: "{{ backend_config }}"

@@ -1,0 +1,27 @@
+---
+- name: Appliquer la configuration LAN IAM dans config.yaml
+  blockinfile:
+    path: "{{ backend_config }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK LAN IAM"
+    block: |
+      lan_iam:
+        enabled: {{ lan_iam_enabled | default(false) | lower }}
+        session_ttl_hours: {{ lan_iam_session_ttl_hours | default(168) }}
+        secure_cookie: true
+        bootstrap_token_file: "{{ lan_iam_bootstrap_token_file | default(config_dir + '/lan_bootstrap.token') }}"
+        passive_auth_capture: false
+    create: yes
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+  when: lan_iam_enabled | default(false) | bool
+
+- name: Generer token bootstrap LAN IAM (one-shot, absent)
+  copy:
+    dest: "{{ lan_iam_bootstrap_token_file | default(config_dir + '/lan_bootstrap.token') }}"
+    content: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=32') }}"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'
+    force: false
+  when: lan_iam_enabled | default(false) | bool

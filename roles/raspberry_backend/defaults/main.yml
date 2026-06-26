@@ -26,3 +26,8 @@ unifi_base_url: "https://192.168.0.1"
 unifi_api_key: ""
 unifi_username: ""
 unifi_password: ""
+
+# LAN IAM (OpenSpec 2026-06.017) — désactivé par défaut
+lan_iam_enabled: false
+lan_iam_session_ttl_hours: 168
+lan_iam_bootstrap_token_file: "{{ config_dir }}/lan_bootstrap.token"
