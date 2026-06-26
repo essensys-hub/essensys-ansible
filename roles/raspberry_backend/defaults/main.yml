@@ -11,3 +11,18 @@ backend_mqtt_enabled: false
 backend_mqtt_broker: "tcp://localhost:1883"
 backend_mqtt_username: "essensys"
 backend_mqtt_password: "essensys_mqtt_password"
+
+# Cloud sync (voir defaults/cloud_sync.yml — inclus ici pour chargement Ansible)
+cloud_sync_enabled: false
+cloud_scheduled_sync_enabled: true
+cloud_hub_url: "{{ cloud_hub_public_url | default('https://mon.essensys.fr') }}"
+cloud_poll_interval_seconds: 5
+cloud_client_id: "default"
+scenarios_sync_enabled: true
+
+# UniFi Protect (désactivé par défaut)
+unifi_enabled: false
+unifi_base_url: "https://192.168.0.1"
+unifi_api_key: ""
+unifi_username: ""
+unifi_password: ""

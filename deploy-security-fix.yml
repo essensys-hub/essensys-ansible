@@ -1,0 +1,12 @@
+---
+# Targeted deploy for the HIGH security fixes (fail-closed secrets +
+# OAuth-token-in-fragment + rotated ADMIN_TOKEN). Rebuilds the consolidated
+# backend and the support-site SPA only; avoids certbot / DB migration steps.
+#   ansible-playbook -i inventory deploy-security-fix.yml
+- name: Deploy Essensys security fixes (backend + SPA)
+  hosts: essensys
+  become: yes
+  roles:
+    - role: cloud_backend
+      when: cloud_backend_consolidated | default(false) | bool
+    - frontend

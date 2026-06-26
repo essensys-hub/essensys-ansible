@@ -17,3 +17,6 @@ group_vars/essensys/vault.yml
 # SOPS versionnés (chiffrés) — OK dans Git :
 # secrets/cloud/essensys.sops.yaml
 # secrets/operator/backup.syno.sops.yaml
+
+# Added by ggshield
+.cache_ggshield

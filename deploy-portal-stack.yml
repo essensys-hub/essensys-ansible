@@ -1,0 +1,19 @@
+---
+# Deploy cloud hub (essensys-user-portal-backend) + portal SPA
+# (essensys-user-portal-frontend) on OVH. Skips certbot, docs, roadmap.
+#
+#   export SOPS_AGE_KEY_FILE="$PWD/.age/keys.txt"
+#   ansible-playbook -i inventory deploy-portal-stack.yml
+#
+# Override versions:
+#   -e cloud_backend_version=main -e portal_frontend_version=main
+- name: Deploy Essensys portal stack (OVH)
+  hosts: essensys
+  become: yes
+
+  roles:
+    - role: sops_load
+      sops_load_cloud: true
+      sops_load_gateway: false
+    - cloud_backend
+    - portal_frontend

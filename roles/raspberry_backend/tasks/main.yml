@@ -63,7 +63,7 @@
 
 - name: Creer le fichier config.yaml si absent
   copy:
-    dest: "{{ backend_dir }}/config.yaml"
+    dest: "{{ backend_config }}"
     content: |
       server:
         port: 7070
@@ -98,7 +98,7 @@
 
 - name: Forcer le port 7070 dans config.yaml
   lineinfile:
-    path: "{{ backend_dir }}/config.yaml"
+    path: "{{ backend_config }}"
     regexp: '^\s*port:'
     line: '  port: 7070'
     insertafter: '^server:'
@@ -108,7 +108,7 @@
 
 - name: Configurer UniFi Protect dans config.yaml
   blockinfile:
-    path: "{{ backend_dir }}/config.yaml"
+    path: "{{ backend_config }}"
     marker: "# {mark} ANSIBLE MANAGED BLOCK UNIFI"
     block: |
       unifi:

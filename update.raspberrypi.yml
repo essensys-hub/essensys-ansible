@@ -6,19 +6,45 @@
   vars:
     service_user: essensys
     install_dir: /opt/essensys
+    data_dir: /opt/data
+    config_dir: "{{ data_dir }}/config"
     backend_dir: "{{ install_dir }}/backend"
     frontend_dir: "{{ install_dir }}/frontend"
     backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
     frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
-    backend_version: V.1.2.2
-    frontend_version: V.1.2.2
+    backend_version: V.1.3.0
+    frontend_version: V.1.3.0
+    essensys_version: V.1.3.0
+    control_plane_version: V.1.3.7
+    control_plane_port: 9100
     acme_email: admin@acme.com
     use_staging: false
     wan_domain_default: essensys.acme.com
     domain_file: "/home/{{ service_user }}/domain.txt"
     traefik_version: v2.11.3
-    go_version: "1.21.5"
+    go_version: "1.26.0"
     node_setup_script: "https://deb.nodesource.com/setup_20.x"
+    cloud_hub_public_url: "https://mon.essensys.fr"
+
+  pre_tasks:
+    - name: Detect installed Go version
+      ansible.builtin.command: /usr/local/go/bin/go version
+      register: go_installed
+      failed_when: false
+      changed_when: false
+
+    - name: Install or upgrade Go for backend V.1.3.0 (requires >= 1.25)
+      ansible.builtin.shell: |
+        set -euo pipefail
+        wget -q "https://go.dev/dl/go{{ go_version }}.linux-arm64.tar.gz" -O /tmp/go.tar.gz
+        rm -rf /usr/local/go
+        tar -C /usr/local -xzf /tmp/go.tar.gz
+        rm /tmp/go.tar.gz
+        /usr/local/go/bin/go version
+      when: >
+        go_installed.rc != 0 or
+        ('go version go' + go_version) not in go_installed.stdout
+
   roles:
     - raspberry_backend
     - raspberry_mcp
