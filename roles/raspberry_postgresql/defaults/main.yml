@@ -1,0 +1,10 @@
+---
+# PostgreSQL local gateway (prérequis LAN IAM — OpenSpec 2026-06.017)
+gateway_db_enabled: "{{ lan_iam_enabled | default(false) }}"
+gateway_db_host: "127.0.0.1"
+gateway_db_port: 5432
+gateway_db_user: essensys
+gateway_db_name: essensys_db
+gateway_db_password_file: "{{ config_dir }}/backend/.postgres_password"
+backend_config: "{{ config_dir }}/backend/config.yaml"
+lan_iam_enabled: false

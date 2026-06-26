@@ -35,3 +35,6 @@ traefik_ca_download_name: "essensys-local-ca.crt"
 traefik_install_ca_on_gateway: true
 # Rapatrier la CA sur le controleur Ansible (files/local-ca/)
 traefik_fetch_ca_to_controller: true
+
+# Fallback si pre_task wan_domain absent (update.raspberrypi calcule depuis domain.txt)
+wan_domain: "{{ wan_domain_default | default('essensys.acme.com') }}"

@@ -127,6 +127,8 @@
     - raspberry_docker
 
     # --- Configuration des services (pas de conteneurs ici) ---
+    - role: raspberry_postgresql
+      when: lan_iam_enabled | default(false) | bool
     - raspberry_mosquitto
     - raspberry_redis
     - raspberry_backend

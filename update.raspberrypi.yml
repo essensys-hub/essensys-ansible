@@ -25,8 +25,29 @@
     go_version: "1.26.0"
     node_setup_script: "https://deb.nodesource.com/setup_20.x"
     cloud_hub_public_url: "https://mon.essensys.fr"
+    # Monitoring (templates nginx)
+    prometheus_port: 9092
+    alertmanager_port: 9093
+    node_exporter_port: 9101
+    avahi_hostname: mon.essensys
+    avahi_domain: local
 
   pre_tasks:
+    - name: Lire le domaine WAN
+      ansible.builtin.slurp:
+        src: "{{ domain_file }}"
+      register: domain_file_content
+      ignore_errors: true
+
+    - name: Calculer wan_domain pour Traefik
+      ansible.builtin.set_fact:
+        wan_domain: >-
+          {{
+            (domain_file_content.content | default('') | b64decode | trim)
+            if (domain_file_content is defined and domain_file_content.content is defined and (domain_file_content.content | b64decode | trim) != '')
+            else wan_domain_default
+          }}
+
     - name: Detect installed Go version
       ansible.builtin.command: /usr/local/go/bin/go version
       register: go_installed
@@ -46,6 +67,8 @@
         ('go version go' + go_version) not in go_installed.stdout
 
   roles:
+    - role: raspberry_postgresql
+      when: lan_iam_enabled | default(false) | bool
     - raspberry_backend
     - raspberry_mcp
     - raspberry_frontend

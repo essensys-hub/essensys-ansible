@@ -59,6 +59,13 @@ wan_domain_default="essensys.acme.com"
 acme_email="admin@acme.com"
 use_staging=false
 
+# mDNS / Traefik routes locales (mon.essensys.local)
+avahi_hostname="mon.essensys"
+avahi_domain="local"
+
+# LAN IAM (OpenSpec 2026-06.017)
+lan_iam_enabled=true
+
 # --- Cloud sync scheduler (essensys-cloud-sync-scheduler) ---
 cloud_sync_enabled=true
 cloud_scheduled_sync_enabled=true

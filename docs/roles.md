@@ -60,20 +60,28 @@ These roles are used by `install.raspberrypi.yml` and `update.raspberrypi.yml`.
     - Creates the `essensys` user and directories.
     - Ensures Redis is running.
 
+## `raspberry_postgresql`
+
+- **Tasks** (when `lan_iam_enabled` / `gateway_db_enabled`):
+    - Installs PostgreSQL + `python3-psycopg2`.
+    - Creates user/database `essensys` / `essensys_db`.
+    - Injects `database:` block in `config.yaml` backend.
+
 ## `raspberry_backend`
 
 - **Tasks**:
+    - Dedupes Ansible-managed YAML blocks in `config.yaml`.
     - Clones `essensys-server-backend`.
     - Builds the Go binary and deploys it.
-    - Creates `config.yaml`.
+    - Configures `lan_iam`, cloud sync, UniFi blocks.
+    - Applies migration `003_lan_users` when LAN IAM enabled.
     - Installs and enables systemd service.
 
 ## `raspberry_frontend`
 
 - **Tasks**:
-    - Clones `essensys-server-frontend`.
-    - Builds the frontend.
-    - Deploys assets to `/opt/essensys/frontend`.
+    - With LAN IAM: git clone + `VITE_LAN_IAM=true npm run build`.
+    - Otherwise: Docker image pull + extract static files.
 
 ## `raspberry_nginx`
 

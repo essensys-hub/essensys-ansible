@@ -1,0 +1,43 @@
+---
+- name: Definir repertoire source frontend LAN IAM
+  ansible.builtin.set_fact:
+    frontend_repo_dir: "/home/{{ service_user }}/essensys-server-frontend"
+
+- name: Cloner ou mettre a jour le frontend (build LAN IAM)
+  ansible.builtin.git:
+    repo: "{{ frontend_repo | default('https://github.com/essensys-hub/essensys-server-frontend.git') }}"
+    dest: "{{ frontend_repo_dir }}"
+    version: "{{ frontend_version }}"
+    force: true
+  become_user: "{{ service_user }}"
+
+- name: Verifier Node.js pour build frontend
+  ansible.builtin.command: node --version
+  register: node_installed
+  failed_when: false
+  changed_when: false
+
+- name: Installer Node.js 20 si absent
+  ansible.builtin.shell: |
+    set -euo pipefail
+    curl -fsSL {{ node_setup_script | default('https://deb.nodesource.com/setup_20.x') }} | bash -
+    apt-get install -y nodejs
+    node --version
+  when: node_installed.rc != 0
+
+- name: Build frontend avec VITE_LAN_IAM=true
+  ansible.builtin.shell: |
+    set -euo pipefail
+    cd "{{ frontend_repo_dir }}"
+    npm ci
+    VITE_LAN_IAM=true npm run build
+  become_user: "{{ service_user }}"
+  environment:
+    HOME: "/home/{{ service_user }}"
+  register: lan_iam_frontend_build
+
+- name: Deployer fichiers statiques LAN IAM
+  ansible.builtin.command: >
+    rsync -a --delete {{ frontend_repo_dir }}/dist/ {{ frontend_html_dir }}/
+  become_user: "{{ service_user }}"
+  when: lan_iam_frontend_build.rc == 0

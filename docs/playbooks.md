@@ -103,7 +103,11 @@ Mise a jour applicative (backend, frontend, config nginx/traefik, push status).
 **Usage:**
 ```bash
 ansible-playbook -i inventory update.raspberrypi.yml
+# Gateway CM5 + LAN IAM :
+ansible-playbook -i inventory.gateway update.raspberrypi.yml -e lan_iam_enabled=true
 ```
+
+Variables clés (gateway) : `prometheus_port`, `alertmanager_port` et `wan_domain` sont calculées dans le playbook. Avec `lan_iam_enabled=true` : rôle `raspberry_postgresql`, migration `lan_users`, build frontend `VITE_LAN_IAM=true`.
 
 ### `uninstall.raspberrypi.yml`
 

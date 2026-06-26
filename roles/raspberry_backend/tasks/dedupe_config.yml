@@ -1,0 +1,11 @@
+---
+- name: Verifier presence config backend
+  ansible.builtin.stat:
+    path: "{{ backend_config }}"
+  register: backend_config_stat
+
+- name: Dedoublonner blocs Ansible dans config.yaml backend
+  ansible.builtin.script: dedupe_config_blocks.py {{ backend_config }}
+  register: dedupe_config
+  changed_when: dedupe_config.stdout == 'deduped'
+  when: backend_config_stat.stat.exists

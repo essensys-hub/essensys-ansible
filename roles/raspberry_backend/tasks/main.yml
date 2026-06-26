@@ -4,6 +4,9 @@
   set_fact:
     backend_repo_dir: "/home/{{ service_user }}/essensys-server-backend"
 
+- name: Dedoublonner config backend avant blocs Ansible
+  import_tasks: dedupe_config.yml
+
 - name: Cloner ou mettre a jour le backend
   git:
     repo: "{{ backend_repo }}"
@@ -96,18 +99,22 @@
     mode: '0644'
     force: false
 
-- name: Forcer le port 7070 dans config.yaml
-  lineinfile:
+- name: Forcer le port 7070 dans config.yaml (section server uniquement)
+  ansible.builtin.replace:
     path: "{{ backend_config }}"
-    regexp: '^\s*port:'
-    line: '  port: 7070'
-    insertafter: '^server:'
+    after: '^server:'
+    before: '^auth:'
+    regexp: '^\s*port:\s*.*$'
+    replace: '  port: 7070'
 
 - name: Configure cloud sync scheduler (gateway)
   import_tasks: cloud_sync.yml
 
 - name: Configurer IAM LAN (017)
   import_tasks: lan_iam.yml
+
+- name: Appliquer migrations SQL LAN IAM
+  import_tasks: lan_iam_migrations.yml
 
 - name: Configurer UniFi Protect dans config.yaml
   blockinfile:
@@ -160,6 +167,15 @@
     name: essensys-backend
     state: restarted
     enabled: true
+
+- name: Dedoublonner config backend apres injection des blocs
+  import_tasks: dedupe_config.yml
+
+- name: Redemarrer backend si config dedoublonnee
+  service:
+    name: essensys-backend
+    state: restarted
+  when: dedupe_config is defined and dedupe_config.changed | default(false)
 
 - name: S'assurer que Redis est actif (Docker, ignore si absent en systemd)
   service:

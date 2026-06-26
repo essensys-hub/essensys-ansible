@@ -1,0 +1,67 @@
+---
+- name: Installer PostgreSQL et dependances Ansible
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+  when: gateway_db_enabled | default(false) | bool
+
+- name: Demarrer PostgreSQL
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+  when: gateway_db_enabled | default(false) | bool
+
+- name: Generer mot de passe PostgreSQL gateway (one-shot)
+  ansible.builtin.copy:
+    dest: "{{ gateway_db_password_file }}"
+    content: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=24') }}"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'
+    force: false
+  when: gateway_db_enabled | default(false) | bool
+
+- name: Lire mot de passe PostgreSQL gateway
+  ansible.builtin.slurp:
+    src: "{{ gateway_db_password_file }}"
+  register: gateway_db_password_slurp
+  when: gateway_db_enabled | default(false) | bool
+
+- name: Creer utilisateur PostgreSQL gateway
+  community.postgresql.postgresql_user:
+    name: "{{ gateway_db_user }}"
+    password: "{{ gateway_db_password_slurp.content | b64decode | trim }}"
+    role_attr_flags: NOSUPERUSER,LOGIN
+  become: true
+  become_user: postgres
+  when: gateway_db_enabled | default(false) | bool
+
+- name: Creer base PostgreSQL gateway
+  community.postgresql.postgresql_db:
+    name: "{{ gateway_db_name }}"
+    owner: "{{ gateway_db_user }}"
+  become: true
+  become_user: postgres
+  when: gateway_db_enabled | default(false) | bool
+
+- name: Injecter bloc database dans config backend
+  ansible.builtin.blockinfile:
+    path: "{{ backend_config }}"
+    marker: "# {mark} ANSIBLE MANAGED DATABASE"
+    block: |
+      database:
+        driver: postgres
+        host: "{{ gateway_db_host }}"
+        port: {{ gateway_db_port }}
+        user: "{{ gateway_db_user }}"
+        password: "{{ gateway_db_password_slurp.content | b64decode | trim }}"
+        name: "{{ gateway_db_name }}"
+    create: true
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0640'
+  when: gateway_db_enabled | default(false) | bool

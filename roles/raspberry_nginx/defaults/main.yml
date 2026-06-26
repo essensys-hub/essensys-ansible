@@ -5,4 +5,7 @@ nginx_container_name: "essensys-nginx"
 nginx_config_dir: "{{ config_dir }}/nginx"
 nginx_frontend_dir: "{{ data_dir }}/frontend"
 
+prometheus_port: 9092
+alertmanager_port: 9093
+
 openclaw_port: 18789
