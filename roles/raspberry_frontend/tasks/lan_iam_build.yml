@@ -25,6 +25,23 @@
     node --version
   when: node_installed.rc != 0
 
+- name: Creer repertoire images frontend LAN IAM
+  ansible.builtin.file:
+    path: "{{ frontend_repo_dir }}/public/images"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: "0755"
+
+- name: Copier fond login depuis support site (machine de controle)
+  ansible.builtin.copy:
+    src: "{{ essensys_root | default(playbook_dir | dirname) }}/essensys-support-site/site/src/assets/fond-inprogress.png"
+    dest: "{{ frontend_repo_dir }}/public/images/fond-inprogress.png"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: "0644"
+  failed_when: false
+
 - name: Build frontend avec VITE_LAN_IAM=true
   ansible.builtin.shell: |
     set -euo pipefail
