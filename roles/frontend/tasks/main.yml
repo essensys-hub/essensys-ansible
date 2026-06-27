@@ -3,7 +3,7 @@
   git:
     repo: 'https://github.com/essensys-hub/essensys-support-site.git'
     dest: /opt/essensys/repo
-    version: V.1.0.0
+    version: "{{ support_site_version | default('V.1.0.0') }}"
     force: yes
 
 - name: Clone essensys-memory for blog content
