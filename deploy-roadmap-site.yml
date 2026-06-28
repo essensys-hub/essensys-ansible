@@ -10,5 +10,6 @@
     - roadmap_site
     - frontend
     - demo_site
+    - demo_portal_site
 
 - import_playbook: enable-https-prod.yml

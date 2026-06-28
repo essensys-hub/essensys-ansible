@@ -1,0 +1,4 @@
+---
+demo_portal_site_enabled: true
+demo_portal_site_domain: demo.portal.essensys.fr
+demo_portal_site_root: /opt/essensys/frontend/dist/demo/portal

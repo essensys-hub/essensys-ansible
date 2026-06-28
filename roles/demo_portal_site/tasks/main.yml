@@ -1,0 +1,40 @@
+---
+- name: Ensure certbot webroot exists (demo portal)
+  ansible.builtin.file:
+    path: /var/www/certbot
+    state: directory
+    mode: '0755'
+  when: demo_portal_site_enabled | bool
+
+- name: Obtain SSL certificate for demo portal domain
+  ansible.builtin.command: >
+    certbot certonly --webroot -w /var/www/certbot
+    -d {{ demo_portal_site_domain }}
+    --non-interactive --agree-tos -m support@essensys.fr
+    --keep-until-expiring
+  register: demo_portal_site_certbot
+  failed_when: false
+  changed_when: demo_portal_site_certbot.rc == 0
+  when: demo_portal_site_enabled | bool
+
+- name: Check demo portal TLS certificate
+  ansible.builtin.stat:
+    path: "/etc/letsencrypt/live/{{ demo_portal_site_domain }}/fullchain.pem"
+  register: demo_portal_site_tls_cert
+  when: demo_portal_site_enabled | bool
+
+- name: Install Nginx vhost for demo portal site
+  ansible.builtin.template:
+    src: essensys-demo-portal.conf.j2
+    dest: /etc/nginx/sites-available/essensys-demo-portal
+    mode: '0644'
+  notify: Reload nginx
+  when: demo_portal_site_enabled | bool
+
+- name: Enable demo portal Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/essensys-demo-portal
+    dest: /etc/nginx/sites-enabled/essensys-demo-portal
+    state: link
+  notify: Reload nginx
+  when: demo_portal_site_enabled | bool

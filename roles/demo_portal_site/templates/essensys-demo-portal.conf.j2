@@ -1,16 +1,16 @@
-# Démo support-site Essensys — {{ demo_site_domain }}
-# Même build que mon.essensys.fr (essensys-support-site/site/dist)
+# Démo portail distant mocké — {{ demo_portal_site_domain }}
+# Build : essensys-user-portal-frontend (VITE_DEMO_MODE + VITE_DEMO_ROOT)
 
 server {
     listen 80;
     listen [::]:80;
-    server_name {{ demo_site_domain }};
+    server_name {{ demo_portal_site_domain }};
 
-    root {{ demo_site_root }};
+    root {{ demo_portal_site_root }};
     index index.html;
 
-    access_log /var/log/nginx/essensys-demo-access.log;
-    error_log /var/log/nginx/essensys-demo-error.log warn;
+    access_log /var/log/nginx/essensys-demo-portal-access.log;
+    error_log /var/log/nginx/essensys-demo-portal-error.log warn;
 
     charset utf-8;
     gzip on;
@@ -31,22 +31,22 @@ server {
     }
 }
 
-{% if demo_site_tls_cert.stat.exists %}
+{% if demo_portal_site_tls_cert.stat.exists %}
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
-    server_name {{ demo_site_domain }};
+    server_name {{ demo_portal_site_domain }};
 
-    ssl_certificate /etc/letsencrypt/live/{{ demo_site_domain }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ demo_site_domain }}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/{{ demo_portal_site_domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ demo_portal_site_domain }}/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-    root {{ demo_site_root }};
+    root {{ demo_portal_site_root }};
     index index.html;
 
-    access_log /var/log/nginx/essensys-demo-access.log;
-    error_log /var/log/nginx/essensys-demo-error.log warn;
+    access_log /var/log/nginx/essensys-demo-portal-access.log;
+    error_log /var/log/nginx/essensys-demo-portal-error.log warn;
 
     charset utf-8;
     gzip on;

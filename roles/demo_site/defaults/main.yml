@@ -1,4 +1,5 @@
 ---
 demo_site_enabled: true
+# Support-site SPA (essensys-support-site) — login, accueil, admin
 demo_site_domain: demo.essensys.fr
-demo_site_root: /opt/essensys/frontend/dist/demo/root
+demo_site_root: /opt/essensys/frontend/dist
