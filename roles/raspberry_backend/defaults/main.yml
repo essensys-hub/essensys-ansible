@@ -2,6 +2,7 @@
 backend_image: "essensyshub/essensys-backend"
 backend_version: "{{ essensys_version }}"
 backend_container_name: "essensys-backend"
+backend_runtime: "systemd"
 backend_port: 7070
 backend_config: "{{ config_dir }}/backend/config.yaml"
 backend_log_level: "info"

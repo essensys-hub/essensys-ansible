@@ -29,8 +29,12 @@ services:
     restart: unless-stopped
     working_dir: /etc/essensys
     entrypoint: ["server"]
+    command: ["-config", "/etc/essensys/config.yaml"]
     volumes:
       - {{ backend_config }}:/etc/essensys/config.yaml:ro
+{% if backend_use_host_binary | default(false) %}
+      - {{ backend_dir }}/server:/usr/local/bin/server:ro
+{% endif %}
     depends_on:
       - essensys-redis
 

@@ -21,6 +21,7 @@
     state: stopped
   failed_when: false
   changed_when: false
+  when: backend_runtime == 'systemd'
 
 - name: Copier le backend vers le repertoire d'installation
   command: rsync -a --delete "{{ backend_repo_dir }}/" "{{ backend_dir }}/"
@@ -56,13 +57,14 @@
     GOTOOLCHAIN: local
   when: go_mod_tidy.rc != 0
 
-- name: Compiler le backend
+- name: Compiler le backend (binaire statique pour conteneur Alpine)
   command: /usr/local/go/bin/go build -o server ./cmd/server
   args:
     chdir: "{{ backend_dir }}"
   environment:
     PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
     GOTOOLCHAIN: local
+    CGO_ENABLED: "0"
 
 - name: Creer le fichier config.yaml si absent
   copy:
@@ -149,10 +151,12 @@
     src: essensys-backend.service.j2
     dest: /etc/systemd/system/essensys-backend.service
     mode: '0644'
+  when: backend_runtime == 'systemd'
 
 - name: Recharger systemd
   systemd:
     daemon_reload: true
+  when: backend_runtime == 'systemd'
 
 - name: Definir les permissions du backend
   file:
@@ -167,6 +171,7 @@
     name: essensys-backend
     state: restarted
     enabled: true
+  when: backend_runtime == 'systemd'
 
 - name: Dedoublonner config backend apres injection des blocs
   import_tasks: dedupe_config.yml
@@ -176,6 +181,7 @@
     name: essensys-backend
     state: restarted
   when: dedupe_config is defined and dedupe_config.changed | default(false)
+        and backend_runtime == 'systemd'
 
 - name: S'assurer que Redis est actif (Docker, ignore si absent en systemd)
   service:

@@ -70,12 +70,13 @@
     mode: '0644'
     force: false
 
-- name: Forcer le port dans la configuration backend Docker
-  lineinfile:
+- name: Forcer le port HTTP backend (section server uniquement)
+  ansible.builtin.replace:
     path: "{{ config_dir }}/backend/config.yaml"
-    regexp: '^\s*port:'
-    line: '  port: {{ backend_port }}'
-    insertafter: '^server:'
+    after: '^server:'
+    before: '^auth:'
+    regexp: '^\s*port:\s*.*$'
+    replace: '  port: {{ backend_port }}'
 
 - name: Configure cloud sync scheduler (gateway)
   import_tasks: ../raspberry_backend/tasks/cloud_sync.yml

@@ -1,6 +1,23 @@
 ---
-- name: Configure cloud sync block in backend config
+- name: Lire token gateway existant si non fourni au playbook
+  ansible.builtin.shell: |
+    awk '/^cloud:/{f=1} f && /gateway_token:/{gsub(/.*"/,""); gsub(/".*/,""); print; exit}' "{{ backend_config }}"
+  register: existing_gateway_token
+  changed_when: false
+  failed_when: false
+  when:
+    - cloud_sync_enabled | default(false) | bool
+    - cloud_gateway_token | default('') | length == 0
+
+- name: Definir token gateway effectif (conserver l'existant si absent des extra-vars)
+  ansible.builtin.set_fact:
+    cloud_gateway_token_effective: "{{ cloud_gateway_token | default(existing_gateway_token.stdout | default('') | trim) }}"
   when: cloud_sync_enabled | default(false) | bool
+
+- name: Configure cloud sync block in backend config
+  when:
+    - cloud_sync_enabled | default(false) | bool
+    - cloud_gateway_token_effective | default('') | length > 0
   blockinfile:
     path: "{{ backend_config }}"
     marker: "# {mark} ANSIBLE MANAGED CLOUD SYNC"
@@ -10,7 +27,7 @@
         enabled: true
         hub_url: "{{ cloud_hub_url }}"
         gateway_id: "{{ cloud_gateway_id | default('') }}"
-        gateway_token: "{{ cloud_gateway_token | default('') }}"
+        gateway_token: "{{ cloud_gateway_token_effective }}"
         poll_interval_seconds: {{ cloud_poll_interval_seconds | default(5) }}
         client_id: "{{ cloud_client_id | default('default') }}"
         machine_id: {{ cloud_gateway_machine_id | default(0) }}

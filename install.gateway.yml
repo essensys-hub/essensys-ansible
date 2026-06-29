@@ -27,6 +27,9 @@
     install_dir: /opt/essensys
     backend_dir: "{{ install_dir }}/backend"
     frontend_dir: "{{ install_dir }}/frontend"
+    # Image Docker V.1.3.0 sans cloudsync : monter le binaire compile sur l'hote
+    backend_use_host_binary: true
+    backend_runtime: "compose"
 
     # Depots sources et versions
     backend_repo: https://github.com/essensys-hub/essensys-server-backend.git

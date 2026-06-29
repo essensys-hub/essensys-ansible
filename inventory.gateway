@@ -70,4 +70,6 @@ lan_iam_enabled=true
 cloud_sync_enabled=true
 cloud_scheduled_sync_enabled=true
 cloud_poll_interval_seconds=5
-# cloud_gateway_id / cloud_gateway_token : host_vars ou vault
+cloud_gateway_id=gw-essensys-gateway
+cloud_gateway_machine_id=19
+# cloud_gateway_token : host_vars/gateway-essensys/secrets.sops.yaml ou -e à chaque deploy

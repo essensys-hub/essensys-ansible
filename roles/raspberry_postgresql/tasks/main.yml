@@ -65,3 +65,12 @@
     group: "{{ service_user }}"
     mode: '0640'
   when: gateway_db_enabled | default(false) | bool
+
+- name: Garantir port PostgreSQL dans config backend (ne pas confondre avec server.port)
+  ansible.builtin.replace:
+    path: "{{ backend_config }}"
+    after: '^database:'
+    before: '^# BEGIN ANSIBLE MANAGED CLOUD SYNC|^cloud:'
+    regexp: '^\s*port:\s*.*$'
+    replace: '  port: {{ gateway_db_port }}'
+  when: gateway_db_enabled | default(false) | bool
