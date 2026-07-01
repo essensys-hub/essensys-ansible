@@ -28,6 +28,8 @@
   args:
     chdir: /opt/essensys/portal-frontend-src
   environment:
+    VITE_PORTAL_ROOT: "true"
+    VITE_SUPPORT_SITE_ORIGIN: "{{ cloud_frontend_url | default('https://www.essensys.fr/') | regex_replace('/$', '') }}"
     VITE_NEW_RELIC_ENABLED: "{{ newrelic_browser_enabled | default(false) | bool | lower }}"
     VITE_NEW_RELIC_ACCOUNT_ID: "{{ newrelic_account_id | default('') }}"
     VITE_NEW_RELIC_APPLICATION_ID: "{{ newrelic_browser_application_id | default('') }}"

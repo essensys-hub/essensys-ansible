@@ -26,6 +26,7 @@ newrelic_infra_integrations:
 
 # Cloud hub (push_status + cloudsync)
 cloud_hub_public_url: "https://mon.essensys.fr"
+cloud_frontend_url: "https://www.essensys.fr/"
 cloud_backend_consolidated: true
 cloud_backend_legacy_mode: false
 cloud_backend_port: 8080

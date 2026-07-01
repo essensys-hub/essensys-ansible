@@ -1,10 +1,21 @@
 ---
-- name: Avahi - installer avahi-daemon et avahi-utils
+- name: Avahi - installer avahi-daemon, avahi-utils et python3-yaml
   ansible.builtin.apt:
     name:
       - avahi-daemon
       - avahi-utils
+      - python3-yaml
     state: present
+  tags: [avahi, lan-dns]
+
+- name: Avahi - deployer le script LAN DNS dynamique
+  ansible.builtin.copy:
+    src: essensys-lan-dns-dynamic.sh
+    dest: /usr/local/bin/essensys-lan-dns-dynamic.sh
+    owner: root
+    group: root
+    mode: "0755"
+  tags: [avahi, lan-dns]
 
 - name: Avahi - deployer la configuration daemon
   ansible.builtin.template:
@@ -14,26 +25,30 @@
     group: root
     mode: '0644'
   notify: Restart avahi
+  tags: [avahi, lan-dns]
 
 - name: Avahi - activer et demarrer avahi-daemon
   ansible.builtin.service:
     name: avahi-daemon
     state: started
     enabled: true
+  tags: [avahi, lan-dns]
 
-- name: Avahi - installer le service de publication mDNS
+- name: Avahi - installer le service de publication mDNS dynamique
   ansible.builtin.template:
     src: avahi-publish-essensys.service.j2
     dest: /etc/systemd/system/avahi-publish-essensys.service
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   notify:
     - Reload systemd
     - Restart avahi-publish
+  tags: [avahi, lan-dns]
 
-- name: Avahi - activer et demarrer le service de publication
+- name: Avahi - activer et demarrer le service LAN DNS dynamique
   ansible.builtin.service:
     name: avahi-publish-essensys
     state: started
     enabled: true
+  tags: [avahi, lan-dns]

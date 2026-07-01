@@ -2,3 +2,6 @@
 avahi_hostname: mon.essensys
 avahi_domain: local
 avahi_use_ipv6: false
+avahi_lan_interface: eth0
+adguard_config_dir: "{{ config_dir | default('/opt/data/config') }}/adguard"
+adguard_container_name: essensys-adguard

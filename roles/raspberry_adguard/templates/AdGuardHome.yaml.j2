@@ -143,6 +143,8 @@ verbose: false
 schema_version: 20
 rewrites:
   - domain: mon.essensys.fr
-    answer: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+    answer: "{{ gateway_eth0_ip | default(ansible_default_ipv4.address, true) }}"
+    enabled: true
   - domain: mon.essensys.local
-    answer: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+    answer: "{{ gateway_eth0_ip | default(ansible_default_ipv4.address, true) }}"
+    enabled: true

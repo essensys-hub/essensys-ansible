@@ -4,6 +4,10 @@
     name: systemd-resolved
     state: restarted
 
+- name: Restart adguard container
+  ansible.builtin.command: docker restart {{ adguard_container_name }}
+  changed_when: true
+
 - name: Save iptables rules
   ansible.builtin.command: netfilter-persistent save
   changed_when: true

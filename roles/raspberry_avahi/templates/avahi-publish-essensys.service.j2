@@ -1,15 +1,19 @@
 # Gere par Ansible - role raspberry_avahi
-# Annonce mon.essensys.local via mDNS (Bonjour/Zeroconf) sur le LAN
+# mDNS + rewrites AdGuard synchronises sur l'IP DHCP courante de eth0
 [Unit]
-Description=mDNS broadcast mon.essensys.local
-After=avahi-daemon.service network-online.target
+Description=Essensys LAN DNS dynamique (mDNS mon.essensys.local + AdGuard)
+After=avahi-daemon.service network-online.target docker.service
+Wants=network-online.target
 Requires=avahi-daemon.service
 
 [Service]
 Type=simple
-Restart=on-failure
+Restart=always
 RestartSec=5
-ExecStart=/usr/bin/avahi-publish -a -R {{ avahi_hostname }}.{{ avahi_domain }} {{ gateway_eth0_ip | default(ansible_default_ipv4.address) }}
+Environment=ESSENSYS_LAN_IFACE=eth0
+Environment=ESSENSYS_LAN_FQDN={{ avahi_hostname }}.{{ avahi_domain }}
+Environment=ESSENSYS_ADGUARD_PORT={{ adguard_web_port | default(3000) }}
+ExecStart=/usr/local/bin/essensys-lan-dns-dynamic.sh
 
 [Install]
 WantedBy=multi-user.target

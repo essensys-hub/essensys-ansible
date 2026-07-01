@@ -35,6 +35,21 @@
     avahi_domain: local
 
   pre_tasks:
+    - name: Detecter l'adresse IP de eth0 (gateway_eth0_ip auto)
+      ansible.builtin.shell: ip -4 addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1 | head -1
+      register: eth0_ip_detected
+      changed_when: false
+      failed_when: false
+      when: gateway_dual_nic | default(false) | bool
+
+    - name: Definir gateway_eth0_ip depuis l'interface si non specifie
+      ansible.builtin.set_fact:
+        gateway_eth0_ip: "{{ eth0_ip_detected.stdout }}"
+      when:
+        - gateway_dual_nic | default(false) | bool
+        - gateway_eth0_ip | default('') == ''
+        - eth0_ip_detected.stdout | default('') != ''
+
     - name: Lire le domaine WAN
       ansible.builtin.slurp:
         src: "{{ domain_file }}"
@@ -78,6 +93,8 @@
     - raspberry_nginx
     # Traefik pour port 443 avec authentification (stack WAN)
     - raspberry_traefik
+    - role: raspberry_avahi
+      when: gateway_dual_nic | default(false) | bool
     - raspberry_push_status
 
   post_tasks:
