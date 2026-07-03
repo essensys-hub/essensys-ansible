@@ -1,0 +1,22 @@
+---
+# Essensys V.1.5.0 — variables Ansible pour déploiement figé (2026-07-03)
+# Usage:
+#   ansible-playbook -i inventory.gateway install.gateway.yml -e @releases/V.1.5.0.yml
+#   ansible-playbook -i inventory deploy-portal-stack.yml -e @releases/V.1.5.0.yml
+#   ansible-playbook -i inventory install.raspberrypi.yml -e @releases/V.1.5.0.yml
+
+essensys_release_id: V.1.5.0
+essensys_release_date: "2026-07-03"
+
+# --- CM5 gateway + Raspberry classique (images Docker) ---
+essensys_version: V.1.3.0
+control_plane_version: V.1.3.7
+backend_version: V.1.3.0
+frontend_version: V.1.3.0
+
+# --- OVH cloud hub (git SHA pins) ---
+cloud_backend_version: "9525a01"
+portal_frontend_version: "974298a"
+cloud_backend_consolidated: true
+cloud_backend_legacy_mode: false
+cloud_backend_port: 8080
