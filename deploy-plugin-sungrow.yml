@@ -1,0 +1,13 @@
+---
+# Deploy ciblé du collecteur Sungrow sur la CM5 (sans re-jouer tout le stack).
+# Inventaire par défaut = inventory.gateway (CM5 distante).
+#   Dry-run : ansible-playbook deploy-plugin-sungrow.yml --check --diff
+#   Apply   : ansible-playbook deploy-plugin-sungrow.yml
+- name: Deploy plugin collector — Sungrow
+  hosts: raspberrypi
+  gather_facts: true
+  become: true
+  vars:
+    data_dir: /opt/data
+  roles:
+    - raspberry_plugin_sungrow

@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=root
 EnvironmentFile={{ plugin_sungrow_dir }}/collector.env
-ExecStart=/usr/bin/python3 {{ plugin_sungrow_dir }}/sungrow_collector.py --interval {{ plugin_sungrow_interval }}
+ExecStart={{ plugin_sungrow_dir }}/venv/bin/python {{ plugin_sungrow_dir }}/sungrow_collector.py --interval {{ plugin_sungrow_interval }}
 Restart=always
 RestartSec=10
 

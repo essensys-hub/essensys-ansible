@@ -12,10 +12,18 @@
   no_log: true
   when: plugin_sungrow_enabled | bool
 
-- name: Sungrow — installer paho-mqtt
+- name: Sungrow — paquet python3-venv (env géré Debian, PEP 668)
+  ansible.builtin.apt:
+    name: python3-venv
+    state: present
+    update_cache: true
+  when: plugin_sungrow_enabled | bool
+
+- name: Sungrow — installer paho-mqtt dans un venv dédié
   ansible.builtin.pip:
     name: "paho-mqtt>=2.0"
-    executable: pip3
+    virtualenv: "{{ plugin_sungrow_dir }}/venv"
+    virtualenv_command: "python3 -m venv"
   when: plugin_sungrow_enabled | bool
 
 - name: Sungrow — répertoire du plugin
