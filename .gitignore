@@ -20,3 +20,7 @@ group_vars/essensys/vault.yml
 
 # Added by ggshield
 .cache_ggshield
+
+# Environnements virtuels Python (ne pas versionner)
+.venv/
+.venv-ansible/

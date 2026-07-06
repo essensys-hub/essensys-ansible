@@ -1,0 +1,11 @@
+---
+# Plugin Sungrow (framework de plugins Essensys) — collecteur sur la CM5.
+plugin_sungrow_enabled: true
+plugin_sungrow_dir: "{{ data_dir }}/plugins/sungrow"
+plugin_sungrow_winet_ip: "192.168.1.247"
+plugin_sungrow_mqtt_host: "127.0.0.1"
+plugin_sungrow_mqtt_port: 1883
+plugin_sungrow_machine_id: "A254"
+plugin_sungrow_interval: 10
+# winet_user / winet_pass : fournis par SOPS (group_vars/essensys/vault.yml).
+# Ne jamais les écrire en clair ici.

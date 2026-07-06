@@ -1,0 +1,7 @@
+---
+- name: restart sungrow collector
+  ansible.builtin.systemd:
+    name: essensys-plugin-sungrow
+    state: restarted
+    daemon_reload: true
+  when: plugin_sungrow_enabled | bool

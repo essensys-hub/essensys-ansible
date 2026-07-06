@@ -1,0 +1,15 @@
+[Unit]
+Description=Essensys plugin collector — Sungrow solar
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+EnvironmentFile={{ plugin_sungrow_dir }}/collector.env
+ExecStart=/usr/bin/python3 {{ plugin_sungrow_dir }}/sungrow_collector.py --interval {{ plugin_sungrow_interval }}
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,69 @@
+---
+- name: Sungrow — vérifier les identifiants WiNet (SOPS/vault)
+  ansible.builtin.assert:
+    that:
+      - winet_user is defined
+      - winet_user | string | length > 0
+      - winet_pass is defined
+      - winet_pass | string | length > 0
+    fail_msg: >-
+      winet_user / winet_pass manquants. Ajoute-les au vault SOPS
+      (group_vars/essensys/vault.yml) — voir docs/secrets.md.
+  no_log: true
+  when: plugin_sungrow_enabled | bool
+
+- name: Sungrow — installer paho-mqtt
+  ansible.builtin.pip:
+    name: "paho-mqtt>=2.0"
+    executable: pip3
+  when: plugin_sungrow_enabled | bool
+
+- name: Sungrow — répertoire du plugin
+  ansible.builtin.file:
+    path: "{{ plugin_sungrow_dir }}"
+    state: directory
+    mode: "0755"
+  when: plugin_sungrow_enabled | bool
+
+- name: Sungrow — déployer le collecteur
+  ansible.builtin.copy:
+    src: sungrow_collector.py
+    dest: "{{ plugin_sungrow_dir }}/sungrow_collector.py"
+    mode: "0755"
+  when: plugin_sungrow_enabled | bool
+  notify: restart sungrow collector
+
+- name: Sungrow — EnvironmentFile (secrets, 0600)
+  ansible.builtin.template:
+    src: sungrow.env.j2
+    dest: "{{ plugin_sungrow_dir }}/collector.env"
+    mode: "0600"
+    owner: root
+    group: root
+  no_log: true
+  when: plugin_sungrow_enabled | bool
+  notify: restart sungrow collector
+
+- name: Sungrow — service systemd
+  ansible.builtin.template:
+    src: essensys-plugin-sungrow.service.j2
+    dest: /etc/systemd/system/essensys-plugin-sungrow.service
+    mode: "0644"
+  when: plugin_sungrow_enabled | bool
+  notify: restart sungrow collector
+
+- name: Sungrow — activer le service
+  ansible.builtin.systemd:
+    name: essensys-plugin-sungrow
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: plugin_sungrow_enabled | bool
+
+- name: Sungrow — désactiver le service si plugin désactivé
+  ansible.builtin.systemd:
+    name: essensys-plugin-sungrow
+    enabled: false
+    state: stopped
+  when: not (plugin_sungrow_enabled | bool)
+  failed_when: false

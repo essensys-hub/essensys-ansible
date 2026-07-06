@@ -54,3 +54,6 @@
     - raspberry_monitor
     - raspberry_logrotate
     - raspberry_push_status
+
+    # --- Plugins (framework) : collecteurs sur la CM5 ---
+    - raspberry_plugin_sungrow
