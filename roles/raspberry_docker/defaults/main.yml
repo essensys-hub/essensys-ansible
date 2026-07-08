@@ -1,3 +1,6 @@
 ---
 docker_users:
   - "{{ service_user }}"
+
+# Stockage images/containers sur NVMe (via {{ data_dir }} monte par raspberry_gateway_nvme)
+docker_data_root: "{{ data_dir | default('/opt/data') }}/docker"

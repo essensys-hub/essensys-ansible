@@ -2,17 +2,14 @@
 # Peripherique NVMe cible (CM5 PCIe)
 gateway_nvme_device: "/dev/nvme0n1"
 
-# Point de montage NVMe (source de verite pour tous les sous-chemins)
-essensys_nvme_mount: "/mnt/nvme"
+data_dir: /opt/data
 
-# Activer les bind mounts NVMe->chemins systeme
-# Mettre a false pour tester le montage seul (mode degrade documente)
+# true : monter le NVMe directement sur {{ data_dir }} (recommande gateway CM5)
+# false : monter sur /mnt/nvme + bind mounts (legacy)
+gateway_nvme_direct_data_mount: true
+
+# Point de montage NVMe en mode legacy (bind mounts)
+essensys_nvme_mount_legacy: "/mnt/nvme"
+
+# Activer les bind mounts supplementaires (logs en mode direct, data+logs en legacy)
 gateway_nvme_bind_mounts_enabled: true
-
-# Liste des bind mounts: {src: chemin NVMe, dest: chemin systeme cible}
-# Les src seront crees sous essensys_nvme_mount avant le bind
-gateway_nvme_bind_mounts:
-  - src: "{{ essensys_nvme_mount }}/data"
-    dest: "{{ data_dir }}"
-  - src: "{{ essensys_nvme_mount }}/logs"
-    dest: "/var/log/essensys"

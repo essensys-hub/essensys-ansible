@@ -1,4 +1,18 @@
 ---
+# === 4.0 : Mode montage (direct /opt/data vs legacy /mnt/nvme) ===
+- name: NVMe - definir le point de montage effectif
+  ansible.builtin.set_fact:
+    nvme_mount_point: "{{ data_dir if gateway_nvme_direct_data_mount | bool else essensys_nvme_mount_legacy }}"
+    nvme_bind_mounts_effective: >-
+      {{
+        ([{'src': data_dir ~ '/logs', 'dest': '/var/log/essensys'}]
+         if gateway_nvme_direct_data_mount | bool
+         else [
+           {'src': essensys_nvme_mount_legacy ~ '/data', 'dest': data_dir},
+           {'src': essensys_nvme_mount_legacy ~ '/logs', 'dest': '/var/log/essensys'}
+         ])
+      }}
+
 # === 4.1 : Detecter le peripherique NVMe ===
 - name: NVMe - verifier la presence du peripherique
   ansible.builtin.stat:
@@ -43,10 +57,83 @@
   register: nvme_uuid
   changed_when: false
 
+# === 4.4b : Migration layout legacy (/mnt/nvme + bind) -> montage direct /opt/data ===
+- name: NVMe - detecter bind legacy sur {{ data_dir }}
+  ansible.builtin.shell: findmnt -n -o SOURCE "{{ data_dir }}" 2>/dev/null || true
+  register: opt_data_source
+  changed_when: false
+  when: gateway_nvme_direct_data_mount | bool
+
+- name: NVMe - migrer layout legacy vers montage direct sur {{ data_dir }}
+  when:
+    - gateway_nvme_direct_data_mount | bool
+    - opt_data_source.stdout is search(essensys_nvme_mount_legacy)
+  block:
+    - name: NVMe migration - arreter Docker
+      ansible.builtin.service:
+        name: docker
+        state: stopped
+      failed_when: false
+
+    - name: NVMe migration - demontage bind {{ data_dir }}
+      ansible.builtin.command: umount "{{ data_dir }}"
+      failed_when: false
+      changed_when: true
+
+    - name: NVMe migration - demontage bind /var/log/essensys
+      ansible.builtin.command: umount /var/log/essensys
+      failed_when: false
+      changed_when: true
+
+    - name: NVMe migration - retirer bind mounts legacy de fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: "{{ item.regexp }}"
+        state: absent
+      loop:
+        - regexp: '^{{ essensys_nvme_mount_legacy }}/data\s'
+        - regexp: '^{{ essensys_nvme_mount_legacy }}/logs\s'
+
+    - name: NVMe migration - remonter {{ essensys_nvme_mount_legacy }} si necessaire
+      ansible.builtin.command: mount "{{ essensys_nvme_mount_legacy }}"
+      failed_when: false
+      changed_when: true
+
+    - name: NVMe migration - aplanir {{ essensys_nvme_mount_legacy }}/data vers racine partition
+      ansible.builtin.shell: |
+        set -euo pipefail
+        legacy="{{ essensys_nvme_mount_legacy }}"
+        if [ ! -d "$legacy/data" ]; then
+          exit 0
+        fi
+        shopt -s dotglob nullglob
+        for item in "$legacy/data"/*; do
+          base="$(basename "$item")"
+          if [ -e "$legacy/$base" ]; then
+            rsync -a "$item/" "$legacy/$base/"
+            rm -rf "$item"
+          else
+            mv "$item" "$legacy/"
+          fi
+        done
+        rmdir "$legacy/data" 2>/dev/null || true
+      args:
+        executable: /bin/bash
+
+    - name: NVMe migration - demontage {{ essensys_nvme_mount_legacy }}
+      ansible.builtin.command: umount "{{ essensys_nvme_mount_legacy }}"
+      changed_when: true
+
+    - name: NVMe migration - retirer entree fstab {{ essensys_nvme_mount_legacy }}
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '\s{{ essensys_nvme_mount_legacy | regex_escape }}\s'
+        state: absent
+
 # === 4.5 : Creer le point de montage ===
-- name: NVMe - creer le point de montage {{ essensys_nvme_mount }}
+- name: NVMe - creer le point de montage {{ nvme_mount_point }}
   ansible.builtin.file:
-    path: "{{ essensys_nvme_mount }}"
+    path: "{{ nvme_mount_point }}"
     state: directory
     owner: root
     group: root
@@ -57,15 +144,15 @@
   ansible.builtin.lineinfile:
     path: /etc/fstab
     regexp: "UUID={{ nvme_uuid.stdout | trim }}"
-    line: "UUID={{ nvme_uuid.stdout | trim }}  {{ essensys_nvme_mount }}  ext4  defaults,noatime  0  2"
+    line: "UUID={{ nvme_uuid.stdout | trim }}  {{ nvme_mount_point }}  ext4  defaults,noatime  0  2"
     state: present
 
 - name: NVMe - monter la partition si non montee
-  ansible.builtin.command: mount "{{ essensys_nvme_mount }}"
+  ansible.builtin.command: mount "{{ nvme_mount_point }}"
   args:
-    creates: "{{ essensys_nvme_mount }}/lost+found"
+    creates: "{{ nvme_mount_point }}/lost+found"
 
-# === 4.8 : Creer les sous-repertoires sur NVMe et les attribuer a essensys ===
+# === 4.8 : Creer les sous-repertoires sur NVMe ===
 - name: NVMe - creer les sous-repertoires de donnees
   ansible.builtin.file:
     path: "{{ item.src }}"
@@ -73,8 +160,23 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0755'
-  loop: "{{ gateway_nvme_bind_mounts }}"
+  loop: "{{ nvme_bind_mounts_effective }}"
   when: gateway_nvme_bind_mounts_enabled | bool
+
+- name: NVMe - creer les repertoires racine {{ data_dir }} (mode direct)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop:
+    - "{{ data_dir }}"
+    - "{{ data_dir }}/logs"
+    - "{{ data_dir }}/docker"
+  when:
+    - gateway_nvme_direct_data_mount | bool
+    - gateway_nvme_bind_mounts_enabled | bool
 
 # === 4.9 : Bind mounts (idempotent via fstab + mount) ===
 - name: NVMe - creer les repertoires cibles des bind mounts
@@ -84,7 +186,7 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0755'
-  loop: "{{ gateway_nvme_bind_mounts }}"
+  loop: "{{ nvme_bind_mounts_effective }}"
   when: gateway_nvme_bind_mounts_enabled | bool
 
 - name: NVMe - ajouter les bind mounts dans fstab
@@ -93,7 +195,7 @@
     regexp: "^{{ item.src | regex_escape }}\\s"
     line: "{{ item.src }}  {{ item.dest }}  none  bind  0  0"
     state: present
-  loop: "{{ gateway_nvme_bind_mounts }}"
+  loop: "{{ nvme_bind_mounts_effective }}"
   when: gateway_nvme_bind_mounts_enabled | bool
   notify: Reload systemd and mount all
 
@@ -101,7 +203,7 @@
   ansible.builtin.command: mount --bind "{{ item.src }}" "{{ item.dest }}"
   args:
     creates: "{{ item.dest }}/.nvme_bind"
-  loop: "{{ gateway_nvme_bind_mounts }}"
+  loop: "{{ nvme_bind_mounts_effective }}"
   when: gateway_nvme_bind_mounts_enabled | bool
   register: bind_mount_result
   failed_when: false
@@ -111,7 +213,7 @@
     path: "{{ item.dest }}/.nvme_bind"
     state: touch
     mode: '0400'
-  loop: "{{ gateway_nvme_bind_mounts }}"
+  loop: "{{ nvme_bind_mounts_effective }}"
   when:
     - gateway_nvme_bind_mounts_enabled | bool
     - bind_mount_result is not skipped
@@ -120,8 +222,8 @@
   ansible.builtin.debug:
     msg: >
       ATTENTION: gateway_nvme_bind_mounts_enabled=false.
-      Le NVMe est monte sur {{ essensys_nvme_mount }} mais les donnees
-      restent sur l'eMMC. Mode degrade - voir README pour activer les bind mounts.
+      Le NVMe est monte sur {{ nvme_mount_point }} mais les logs
+      restent sur l'eMMC. Mode degrade - voir README.
   when: not (gateway_nvme_bind_mounts_enabled | bool)
 
 # === 4.10 : Docker demarre apres le montage NVMe ===
@@ -137,6 +239,6 @@
     content: |
       [Unit]
       After=local-fs.target
-      RequiresMountsFor={{ essensys_nvme_mount }}
+      RequiresMountsFor={{ nvme_mount_point }}
     mode: '0644'
   notify: Reload systemd and mount all

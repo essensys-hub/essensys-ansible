@@ -12,11 +12,11 @@ compose_project_name: essensys
 # Profil gateway (desinstallation reseau / NVMe / dnsmasq)
 gateway_dual_nic: true
 gateway_nvme_device: "/dev/nvme0n1"
-essensys_nvme_mount: "/mnt/nvme"
+gateway_nvme_direct_data_mount: true
+essensys_nvme_mount_legacy: "/mnt/nvme"
+essensys_nvme_mount: "{{ data_dir if gateway_nvme_direct_data_mount | default(true) else essensys_nvme_mount_legacy }}"
 gateway_nvme_bind_mounts:
-  - src: "{{ essensys_nvme_mount }}/data"
-    dest: "/opt/data"
-  - src: "{{ essensys_nvme_mount }}/logs"
+  - src: "{{ data_dir }}/logs"
     dest: "/var/log/essensys"
 
 # Options de nettoyage

@@ -9,6 +9,56 @@
   shell: curl -fsSL https://get.docker.com | sh
   when: docker_check.rc != 0
 
+- name: Creer le repertoire data-root Docker sur NVMe
+  ansible.builtin.file:
+    path: "{{ docker_data_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0711'
+  when: docker_data_root | default('') != ''
+
+- name: Lire data-root Docker actuel
+  ansible.builtin.shell: docker info --format '{{ '{{' }}.DockerRootDir{{ '}}' }}' 2>/dev/null || true
+  register: docker_root_current
+  changed_when: false
+  failed_when: false
+
+- name: Arreter Docker et containerd avant migration data-root
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: stopped
+  loop:
+    - docker
+    - docker.socket
+    - containerd
+  failed_when: false
+  when:
+    - docker_data_root | default('') != ''
+    - docker_root_current.stdout | trim == '/var/lib/docker'
+
+- name: Migrer les donnees Docker vers le NVMe
+  ansible.builtin.command:
+    argv:
+      - rsync
+      - -a
+      - /var/lib/docker/
+      - "{{ docker_data_root }}/"
+  when:
+    - docker_data_root | default('') != ''
+    - docker_root_current.stdout | trim == '/var/lib/docker'
+
+- name: Configurer data-root Docker sur NVMe
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "data-root": "{{ docker_data_root }}"
+      }
+    mode: '0644'
+  when: docker_data_root | default('') != ''
+  notify: restart docker
+
 - name: Ajouter les utilisateurs au groupe docker
   user:
     name: "{{ item }}"
@@ -29,4 +79,4 @@
 
 - name: Afficher la version Docker
   debug:
-    msg: "Docker installe: {{ docker_check.stdout | default(docker_info.stdout_lines[0] | default('OK')) }}"
+    msg: "Docker installe: {{ docker_check.stdout | default(docker_info.stdout_lines[0] | default('OK')) }}, data-root={{ docker_data_root | default('/var/lib/docker') }}"

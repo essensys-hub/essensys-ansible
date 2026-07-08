@@ -46,7 +46,7 @@ gateway_upstream_dns="9.9.9.9"
 
 # --- Stockage NVMe ---
 gateway_nvme_device="/dev/nvme0n1"
-essensys_nvme_mount="/mnt/nvme"
+gateway_nvme_direct_data_mount=true
 gateway_nvme_bind_mounts_enabled=true
 
 # --- Playbooks CM5 ---

@@ -1,0 +1,14 @@
+---
+# Migration stockage gateway : NVMe direct sur /opt/data + Docker data-root
+- name: Migration NVMe gateway CM5
+  hosts: raspberrypi
+  gather_facts: true
+  become: true
+  vars:
+    service_user: essensys
+    data_dir: /opt/data
+    gateway_nvme_direct_data_mount: true
+    gateway_nvme_bind_mounts_enabled: true
+  roles:
+    - raspberry_gateway_nvme
+    - raspberry_docker
