@@ -5,9 +5,10 @@ plugin_sungrow_dir: "{{ data_dir }}/plugins/sungrow"
 plugin_sungrow_winet_ip: "192.168.1.247"
 plugin_sungrow_mqtt_host: "127.0.0.1"
 plugin_sungrow_mqtt_port: 1883
-# Auth MQTT : réutilise les identifiants du rôle raspberry_mosquitto.
-plugin_sungrow_mqtt_user: "{{ mosquitto_user | default('essensys') }}"
-plugin_sungrow_mqtt_pass: "{{ mosquitto_password | default('') }}"
+# Auth MQTT : sungrow_mqtt_* (SOPS secrets/cloud) prioritaire,
+# sinon identifiants du rôle raspberry_mosquitto.
+plugin_sungrow_mqtt_user: "{{ sungrow_mqtt_user | default(mosquitto_user) | default('essensys') }}"
+plugin_sungrow_mqtt_pass: "{{ sungrow_mqtt_pass | default(mosquitto_password) | default('') }}"
 plugin_sungrow_machine_id: "A254"
 plugin_sungrow_interval: 10
 # winet_user / winet_pass : fournis par SOPS (group_vars/essensys/vault.yml).
