@@ -1,0 +1,6 @@
+---
+immudb_image: codenotary/immudb
+immudb_version: latest
+immudb_container_name: essensys-immudb
+immudb_data_dir: "{{ data_dir }}/immudb"
+immudb_port: 3322

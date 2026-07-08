@@ -1,0 +1,91 @@
+---
+- name: audit-service - creer repertoires
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0755'
+  loop:
+    - "{{ audit_service_config_dir }}"
+    - "{{ audit_service_data_dir }}"
+
+- name: audit-service - generer token API si absent
+  ansible.builtin.shell: |
+    set -euo pipefail
+    if [ ! -s "{{ audit_service_api_token_file }}" ]; then
+      openssl rand -hex 32 > "{{ audit_service_api_token_file }}"
+      chmod 600 "{{ audit_service_api_token_file }}"
+      chown {{ service_user }}:{{ service_user }} "{{ audit_service_api_token_file }}"
+    fi
+  args:
+    creates: "{{ audit_service_api_token_file }}"
+  changed_when: false
+
+- name: audit-service - lire token API
+  ansible.builtin.slurp:
+    src: "{{ audit_service_api_token_file }}"
+  register: audit_api_token_slurp
+
+- name: audit-service - lire mot de passe PostgreSQL
+  ansible.builtin.slurp:
+    src: "{{ gateway_db_password_file | default(config_dir + '/backend/.postgres_password') }}"
+  register: gateway_db_password_slurp
+  no_log: true
+
+- name: audit-service - deployer config.yaml
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ audit_service_config_dir }}/config.yaml"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0600'
+
+- name: audit-service - synchroniser sources
+  ansible.builtin.synchronize:
+    src: "{{ playbook_dir }}/../essensys-audit-service/"
+    dest: "{{ install_dir }}/audit-service/"
+    delete: false
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=vendor"
+  delegate_to: localhost
+  become: false
+
+- name: audit-service - compiler binaire
+  ansible.builtin.shell: |
+    set -euo pipefail
+    export PATH="/usr/local/go/bin:$PATH"
+    cd "{{ install_dir }}/audit-service"
+    /usr/local/go/bin/go build -o "{{ audit_service_data_dir }}/audit-service" ./cmd/audit-service
+    /usr/local/go/bin/go build -o "{{ audit_service_data_dir }}/audit-rebuild" ./cmd/audit-rebuild
+  become_user: "{{ service_user }}"
+  environment:
+    GOPATH: "/home/{{ service_user }}/go"
+    HOME: "/home/{{ service_user }}"
+
+- name: audit-service - installer unit systemd
+  ansible.builtin.template:
+    src: essensys-audit-service.service.j2
+    dest: /etc/systemd/system/essensys-audit-service.service
+    mode: '0644'
+  notify: Restart audit-service
+
+- name: audit-service - activer et demarrer
+  ansible.builtin.systemd:
+    name: essensys-audit-service
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: audit-service - injecter config audit dans backend
+  ansible.builtin.blockinfile:
+    path: "{{ backend_config | default(config_dir + '/backend/config.yaml') }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK audit"
+    block: |
+      audit:
+        enabled: true
+        service_url: "http://127.0.0.1:{{ audit_service_listen_port }}"
+        api_token: "{{ audit_api_token_slurp.content | b64decode | trim }}"
+        machine_id: {{ cloud_gateway_machine_id | default(19) }}
+  when: gateway_audit_enabled | bool

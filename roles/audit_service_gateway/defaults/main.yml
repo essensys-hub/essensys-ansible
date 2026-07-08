@@ -1,0 +1,10 @@
+---
+audit_service_image: essensys-audit-service
+audit_service_version: local
+audit_service_container_name: essensys-audit-service
+audit_service_listen_port: 8095
+audit_service_config_dir: "{{ config_dir }}/audit-service"
+audit_service_data_dir: "{{ data_dir }}/audit-service"
+audit_service_api_token_file: "{{ audit_service_config_dir }}/api.token"
+immudb_addr: "127.0.0.1:3322"
+gateway_audit_enabled: true

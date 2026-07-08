@@ -1,0 +1,17 @@
+[Unit]
+Description=Essensys Audit Service (immudb writer)
+After=network-online.target postgresql.service docker.service
+Wants=network-online.target
+RequiresMountsFor={{ data_dir }}
+
+[Service]
+Type=simple
+User={{ service_user }}
+Group={{ service_user }}
+WorkingDirectory={{ audit_service_data_dir }}
+ExecStart={{ audit_service_data_dir }}/audit-service -config {{ audit_service_config_dir }}/config.yaml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

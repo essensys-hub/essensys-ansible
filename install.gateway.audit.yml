@@ -1,0 +1,33 @@
+---
+# Deploy audit trail DEV 1 sur gateway CM5 (immudb + audit-service + backend + frontend)
+- name: Deploy audit trail gateway DEV 1
+  hosts: raspberrypi
+  gather_facts: true
+  become: true
+  vars:
+    essensys_version: "V.1.5.0"
+    control_plane_version: "V.1.3.7"
+    service_user: essensys
+    data_dir: /opt/data
+    config_dir: "{{ data_dir }}/config"
+    install_dir: /opt/essensys
+    backend_dir: "{{ install_dir }}/backend"
+    frontend_dir: "{{ install_dir }}/frontend"
+    backend_repo: https://github.com/essensys-hub/essensys-server-backend.git
+    frontend_repo: https://github.com/essensys-hub/essensys-server-frontend.git
+    backend_version: "{{ essensys_version }}"
+    frontend_version: "{{ essensys_version }}"
+    backend_use_host_binary: true
+    backend_runtime: "compose"
+    go_version: "1.23.4"
+    lan_iam_enabled: true
+    gateway_audit_enabled: true
+  roles:
+    - role: immudb_gateway
+    - role: audit_service_gateway
+    - role: raspberry_backend
+      tags: [backend]
+    - role: raspberry_frontend
+      tags: [frontend]
+    - role: raspberry_compose
+      tags: [compose]

@@ -1,0 +1,9 @@
+listen_addr: ":{{ audit_service_listen_port }}"
+api_token: "{{ audit_api_token_slurp.content | b64decode | trim }}"
+immudb:
+  addr: "{{ immudb_addr }}"
+  user: immudb
+  password: immudb
+  database: defaultdb
+postgres:
+  dsn: "host={{ gateway_db_host | default('127.0.0.1') }} port={{ gateway_db_port | default(5432) }} user={{ gateway_db_user | default('essensys') }} password={{ gateway_db_password_slurp.content | b64decode | trim }} dbname={{ gateway_db_name | default('essensys_db') }} sslmode=disable"

@@ -1,0 +1,6 @@
+---
+- name: Restart audit-service
+  ansible.builtin.systemd:
+    name: essensys-audit-service
+    state: restarted
+    daemon_reload: true

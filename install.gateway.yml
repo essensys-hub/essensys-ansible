@@ -58,7 +58,7 @@
     # gateway_upstream_dns: "9.9.9.9"
     # gateway_armoire_hostname: "mon.essensys.fr"
     # gateway_nvme_device: "/dev/nvme0n1"
-    # essensys_nvme_mount: "/mnt/nvme"
+    # gateway_nvme_direct_data_mount: true   # monte NVMe sur /opt/data
     # gateway_nvme_bind_mounts_enabled: true
 
   pre_tasks:
@@ -132,9 +132,13 @@
     # --- Configuration des services (pas de conteneurs ici) ---
     - role: raspberry_postgresql
       when: lan_iam_enabled | default(false) | bool
+    - role: immudb_gateway
+      when: lan_iam_enabled | default(false) | bool
     - raspberry_mosquitto
     - raspberry_redis
     - raspberry_backend
+    - role: audit_service_gateway
+      when: lan_iam_enabled | default(false) | bool
     - raspberry_mcp
     - raspberry_frontend
     - raspberry_nginx

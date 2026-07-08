@@ -93,3 +93,33 @@
     - lan_iam_enabled | default(false) | bool
     - gateway_db_pw_stat.stat.exists
     - lan_login_clients_table_check.stdout | default('') | trim != '1'
+
+- name: Verifier existence table armoire_audit_events
+  ansible.builtin.shell: |
+    set -euo pipefail
+    export PGPASSWORD="$(cat '{{ gateway_db_password_file | default(config_dir + '/backend/.postgres_password') }}')"
+    psql -h "{{ gateway_db_host | default('127.0.0.1') }}" \
+         -U "{{ gateway_db_user | default('essensys') }}" \
+         -d "{{ gateway_db_name | default('essensys_db') }}" \
+         -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='armoire_audit_events'"
+  register: audit_events_table_check
+  changed_when: false
+  failed_when: false
+  when:
+    - lan_iam_enabled | default(false) | bool
+    - gateway_db_pw_stat.stat.exists
+
+- name: Appliquer migration audit (006)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    export PGPASSWORD="$(cat '{{ gateway_db_password_file | default(config_dir + '/backend/.postgres_password') }}')"
+    psql -h "{{ gateway_db_host | default('127.0.0.1') }}" \
+         -U "{{ gateway_db_user | default('essensys') }}" \
+         -d "{{ gateway_db_name | default('essensys_db') }}" \
+         -v ON_ERROR_STOP=1 \
+         -f "{{ backend_dir }}/migrations/006_audit_outbox.up.sql"
+  become_user: "{{ service_user }}"
+  when:
+    - lan_iam_enabled | default(false) | bool
+    - gateway_db_pw_stat.stat.exists
+    - audit_events_table_check.stdout | default('') | trim != '1'
