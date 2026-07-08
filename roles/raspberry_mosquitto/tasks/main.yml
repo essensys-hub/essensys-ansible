@@ -54,15 +54,17 @@
 
 - name: Generer le fichier password Mosquitto si absent
   shell: |
-    docker run --rm --user 0:0 -v {{ mosquitto_config_dir }}:/mosquitto/config eclipse-mosquitto:2 \
+    docker run --rm --user 0:0 -v {{ mosquitto_config_dir }}:/mosquitto/config \
+      {{ mosquitto_image }}:{{ mosquitto_version }} \
       sh -c "mosquitto_passwd -c -b /mosquitto/config/passwd {{ mosquitto_user }} {{ mosquitto_password }}"
   when: not mqtt_passwd_stat.stat.exists
 
-- name: Fixer les permissions du fichier password
+- name: Fixer les permissions du fichier password (0644 — lisible par le conteneur)
   file:
     path: "{{ mosquitto_config_dir }}/passwd"
     mode: '0644'
-  when: mqtt_passwd_stat.stat.exists or not mqtt_passwd_stat.stat.exists
+    owner: root
+    group: root
 
 - name: Migrer les donnees depuis l'ancien emplacement
   shell: |
