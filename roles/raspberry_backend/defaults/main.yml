@@ -1,6 +1,12 @@
 ---
 backend_image: "essensyshub/essensys-backend"
 backend_version: "{{ essensys_version }}"
+# Repos du framework de plugins — requis par les replace locaux du go.mod
+# (../essensys-plugin-framework/go, ../essensys-plugin-sungrow/adapter),
+# clonés à côté de backend_dir avant le build.
+plugin_framework_repo: "https://github.com/essensys-hub/essensys-plugin-framework.git"
+plugin_sungrow_repo: "https://github.com/essensys-hub/essensys-plugin-sungrow.git"
+backend_plugin_repos_version: "main"
 backend_container_name: "essensys-backend"
 backend_runtime: "systemd"
 backend_port: 7070

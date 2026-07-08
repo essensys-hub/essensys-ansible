@@ -22,6 +22,14 @@
     go_version: "1.23.4"
     lan_iam_enabled: true
     gateway_audit_enabled: true
+    # MQTT backend (bus du framework de plugins) — identifiants du broker CM5
+    # lus directement dans le SOPS (clés sungrow_mqtt_*, PAS backend_mqtt_*
+    # qui sont les identifiants du broker cloud).
+    sops_cloud_secrets: "{{ lookup('community.sops.sops', playbook_dir ~ '/secrets/cloud/essensys.sops.yaml') | from_yaml }}"
+    backend_mqtt_enabled: true
+    backend_mqtt_broker: "tcp://localhost:1883"
+    backend_mqtt_username: "{{ sops_cloud_secrets.sungrow_mqtt_user }}"
+    backend_mqtt_password: "{{ sops_cloud_secrets.sungrow_mqtt_pass }}"
   roles:
     - role: immudb_gateway
     - role: audit_service_gateway

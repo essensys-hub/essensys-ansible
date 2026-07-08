@@ -28,6 +28,16 @@
   register: backend_sync
   changed_when: backend_sync.rc == 0
 
+- name: Cloner les repos plugins (replace locaux du go.mod)
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ backend_dir | dirname }}/{{ item.name }}"
+    version: "{{ backend_plugin_repos_version }}"
+    force: true
+  loop:
+    - { name: essensys-plugin-framework, repo: "{{ plugin_framework_repo }}" }
+    - { name: essensys-plugin-sungrow, repo: "{{ plugin_sungrow_repo }}" }
+
 - name: Synchroniser les dependances Go
   command: /usr/local/go/bin/go mod tidy
   args:
@@ -137,6 +147,23 @@
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
     mode: '0644'
+
+- name: Configurer MQTT (bus plugins + discovery) dans config.yaml
+  blockinfile:
+    path: "{{ backend_config }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK MQTT"
+    block: |
+      mqtt:
+        enabled: {{ backend_mqtt_enabled | lower }}
+        broker: "{{ backend_mqtt_broker }}"
+        username: "{{ backend_mqtt_username }}"
+        password: "{{ backend_mqtt_password }}"
+        client_id: "{{ backend_mqtt_client_id | default('essensys-backend') }}"
+    create: yes
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
+  no_log: true
 
 - name: Creer le repertoire de logs backend
   file:
