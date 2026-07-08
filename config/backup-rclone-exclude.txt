@@ -28,3 +28,7 @@
 # Obsidian workspace local (regénérable)
 **/.obsidian/workspace.json
 **/.obsidian/graph.json
+
+# JVM heap dumps (souvent plusieurs Go, inutiles en backup)
+**/*.hprof
+**/java_pid*.hprof

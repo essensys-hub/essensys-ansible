@@ -39,6 +39,7 @@
     name:
       - mkdocs-material
       - pymdown-extensions
+      - mkdocs-glightbox
     virtualenv: /opt/essensys/docs-build/venv
     virtualenv_command: python3 -m venv
   when: docs_site_enabled | bool

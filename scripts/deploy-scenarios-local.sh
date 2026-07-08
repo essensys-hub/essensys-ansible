@@ -41,7 +41,7 @@ ssh "$OVH_HOST" bash -s <<'REMOTE'
 set -euo pipefail
 sudo rsync -a --delete /tmp/portal-frontend-src/ /opt/essensys/portal-frontend-src/
 sudo chown -R essensys:essensys /opt/essensys/portal-frontend-src
-sudo -u essensys bash -c 'cd /opt/essensys/portal-frontend-src && npm install --silent && npm run build'
+sudo -u essensys bash -c 'cd /opt/essensys/portal-frontend-src && npm install --silent && VITE_PORTAL_ROOT=true npm run build'
 sudo rsync -a --delete /opt/essensys/portal-frontend-src/dist/ /opt/essensys/portal-frontend/dist/
 sudo chown -R essensys:essensys /opt/essensys/portal-frontend/dist
 REMOTE
