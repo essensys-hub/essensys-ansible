@@ -52,6 +52,7 @@
     VITE_NEW_RELIC_AGENT_ID: "{{ newrelic_support_browser_agent_id | default('') }}"
     VITE_NEW_RELIC_TRUST_KEY: "{{ newrelic_support_browser_trust_key | default(newrelic_account_id | default('')) }}"
     VITE_NEW_RELIC_REGION: "{{ newrelic_region | default('EU') }}"
+    VITE_TURNSTILE_SITE_KEY: "{{ vault_turnstile_site_key | default(VITE_TURNSTILE_SITE_KEY | default('')) }}"
 
 - name: Clear deployment directory
   file:

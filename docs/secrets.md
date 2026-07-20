@@ -27,7 +27,28 @@ Ansible charge les secrets via le rôle **`sops_load`** (`community.sops` lookup
 | `vault_newrelic_license_key` | APM Go | `cloud-backend.env.j2` |
 | `vault_newrelic_browser_license_key` | Build Vite NR | `roles/frontend/tasks/main.yml` |
 | `vault_newrelic_api_key` | Alertes NR API | `newrelic_alerts`, `newrelic_deployment` |
+| `vault_turnstile_secret_key` or `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile (register) | `cloud-backend.env.j2` → `TURNSTILE_SECRET_KEY` |
+| `vault_turnstile_site_key` or `VITE_TURNSTILE_SITE_KEY` | Turnstile site key (public) | `roles/frontend/tasks/main.yml` → `VITE_TURNSTILE_SITE_KEY` |
 | `cloud_frontend_url` | Redirects OAuth | SOPS cloud |
+
+### Cloudflare Turnstile (inscription)
+
+1. Create a **managed** widget in the Cloudflare Turnstile dashboard.
+2. Allowlist hostnames: `www.essensys.fr`, `mon.essensys.fr`, `test.essensys.fr` (plus local if needed).
+3. Add keys to SOPS (never commit plaintext):
+
+```bash
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+sops secrets/cloud/essensys.sops.yaml
+# add:
+#   vault_turnstile_secret_key: "<secret>"
+#   vault_turnstile_site_key: "<site key>"
+```
+
+4. Redeploy cloud-backend + support-site frontend so `.env` and the Vite build pick up the keys.
+5. Production sets `ENV=production` and `TURNSTILE_DISABLED=false` — disable is refused at backend startup.
+
+CI / local: Cloudflare always-pass test keys, or `TURNSTILE_DISABLED=true` with `ENV` not `production`.
 
 ## Inventaire secrets gateway (phase 2)
 
