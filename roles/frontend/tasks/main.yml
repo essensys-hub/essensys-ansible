@@ -1,4 +1,19 @@
 ---
+# The clone is owned by essensys while this play runs as root, which git 2.35+
+# refuses to touch. Without this the clone task fails before anything is built,
+# which is how the site sat at be92b00 while later commits looked deployed. The
+# two portal clones already carry the same exception, added by hand; declaring it
+# here keeps the deploy reproducible instead of relying on host state.
+- name: Read git directories already trusted by root
+  command: git config --global --get-all safe.directory
+  register: frontend_safe_dirs
+  changed_when: false
+  failed_when: false
+
+- name: Trust the support site clone
+  command: git config --global --add safe.directory /opt/essensys/repo
+  when: "'/opt/essensys/repo' not in frontend_safe_dirs.stdout_lines"
+
 - name: Clone repository
   git:
     repo: 'https://github.com/essensys-hub/essensys-support-site.git'
