@@ -12,9 +12,16 @@
   hosts: essensys
   become: yes
 
+# Tags let a backend-only change ship without rebuilding the portal SPA from
+# main, which would otherwise carry along whatever frontend commits happen to
+# have landed since the last deploy:
+#   ansible-playbook -i inventory deploy-portal-stack.yml --tags cloud_backend
   roles:
     - role: sops_load
       sops_load_cloud: true
       sops_load_gateway: false
-    - cloud_backend
-    - portal_frontend
+      tags: [always]
+    - role: cloud_backend
+      tags: [cloud_backend]
+    - role: portal_frontend
+      tags: [portal_frontend]
