@@ -7,6 +7,10 @@
   hosts: essensys
   become: yes
   roles:
+    - role: sops_load
+      sops_load_cloud: true
+      sops_load_gateway: false
+      tags: [always]
     - role: cloud_backend
       when: cloud_backend_consolidated | default(false) | bool
     - frontend
