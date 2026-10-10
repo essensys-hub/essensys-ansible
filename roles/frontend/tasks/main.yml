@@ -35,6 +35,33 @@
     /opt/essensys/repo/site/public/blog-data
   when: prepare_blog_from_memory | default(false) | bool
 
+- name: Clone essensys-user-portal-frontend for the user guide
+  git:
+    repo: "{{ portal_user_guide_repo | default('https://github.com/essensys-hub/essensys-user-portal-frontend.git') }}"
+    dest: /opt/essensys/guide-build/portal
+    version: "{{ portal_user_guide_version | default('main') }}"
+    depth: 1
+    force: yes
+  when: prepare_user_guide | default(true) | bool
+
+# Guide utilisateur du portail (portal-user-guide-2026-10-006) : source unique dans le dépôt du
+# portail, préparée dans site/public/guide-data par le script du site (même code qu'en local).
+- name: Check the site version ships the guide preparation script
+  stat:
+    path: /opt/essensys/repo/site/scripts/prepare_guide.py
+  register: guide_prepare_script
+
+- name: Prepare user guide for Vite build
+  command: >
+    python3 /opt/essensys/repo/site/scripts/prepare_guide.py
+    /opt/essensys/guide-build/portal/docs/user-guide
+    /opt/essensys/repo/site/public/guide-data
+  args:
+    chdir: /opt/essensys/repo/site
+  when:
+    - prepare_user_guide | default(true) | bool
+    - guide_prepare_script.stat.exists
+
 - name: Install npm dependencies
   command: npm install
   args:
