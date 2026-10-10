@@ -28,6 +28,9 @@ Ansible charge les secrets via le rôle **`sops_load`** (`community.sops` lookup
 | `vault_newrelic_browser_license_key` | Build Vite NR | `roles/frontend/tasks/main.yml` |
 | `vault_newrelic_api_key` | Alertes NR API | `newrelic_alerts`, `newrelic_deployment` |
 | `cloud_frontend_url` | Redirects OAuth | SOPS cloud |
+| `vault_support_pseudonym_key` | Signalements : clé HMAC des références `U-` (64 hex). Obligatoire en production, ne jamais la changer : les références des comptes changeraient | `cloud-backend.env.j2` (`SUPPORT_PSEUDONYM_KEY`) |
+| `vault_github_app_id`, `vault_github_app_installation_id` | Signalements : GitHub App « Essensys Support » (optionnel : sans eux, signalements « en attente ») | `cloud-backend.env.j2` |
+| `vault_github_app_private_key_content` | Signalements : clé privée PEM de la GitHub App | `cloud_backend/tasks/github_app_key.yml` → `/opt/essensys/secrets/github/` |
 
 ## Inventaire secrets gateway (phase 2)
 

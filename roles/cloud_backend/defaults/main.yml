@@ -23,3 +23,11 @@ cloud_backend_legacy_mode: false
 newrelic_backend_app_name: "essensys-cloud-backend"
 cloud_apple_secrets_dir: /opt/essensys/secrets/apple
 cloud_apple_key_filename: AuthKey.p8
+
+# Signalements Bug/Incident (support-reports-2026-10-004)
+cloud_github_app_secrets_dir: /opt/essensys/secrets/github
+cloud_github_app_key_filename: support-app.pem
+cloud_support_public_repo: essensys-hub/essensys-support-site
+cloud_support_private_repo: essensys-hub/essensys-support
+# Project v2 « Essensys Roadmap » (essensys-hub #6)
+cloud_support_project_id: PVT_kwDODqt0Wc4BavHT
