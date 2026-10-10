@@ -10,6 +10,7 @@ sops_required_cloud_keys:
   - portal_jwt_secret
   - vault_admin_token
   - vault_newrelic_license_key
+  - vault_support_pseudonym_key
 
 sops_required_gateway_keys:
   - cloud_gateway_token
