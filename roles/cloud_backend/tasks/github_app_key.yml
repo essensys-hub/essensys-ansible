@@ -1,0 +1,29 @@
+---
+# Clé privée de la GitHub App « Essensys Support » (support-reports-2026-10-004).
+# Sans vault_github_app_private_key_content, la variable reste vide : le
+# backend accepte les signalements et les garde « en attente d'envoi ».
+- name: Ensure GitHub App secrets directory
+  ansible.builtin.file:
+    path: "{{ cloud_github_app_secrets_dir }}"
+    state: directory
+    owner: essensys
+    group: essensys
+    mode: "0700"
+  when: vault_github_app_private_key_content | default('') | length > 0
+
+- name: Deploy GitHub App private key from SOPS
+  ansible.builtin.copy:
+    content: "{{ vault_github_app_private_key_content }}"
+    dest: "{{ cloud_github_app_secrets_dir }}/{{ cloud_github_app_key_filename }}"
+    owner: essensys
+    group: essensys
+    mode: "0600"
+  when: vault_github_app_private_key_content | default('') | length > 0
+  no_log: true
+
+- name: Resolve GitHub App key file path for cloud backend
+  ansible.builtin.set_fact:
+    cloud_github_app_key_file_resolved: >-
+      {{ (cloud_github_app_secrets_dir ~ '/' ~ cloud_github_app_key_filename)
+         if (vault_github_app_private_key_content | default('') | length > 0)
+         else '' }}
