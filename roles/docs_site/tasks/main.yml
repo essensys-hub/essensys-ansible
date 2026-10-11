@@ -36,9 +36,7 @@
 
 - name: Install MkDocs in venv
   pip:
-    name:
-      - mkdocs-material
-      - pymdown-extensions
+    requirements: /opt/essensys/docs-build/essensys-doc/requirements.txt
     virtualenv: /opt/essensys/docs-build/venv
     virtualenv_command: python3 -m venv
   when: docs_site_enabled | bool
