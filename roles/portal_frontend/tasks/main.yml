@@ -58,3 +58,43 @@
     remote_src: yes
     owner: essensys
     group: essensys
+
+# index.html n'a aucun Cache-Control : le navigateur le garde en cache
+# heuristique et continue de charger un ancien bundle (essensys-user-portal-frontend#37).
+# Les assets/* ont des noms hachés et gardent leur cache d'un an.
+# Le vhost mon.essensys.fr n'est pas un template : on y insère le bloc.
+- name: Revalidate index.html on every visit (mon.essensys.fr)
+  tags: [portal_nginx_cache]
+  block:
+    - name: Add no-cache location for index.html in the mon.essensys.fr server block
+      ansible.builtin.replace:
+        path: /etc/nginx/sites-available/essensys
+        regexp: '(    root /opt/essensys/portal-frontend/dist;\n)(?!    # index.html revalidé)'
+        replace: |
+          \1    # index.html revalidé à chaque visite (assets/* hachés : cache long)
+              location = /index.html {
+                  add_header Cache-Control "no-cache";
+              }
+        backup: true
+      register: portal_index_cache
+
+    - name: Check nginx configuration
+      ansible.builtin.command: nginx -t
+      changed_when: false
+
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+      when: portal_index_cache.changed
+  rescue:
+    - name: Restore the vhost backup after a failed check
+      ansible.builtin.copy:
+        src: "{{ portal_index_cache.backup_file }}"
+        dest: /etc/nginx/sites-available/essensys
+        remote_src: true
+      when: portal_index_cache.backup_file is defined
+
+    - name: Fail after restoring the vhost
+      ansible.builtin.fail:
+        msg: "nginx -t a échoué, vhost restauré ; index.html garde son cache heuristique."
