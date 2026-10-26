@@ -1,3 +1,7 @@
+# Site portant /login : cible du lien « Se connecter » du portail. Distinct de
+# cloud_frontend_url (redirections OAuth du backend), que le SOPS cloud fixe à
+# mon.essensys.fr : s'en servir ici fait boucler le lien sur le portail.
+portal_support_site_origin: "https://www.essensys.fr"
 portal_frontend_repo: "https://github.com/essensys-hub/essensys-user-portal-frontend.git"
 newrelic_browser_enabled: false
 newrelic_account_id: ""
