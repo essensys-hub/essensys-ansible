@@ -32,3 +32,10 @@ unifi_password: ""
 lan_iam_enabled: false
 lan_iam_session_ttl_hours: 168
 lan_iam_bootstrap_token_file: "{{ config_dir }}/lan_bootstrap.token"
+
+# Noms personnalises des lumieres (Feature noms-lumieres-2026-11-004, #41)
+# Repertoire hote, monte en ECRITURE dans le conteneur backend (le reste du
+# conteneur reste en lecture seule). Sauvegarde avec /opt/data.
+light_names_host_dir: "{{ data_dir }}/light-names"
+light_names_container_dir: "/var/lib/essensys/names"
+light_names_path: "{{ light_names_container_dir }}/light-names.json"

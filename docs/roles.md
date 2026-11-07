@@ -74,8 +74,18 @@ These roles are used by `install.raspberrypi.yml` and `update.raspberrypi.yml`.
     - Clones `essensys-server-backend`.
     - Builds the Go binary and deploys it.
     - Configures `lan_iam`, cloud sync, UniFi blocks.
+    - Creates `/opt/data/light-names` (owner `service_user`, mode `0750`) and manages the `light_names.path` block in `config.yaml` (custom light names, Feature `noms-lumieres-2026-11-004`).
     - Applies migration `003_lan_users` when LAN IAM enabled.
     - Installs and enables systemd service.
+
+!!! warning "Noms de lumieres : recreer le conteneur"
+    `raspberry_compose` monte `/opt/data/light-names` en ecriture sur `/var/lib/essensys/names`
+    dans `essensys-backend` (le reste du conteneur reste en lecture seule). Un nouveau montage
+    n'est pris en compte qu'a la **recreation** du conteneur : `install.gateway.yml` le fait
+    (`up -d --force-recreate`) ; sinon lancer
+    `docker compose -f /opt/data/docker-compose.yml up -d --force-recreate essensys-backend`.
+    Un simple `docker restart` ne suffit pas (les routes de noms repondent alors 503 `names_unavailable`).
+    Le fichier `light-names.json` est sauvegarde avec `/opt/data`.
 
 ## `raspberry_frontend`
 

@@ -1,0 +1,34 @@
+---
+# Noms personnalises des lumieres (noms-lumieres-2026-11-004, #41).
+#
+# Le backend gateway ecrit un fichier JSON (light-names.json) dans un
+# repertoire dedie. Le conteneur essensys-backend ne monte que config.yaml en
+# lecture seule : le repertoire hote ci-dessous est monte en ECRITURE sur
+# light_names_container_dir par le role raspberry_compose (jamais config.yaml).
+#
+# ATTENTION : un nouveau montage n'est pris en compte que si le conteneur est
+# RECREE, pas redemarre. Au premier deploiement, install.gateway.yml
+# (raspberry_compose : `up -d --force-recreate`) le fait deja ; en cas de
+# deploiement partiel, lancer a la main :
+#   docker compose -f /opt/data/docker-compose.yml up -d --force-recreate essensys-backend
+# Un simple `docker restart essensys-backend` NE SUFFIT PAS (le fichier reste
+# inaccessible et les routes de noms repondent 503 names_unavailable).
+- name: Creer le repertoire hote des noms de lumieres (ecriture pour le service)
+  ansible.builtin.file:
+    path: "{{ light_names_host_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0750'
+
+- name: Configurer le fichier des noms de lumieres dans config.yaml
+  ansible.builtin.blockinfile:
+    path: "{{ backend_config }}"
+    marker: "# {mark} ANSIBLE MANAGED LIGHT NAMES"
+    block: |
+      light_names:
+        path: "{{ light_names_path }}"
+    create: true
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0644'
