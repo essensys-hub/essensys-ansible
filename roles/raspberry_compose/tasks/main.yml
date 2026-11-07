@@ -83,6 +83,11 @@
   vars:
     backend_config: "{{ config_dir }}/backend/config.yaml"
 
+- name: Configurer les noms personnalises des lumieres (gateway)
+  import_tasks: ../raspberry_backend/tasks/light_names.yml
+  vars:
+    backend_config: "{{ config_dir }}/backend/config.yaml"
+
 - name: Deployer le fichier docker-compose.yml
   template:
     src: docker-compose.yml.j2
@@ -95,6 +100,9 @@
   command: docker compose -f {{ compose_file }} pull
   changed_when: true
 
+# Le --force-recreate recree essensys-backend : necessaire pour que le montage en
+# ecriture de {{ light_names_host_dir }} (noms de lumieres) soit pris en compte ;
+# un `docker restart` ne recharge pas les volumes.
 - name: Lancer les services via Docker Compose
   command: docker compose -f {{ compose_file }} up -d --remove-orphans --force-recreate
   changed_when: true

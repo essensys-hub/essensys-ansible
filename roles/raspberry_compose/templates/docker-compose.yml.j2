@@ -32,6 +32,8 @@ services:
     command: ["-config", "/etc/essensys/config.yaml"]
     volumes:
       - {{ backend_config }}:/etc/essensys/config.yaml:ro
+      # Noms personnalises des lumieres : seul montage en ecriture du backend
+      - {{ light_names_host_dir }}:{{ light_names_container_dir }}
 {% if backend_use_host_binary | default(false) %}
       - {{ backend_dir }}/server:/usr/local/bin/server:ro
 {% endif %}

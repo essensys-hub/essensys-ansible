@@ -17,6 +17,7 @@ MARKER_KEYS = {
     "BLOCK UNIFI": "unifi",
     "BLOCK LAN IAM": "lan_iam",
     "DATABASE": "database",
+    "LIGHT NAMES": "light_names",
 }
 
 

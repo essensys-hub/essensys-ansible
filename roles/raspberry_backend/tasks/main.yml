@@ -138,6 +138,9 @@
     group: "{{ service_user }}"
     mode: '0644'
 
+- name: Configurer les noms personnalises des lumieres (repertoire et config.yaml)
+  import_tasks: light_names.yml
+
 - name: Creer le repertoire de logs backend
   file:
     path: /var/log/essensys
