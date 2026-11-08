@@ -19,7 +19,8 @@ PB=(ansible-playbook -i localhost, tests/cloud-push-env-render.yml)
 # (les scanners de secrets signalent la séquence littérale, même avec de fausses valeurs).
 PEM_B="-----BEGIN PRIV""ATE KEY-----"
 PEM_E="-----END PRIV""ATE KEY-----"
-FCM_JSON='{"type":"service_account","project_id":"fake-proj","private_key":"'"${PEM_B}"'\nFAKEFCMKEYLINE\n'"${PEM_E}"'\n","client_email":"fake@fake-proj.example.org"}'
+# JSON de compte de service au format Google (indente) : sops_load le convertit en dictionnaire.
+FCM_JSON="$(PB="$PEM_B" PE="$PEM_E" python3 -c 'import json,os; print(json.dumps({"type":"service_account","project_id":"fake-proj","private_key":os.environ["PB"]+"\nFAKEFCMKEYLINE\n"+os.environ["PE"]+"\n","client_email":"fake@fake-proj.example.org","universe_domain":"googleapis.com"}, indent=2))')"
 P8="${PEM_B}"$'\nFAKEAPNSKEYLINE1\nFAKEAPNSKEYLINE2\n'"${PEM_E}"
 SECRETS=(FAKEFCMKEYLINE FAKEAPNSKEYLINE1 FAKEAPNSKEYLINE2 fake-proj FAKEKEYID FAKETEAMID)
 
@@ -52,7 +53,7 @@ run() { # run <nom> : check --diff puis application reelle
 
 check_env() { # check_env <fcm:0|1> <apns:0|1>  -> decode le .env comme systemd (apostrophes = litteral)
   python3 - "$PUSH_TEST_DIR/.env" "$1" "$2" "$FCM_JSON" "$P8" <<'PY' || fail "contenu .env ($1 $2)"
-import sys, re
+import sys, re, json
 path, fcm, apns, fj, p8 = sys.argv[1:6]
 t = open(path).read()
 env = {}
@@ -73,7 +74,7 @@ apns_keys = {"APNS_KEY_P8", "APNS_KEY_ID", "APNS_TEAM_ID", "APNS_BUNDLE_ID", "AP
 got = {k for k in env if k in fcm_keys | apns_keys}
 assert got == (fcm_keys if fcm == "1" else set()) | (apns_keys if apns == "1" else set()), got
 if fcm == "1":
-    assert env["FCM_SERVICE_ACCOUNT_JSON"] == fj and env["FCM_PROJECT_ID"] == "fake-proj"
+    assert json.loads(env["FCM_SERVICE_ACCOUNT_JSON"]) == json.loads(fj) and env["FCM_PROJECT_ID"] == "fake-proj"
 if apns == "1":
     assert env["APNS_KEY_P8"] == p8, repr(env["APNS_KEY_P8"])
     assert (env["APNS_KEY_ID"], env["APNS_TEAM_ID"], env["APNS_ENV"]) == ("FAKEKEYID", "FAKETEAMID", "production")
