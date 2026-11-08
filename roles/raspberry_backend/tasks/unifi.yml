@@ -18,7 +18,30 @@
 #   docker compose -f /opt/data/docker-compose.yml up -d --force-recreate essensys-backend
 # Un simple `docker restart` ne recharge PAS les volumes : ne pas s'y fier.
 #
+# Cle d'API : si `unifi_api_key` est vide et que UniFi est active, elle est lue
+# dans `secrets/cloud/essensys.sops.yaml` (cle `unifi_api_key` seule, jamais
+# affichee). Le jeu gateway ne charge pas ce fichier en entier (sops_load_cloud
+# a false) : seule cette cle est reprise. Il faut SOPS_AGE_KEY_FILE exporte.
+#
 # `diff: false` : la cle d'API ne doit jamais apparaitre dans `--diff`.
+- name: Lire unifi_api_key dans les secrets SOPS cloud (cle seule)
+  ansible.builtin.set_fact:
+    unifi_api_key: >-
+      {{ (lookup('community.sops.sops',
+         sops_cloud_secrets_file | default(playbook_dir ~ '/secrets/cloud/essensys.sops.yaml'))
+         | from_yaml).unifi_api_key }}
+  when:
+    - unifi_enabled | bool
+    - (unifi_api_key | default('')) | length == 0
+  no_log: true
+
+- name: Exiger une cle d'API UniFi quand UniFi est active
+  ansible.builtin.assert:
+    that: (unifi_api_key | default('')) | length > 0
+    fail_msg: "unifi_enabled est vrai mais unifi_api_key est vide (secrets/cloud/essensys.sops.yaml)."
+  when: unifi_enabled | bool
+  no_log: true
+
 - name: Configurer UniFi Protect dans config.yaml
   diff: false
   blockinfile:
