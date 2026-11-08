@@ -1,0 +1,36 @@
+---
+# Fournisseurs push de la sonnette (Feature sonnette-plages-push-2026-11-008,
+# essensys-feature-lifecycle#61, essensys-ansible#19).
+#
+# Les cles SOPS suivantes (secrets/cloud/essensys.sops.yaml, chargees par le role
+# sops_load) deviennent des variables d'environnement du backend cloud, ecrites
+# dans le .env (0600) par templates/cloud-backend-push.env.j2 :
+#   fcm_project_id, fcm_service_account_json -> FCM_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON
+#   apns_key_p8, apns_key_id, apns_team_id,
+#   apns_bundle_id, apns_env                 -> APNS_KEY_P8, APNS_KEY_ID, APNS_TEAM_ID,
+#                                               APNS_BUNDLE_ID, APNS_ENV
+# Chaque fournisseur est facultatif : cles absentes ou vides = variables non posees,
+# sans erreur (le cloud desactive alors le fournisseur et journalise push_unavailable).
+# Voir docs/push-providers.md pour la creation du projet Firebase et de la cle APNs.
+#
+# Les valeurs ne sont jamais affichees : no_log sur les taches, diff: false sur le
+# template du .env. Les valeurs multi-lignes (JSON, PEM) sont ecrites entre
+# apostrophes (aucun echappement systemd), d'ou le refus d'une apostrophe.
+- name: Verifier la coherence des fournisseurs push (sans afficher de valeur)
+  ansible.builtin.assert:
+    that:
+      - >-
+        (fcm_service_account_json | default('') | length == 0)
+        or (fcm_project_id | default('') | length > 0)
+      - >-
+        (apns_key_p8 | default('') | length == 0)
+        or ((apns_key_id | default('') | length > 0)
+            and (apns_team_id | default('') | length > 0))
+      - "\"'\" not in (fcm_service_account_json | default('') | string)"
+      - "\"'\" not in (apns_key_p8 | default('') | string)"
+      - (apns_env | default('production')) in ['production', 'development']
+    fail_msg: >-
+      Configuration push incoherente dans secrets/cloud/essensys.sops.yaml :
+      fcm_service_account_json exige fcm_project_id ; apns_key_p8 exige apns_key_id et
+      apns_team_id ; pas d'apostrophe dans les valeurs ; apns_env vaut production ou development.
+  no_log: true

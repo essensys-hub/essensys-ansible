@@ -62,6 +62,10 @@
 - name: Prepare GitHub App key from SOPS (support reports)
   import_tasks: github_app_key.yml
 
+- name: Check push providers (doorbell notifications)
+  import_tasks: push_providers.yml
+
+# diff: false / no_log : le .env contient des secrets (dont ceux des fournisseurs push).
 - name: Deploy cloud backend environment
   template:
     src: cloud-backend.env.j2
@@ -69,6 +73,8 @@
     owner: essensys
     group: essensys
     mode: '0600'
+  diff: false
+  no_log: true
   notify: Restart cloud backend
 
 - name: Install cloud backend systemd unit
