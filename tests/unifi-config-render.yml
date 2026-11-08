@@ -1,0 +1,26 @@
+---
+# Test hors ligne du bloc UniFi de config.yaml (Feature sonnette-unifi-2026-11-007, #58).
+# Valeurs factices uniquement (example.org, RFC 5737). Lance par
+# tests/unifi-config-render.sh ; ne touche ni une CM5 ni un secret SOPS.
+- name: Rendu du bloc unifi (valeurs factices)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    service_user: "{{ lookup('env', 'USER') }}"
+    service_group: "{{ lookup('pipe', 'id -gn') }}"
+    backend_config: "{{ lookup('env', 'UNIFI_TEST_DIR') }}/config.yaml"
+    unifi_enabled: true
+    unifi_base_url: "https://console.example.org"
+    unifi_api_key: "FAKE-KEY-0123456789-NOT-A-SECRET"
+  tasks:
+    - name: Fichier config.yaml de depart (autres sections presentes)
+      ansible.builtin.copy:
+        dest: "{{ backend_config }}"
+        content: "server:\n  port: 7070\nlight_names:\n  path: /var/lib/essensys/names/light-names.json\n"
+        mode: '0644'
+        force: false
+      check_mode: false
+
+    - name: Appliquer le bloc UniFi du role
+      ansible.builtin.import_tasks: ../roles/raspberry_backend/tasks/unifi.yml

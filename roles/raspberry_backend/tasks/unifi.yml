@@ -1,0 +1,41 @@
+---
+# UniFi Protect (config `unifi:` du backend gateway) - utilise aussi par la
+# sonnette UniFi (Feature sonnette-unifi-2026-11-007, essensys-feature-lifecycle#58).
+#
+# Activation (CM5) : dans host_vars/<hote>/secrets.sops.yaml (chiffre SOPS,
+# charge par le role sops_load, prioritaire sur les variables du play) :
+#   unifi_enabled: true
+#   unifi_base_url: "https://<adresse de la console UniFi>"
+#   unifi_api_key: "<cle d'API UniFi Protect>"
+# Puis `ansible-playbook install.gateway.yml -i inventory.gateway` (sans tags).
+# L'identifiant de camera, les lumieres et le nombre de clignotements ne sont
+# PAS ici : ils se reglent dans le portail (admin) et vivent dans la section
+# `doorbell` du fichier de `light_names.path`.
+#
+# Le config.yaml est monte en lecture seule : le conteneur essensys-backend
+# est recree par raspberry_compose (`up -d --force-recreate`) a chaque
+# deploiement, ce qui suffit a relire la cle. Hors playbook complet :
+#   docker compose -f /opt/data/docker-compose.yml up -d --force-recreate essensys-backend
+# Un simple `docker restart` ne recharge PAS les volumes : ne pas s'y fier.
+#
+# `diff: false` : la cle d'API ne doit jamais apparaitre dans `--diff`.
+- name: Configurer UniFi Protect dans config.yaml
+  diff: false
+  blockinfile:
+    path: "{{ backend_config }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK UNIFI"
+    block: |
+      unifi:
+        enabled: {{ unifi_enabled | lower }}
+        base_url: "{{ unifi_base_url }}"
+        api_key: "{{ unifi_api_key }}"
+        {% if unifi_username | default('') != '' %}
+        username: "{{ unifi_username }}"
+        {% endif %}
+        {% if unifi_password | default('') != '' %}
+        password: "{{ unifi_password }}"
+        {% endif %}
+    create: yes
+    owner: "{{ service_user }}"
+    group: "{{ service_group | default(service_user) }}"
+    mode: '0644'

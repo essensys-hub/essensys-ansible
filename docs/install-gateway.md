@@ -218,6 +218,27 @@ gateway_dhcp_reservations:
 | `unifi_base_url` | `https://192.168.0.1` | URL UniFi si activé |
 | `unifi_api_key` | `""` | Clé API UniFi |
 
+### UniFi Protect et sonnette UniFi
+
+Les variables `unifi_*` du play sont des **valeurs par défaut** (désactivé). Pour activer UniFi sur la CM5 (caméras, sonnette UniFi : vidéo dans le portail local et clignotement de lumières), les renseigner dans `host_vars/<hôte>/secrets.sops.yaml` (chiffré SOPS, chargé par le rôle `sops_load`, prioritaire sur les variables du play) :
+
+| Variable | Rôle |
+|----------|------|
+| `unifi_enabled` | `true` pour activer |
+| `unifi_base_url` | Adresse de la console UniFi (`https://<console>`) |
+| `unifi_api_key` | Clé d'API UniFi Protect (jamais en clair dans le dépôt) |
+| `unifi_username` / `unifi_password` | Optionnels (session) |
+
+L'identifiant de la caméra, les lumières à faire clignoter et le nombre de clignotements ne sont **pas** des variables Ansible : l'administrateur les règle dans le portail (section `doorbell` du fichier désigné par `light_names.path`, déjà monté en écriture).
+
+Au déploiement, le bloc `unifi:` de `config.yaml` est réécrit (sans afficher la clé dans `--diff`) et le conteneur `essensys-backend` est **recréé** par `raspberry_compose` (`up -d --force-recreate`). Un `docker restart` ne suffit pas. Hors playbook complet :
+
+```bash
+docker compose -f /opt/data/docker-compose.yml up -d --force-recreate essensys-backend
+```
+
+Contrôle sans secret : `bash tests/unifi-config-render.sh` (rendu du bloc avec des valeurs factices).
+
 Le domaine WAN effectif **`wan_domain`** est calculé par `raspberry_common` à partir de `domain_file` ou `wan_domain_default`.
 
 ---
