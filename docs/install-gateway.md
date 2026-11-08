@@ -231,6 +231,8 @@ Les variables `unifi_*` du play sont des **valeurs par défaut** (désactivé). 
 
 L'identifiant de la caméra, les lumières à faire clignoter et le nombre de clignotements ne sont **pas** des variables Ansible : l'administrateur les règle dans le portail (section `doorbell` du fichier désigné par `light_names.path`, déjà monté en écriture).
 
+**Clé déjà dans les secrets cloud.** Si `unifi_api_key` est vide alors que `unifi_enabled` est vrai, le rôle lit cette seule clé dans `secrets/cloud/essensys.sops.yaml` (`export SOPS_AGE_KEY_FILE=.age/keys.txt` avant le playbook) ; le reste du fichier n'est pas chargé pour le jeu gateway. Activation sans éditer de fichier : `-e unifi_enabled=true`. Le déploiement s'arrête si la clé reste vide.
+
 Au déploiement, le bloc `unifi:` de `config.yaml` est réécrit (sans afficher la clé dans `--diff`) et le conteneur `essensys-backend` est **recréé** par `raspberry_compose` (`up -d --force-recreate`). Un `docker restart` ne suffit pas. Hors playbook complet :
 
 ```bash
