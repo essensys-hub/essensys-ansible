@@ -26,7 +26,9 @@
         (apns_key_p8 | default('') | length == 0)
         or ((apns_key_id | default('') | length > 0)
             and (apns_team_id | default('') | length > 0))
-      - "\"'\" not in (fcm_service_account_json | default('') | string)"
+      # sops_load convertit un JSON en dictionnaire (set_fact) : to_json ramene une chaine
+      # JSON valide dans les deux cas, sans les apostrophes de la representation Python.
+      - "\"'\" not in (fcm_service_account_json | default('') | to_json)"
       - "\"'\" not in (apns_key_p8 | default('') | string)"
       - (apns_env | default('production')) in ['production', 'development']
     fail_msg: >-
