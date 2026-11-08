@@ -31,6 +31,8 @@ Ansible charge les secrets via le rôle **`sops_load`** (`community.sops` lookup
 | `vault_support_pseudonym_key` | Signalements : clé HMAC des références `U-` (64 hex). Obligatoire en production, ne jamais la changer : les références des comptes changeraient | `cloud-backend.env.j2` (`SUPPORT_PSEUDONYM_KEY`) |
 | `vault_github_app_id`, `vault_github_app_installation_id` | Signalements : GitHub App « Essensys Support » (optionnel : sans eux, signalements « en attente ») | `cloud-backend.env.j2` |
 | `vault_github_app_private_key_content` | Signalements : clé privée PEM de la GitHub App | `cloud_backend/tasks/github_app_key.yml` → `/opt/essensys/secrets/github/` |
+| `fcm_project_id`, `fcm_service_account_json` | Sonnette : notifications push Android (optionnel) | `cloud_backend/tasks/push_providers.yml`, `cloud-backend-push.env.j2` ; voir [push-providers.md](push-providers.md) |
+| `apns_key_p8`, `apns_key_id`, `apns_team_id`, `apns_bundle_id`, `apns_env` | Sonnette : notifications push iPhone (optionnel) | idem |
 
 ## Inventaire secrets gateway (phase 2)
 

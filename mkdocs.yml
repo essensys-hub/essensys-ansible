@@ -9,5 +9,6 @@ nav:
   - Installation Gateway CM5: install-gateway.md
   - Installation Raspberry (classique): playbooks.md
   - Roles: roles.md
+  - Notifications push (FCM, APNs): push-providers.md
   - Guide utilisateur HTTPS local: guide-utilisateur-https-local.md
   - HTTPS domaine local (admin): tls-local-domain.md

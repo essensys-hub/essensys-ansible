@@ -1,0 +1,34 @@
+---
+# Test hors ligne du .env cloud (fournisseurs push de la sonnette, #61 / ansible#19).
+# Charge de FAUX secrets depuis un fichier SOPS jetable (role sops_load reel), puis
+# rend le vrai gabarit cloud-backend.env.j2. Lance par tests/cloud-push-env-render.sh.
+- name: Rendu du .env cloud (valeurs factices)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    sops_cloud_secrets_file: "{{ lookup('env', 'PUSH_TEST_DIR') }}/secrets.sops.yaml"
+    sops_required_cloud_keys: []
+    cloud_backend_install_dir: "{{ lookup('env', 'PUSH_TEST_DIR') }}"
+    cloud_backend_src_dir: /opt/essensys/cloud-backend-src
+    cloud_backend_port: 8080
+    cloud_hub_public_url: "https://portal.example.org"
+    cloud_support_public_repo: example/public
+    cloud_support_private_repo: example/private
+    cloud_support_project_id: PVT_fake
+    portal_db_password: "{{ 'dummy' ~ '-db' }}"
+    portal_jwt_secret: "{{ 'dummy' ~ '-jwt' }}"
+    vault_admin_token: "{{ 'dummy' ~ '-admin' }}"
+  roles:
+    - sops_load
+  tasks:
+    - name: Verifier les fournisseurs push (tache reelle du role)
+      ansible.builtin.import_tasks: ../roles/cloud_backend/tasks/push_providers.yml
+
+    - name: Rendre le .env (comme le role, diff false et no_log)
+      ansible.builtin.template:
+        src: ../roles/cloud_backend/templates/cloud-backend.env.j2
+        dest: "{{ cloud_backend_install_dir }}/.env"
+        mode: '0600'
+      diff: false
+      no_log: true
