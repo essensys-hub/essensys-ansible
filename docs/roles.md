@@ -73,7 +73,7 @@ These roles are used by `install.raspberrypi.yml` and `update.raspberrypi.yml`.
     - Dedupes Ansible-managed YAML blocks in `config.yaml`.
     - Clones `essensys-server-backend`.
     - Builds the Go binary and deploys it.
-    - Configures `lan_iam`, cloud sync, UniFi blocks.
+    - Configures `lan_iam`, cloud sync, UniFi blocks (`tasks/unifi.yml`, also used by the UniFi doorbell, Feature `sonnette-unifi-2026-11-007`; the API key is never shown in `--diff`).
     - Creates `/opt/data/light-names` (owner `service_user`, mode `0750`) and manages the `light_names.path` block in `config.yaml` (custom light names, Feature `noms-lumieres-2026-11-004`).
     - Applies migration `003_lan_users` when LAN IAM enabled.
     - Installs and enables systemd service.
