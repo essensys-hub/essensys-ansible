@@ -20,5 +20,8 @@ if ia is None or ia > fe.index(build): err("assert sur vault_turnstile_site_key 
 ts = next((t for t in be if "TURNSTILE_SECRET_KEY" in str(t.get("loop", ""))), None) or err("TURNSTILE_SECRET_KEY absent du .env backend")
 if not ts.get("no_log"): err("la tâche secrète doit être no_log")
 if "TURNSTILE_DISABLED" not in str(ts["loop"]) or "'false'" not in str(ts["loop"]).replace('"', "'"): err("TURNSTILE_DISABLED=false absent")
+tpl = open("roles/cloud_backend/templates/cloud-backend.env.j2").read()
+if "TURNSTILE_SECRET_KEY={{ vault_turnstile_secret_key" not in tpl or "TURNSTILE_DISABLED=false" not in tpl:
+    err("le .env du backend de prod (cloud_backend) n'a pas TURNSTILE_SECRET_KEY / TURNSTILE_DISABLED=false")
 print("OK NR-essensys-ansible-22")
 PY
