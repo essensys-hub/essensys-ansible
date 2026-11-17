@@ -53,6 +53,21 @@
     mode: '0600'
     force: no
 
+- name: Configure Turnstile verification for public registration (#22)
+  lineinfile:
+    path: /opt/essensys/backend/.env
+    regexp: '^{{ item.key }}='
+    line: "{{ item.key }}={{ item.value }}"
+    owner: essensys
+    group: essensys
+    mode: '0600'
+  no_log: true
+  loop:
+    - key: TURNSTILE_SECRET_KEY
+      value: "{{ vault_turnstile_secret_key | mandatory('vault_turnstile_secret_key must be set in SOPS — /register refuses every signup without it') }}"
+    - key: TURNSTILE_DISABLED
+      value: "false"
+
 - name: Copy systemd service file from repo
   copy:
     src: /opt/essensys/repo/backend/essensys-backend.service
