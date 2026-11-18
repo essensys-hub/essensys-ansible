@@ -1,0 +1,10 @@
+---
+# Durcissement nginx du VPS cloud (essensys-ansible#25), sans toucher aux vhosts.
+#
+#   ansible-playbook -i inventory nginx-hardening.yml --check --diff
+#   ansible-playbook -i inventory nginx-hardening.yml
+- name: Durcir nginx sur le VPS cloud
+  hosts: essensys
+  become: yes
+  roles:
+    - nginx_hardening
