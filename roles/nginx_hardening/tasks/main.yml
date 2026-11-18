@@ -1,0 +1,14 @@
+---
+# Durcissement nginx du VPS cloud (essensys-ansible#25).
+# nginx.conf d'Ubuntu porte déjà une directive server_tokens dans le contexte
+# http : on la remplace sur place (un fichier conf.d ferait un doublon refusé
+# par nginx -t). Indépendant des vhosts réécrits par frontend/portal_nginx.
+- name: Masquer la version de nginx (server_tokens off)
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^\s*#?\s*server_tokens\s'
+    line: "\tserver_tokens off; # essensys-ansible#25"
+    insertafter: '^http\s*\{'
+    backup: yes
+    validate: 'nginx -t -c %s'
+  notify: Reload nginx (hardening)

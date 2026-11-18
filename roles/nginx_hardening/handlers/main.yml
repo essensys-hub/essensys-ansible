@@ -1,0 +1,5 @@
+---
+- name: Reload nginx (hardening)
+  service:
+    name: nginx
+    state: reloaded

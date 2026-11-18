@@ -24,6 +24,8 @@
     - portal_frontend
     - role: cloud_nginx
       when: use_cloud_backend | bool
+    - role: nginx_hardening
+      tags: [nginx_hardening]
     - role: portal_nginx
       when: not (use_cloud_backend | bool)
 
